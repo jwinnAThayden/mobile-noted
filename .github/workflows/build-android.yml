@@ -39,6 +39,8 @@ jobs:
           autoconf \
           automake \
           libtool \
+          libtool-bin \
+          libltdl-dev \
           pkg-config \
           zlib1g-dev \
           libncurses5-dev \
@@ -52,7 +54,9 @@ jobs:
           tk-dev \
           libxml2-dev \
           libxmlsec1-dev \
-          liblzma-dev
+          liblzma-dev \
+          m4 \
+          gettext
     
     - name: Install Python dependencies
       run: |
@@ -71,6 +75,11 @@ jobs:
         export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
         export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk
         export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+        
+        # Ensure libtool is properly configured for autotools
+        export ACLOCAL_PATH="/usr/share/aclocal:${ACLOCAL_PATH}"
+        autoreconf --version
+        libtoolize --version
         
         # Build the APK
         buildozer android debug

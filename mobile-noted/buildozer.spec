@@ -51,6 +51,21 @@ android.minapi = 21
 # (str) Android NDK version to use
 android.ndk = 25b
 
+# (str) python-for-android git url (if not set, defaults to upstream)
+p4a.source_dir = 
+
+# (str) The directory in which python-for-android should look for your own build recipes (if any)
+p4a.local_recipes = 
+
+# (str) Filename to the hook for p4a
+p4a.hook = 
+
+# (str) Bootstrap to use for creating the application
+p4a.bootstrap = sdl2
+
+# (int) port number to specify an explicit --port= p4a argument (eg for bootstrap flask)
+p4a.port =
+
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = True
 
