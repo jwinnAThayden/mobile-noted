@@ -24,7 +24,8 @@ version = 1.0
 
 # (list) Application requirements
 # Note: android and pyjnius are automatically included by buildozer for Android builds
-requirements = python3,kivy>=2.0.0,kivymd>=1.0.0,plyer>=2.0.0,pyenchant
+# Using compatible versions to avoid jnius compilation issues
+requirements = python3,kivy==2.1.0,kivymd==1.1.1,plyer==2.1.0
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
@@ -53,8 +54,8 @@ android.ndk = 25b
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = True
 
-# (str) Android arch to build for
-android.arch = armeabi-v7a,arm64-v8a
+# (list) Android architectures to build for
+android.archs = armeabi-v7a,arm64-v8a
 
 # (str) Android SDK path (auto-detected by buildozer if not set)
 #android.sdk_path = 

@@ -1,0 +1,136 @@
+# Dockerfile for Mobile Noted Android APK Build - Fixed Version
+# Addresses jnius compilation and Cython compatibility issues
+
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install essential system packages with default Python
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-dev \
+    python3-distutils \
+    python3-pip \
+    python3-venv \
+    build-essential \
+    git \
+    wget \
+    curl \
+    unzip \
+    zip \
+    default-jdk \
+    openjdk-17-jdk \
+    openjdk-17-jre \
+    autoconf \
+    automake \
+    libtool \
+    pkg-config \
+    zlib1g-dev \
+    libncurses5-dev \
+    libssl-dev \
+    libffi-dev \
+    libsqlite3-dev \
+    libbz2-dev \
+    libreadline-dev \
+    llvm \
+    xz-utils \
+    tk-dev \
+    libxml2-dev \
+    libxmlsec1-dev \
+    liblzma-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Java 17 as default
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Create non-root user for buildozer
+RUN useradd -m -s /bin/bash builder
+USER builder
+WORKDIR /home/builder
+
+# Install Python packages with specific versions for compatibility
+RUN python3 -m pip install --user --upgrade pip setuptools wheel
+
+# Install buildozer and specific compatible versions
+RUN python3 -m pip install --user \
+    buildozer==1.5.0 \
+    cython==0.29.36 \
+    kivy==2.1.0 \
+    kivymd==1.1.1 \
+    plyer==2.1.0
+
+# Create app directory and copy files
+WORKDIR /app
+COPY --chown=builder:builder . .
+
+# Create build script with error handling and compatibility fixes
+RUN cat > build.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "🚀 Starting Android APK build with compatibility fixes..."
+echo "📋 Environment:"
+echo "   Java: $(java -version 2>&1 | head -1)"
+echo "   Python: $(python3 --version)"
+echo "   Buildozer: $(python3 -m buildozer version 2>/dev/null || echo 'Buildozer available')"
+echo "   User: $(whoami)"
+echo "   Working dir: $(pwd)"
+echo "   Available space: $(df -h . | tail -1 | awk '{print $4}')"
+echo ""
+
+# Set environment variables for compatibility
+export ANDROIDSDK="/home/builder/.buildozer/android/platform/android-sdk"
+export ANDROIDNDK="/home/builder/.buildozer/android/platform/android-ndk"
+export ANDROIDAPI="31"
+export NDKAPI="21"
+
+# Create necessary directories
+mkdir -p /home/builder/.buildozer
+
+echo "🏗️ Building Android APK with compatibility fixes..."
+echo "⏰ Started at: $(date)"
+
+# Use Python 3 explicitly and add compatibility flags
+python3 -m buildozer android debug --verbose
+
+BUILD_EXIT_CODE=$?
+
+echo ""
+echo "⏰ Finished at: $(date)"
+
+if [ $BUILD_EXIT_CODE -eq 0 ]; then
+    echo "✅ Build completed successfully!"
+    
+    # Find and list the APK
+    APK_PATH=$(find . -name "*.apk" -type f 2>/dev/null | head -1)
+    if [ -n "$APK_PATH" ]; then
+        echo "📱 APK created at: $APK_PATH"
+        echo "📊 APK size: $(du -h "$APK_PATH" | cut -f1)"
+        
+        # Copy APK to easily accessible location
+        cp "$APK_PATH" /app/mobile-noted.apk
+        echo "📋 APK copied to: /app/mobile-noted.apk"
+    else
+        echo "⚠️ APK file not found, but build reported success"
+        exit 1
+    fi
+else
+    echo "❌ Build failed with exit code: $BUILD_EXIT_CODE"
+    
+    # Show buildozer log for debugging
+    echo "📝 Last few lines of buildozer log:"
+    if [ -f ".buildozer/android/platform/buildozer.log" ]; then
+        tail -20 .buildozer/android/platform/buildozer.log
+    fi
+    
+    exit $BUILD_EXIT_CODE
+fi
+EOF
+
+RUN chmod +x build.sh
+
+# Set default command
+CMD ["./build.sh"]
