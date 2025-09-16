@@ -1,0 +1,38 @@
+# Exclude build directories and caches
+.buildozer/
+bin/
+build_env/
+venv/
+build_venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Exclude version control
+.git/
+.github/
+
+# Exclude IDE files
+.idea/
+.vscode/
+
+# Exclude temporary files
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# Exclude large Python distributions
+Python-3.10.14/
+Python-3.10.14.tgz
+
+# Exclude Docker files (to prevent recursive copying)
+Dockerfile
+.dockerignore
+docker_build.sh
+
+# Exclude Windows-specific build scripts
+build_android.bat
+build_docker.bat
+build_wsl.sh
+build_local_wsl.sh

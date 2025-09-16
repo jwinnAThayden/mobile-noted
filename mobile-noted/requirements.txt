@@ -1,0 +1,9 @@
+# Requirements for Mobile Noted app
+# Core dependencies for desktop development and testing
+kivy>=2.0.0
+kivymd>=1.0.0
+plyer>=2.0.0
+pyenchant>=3.0.0
+
+# Note: android package is only available when building for Android with buildozer
+# It will be automatically included during the Android build process

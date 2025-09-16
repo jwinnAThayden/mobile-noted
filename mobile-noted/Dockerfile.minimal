@@ -1,0 +1,79 @@
+# Minimal Docker build that lets buildozer handle Android SDK/NDK
+FROM ubuntu:22.04
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install minimal dependencies needed for buildozer
+RUN apt-get update && apt-get install -y \
+    # Essential tools
+    git \
+    python3 \
+    python3-pip \
+    python3-venv \
+    # Java for Android (compatible version)
+    openjdk-17-jdk \
+    # Basic build tools
+    build-essential \
+    wget \
+    unzip \
+    zip \
+    # Dependencies for Kivy and Python compilation
+    libffi-dev \
+    libssl-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Java environment
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+# Create working directory
+WORKDIR /app
+
+# Copy project files
+COPY . /app/
+
+# Create virtual environment and install dependencies
+RUN python3 -m venv venv && \
+    venv/bin/pip install --upgrade pip && \
+    venv/bin/pip install buildozer cython && \
+    venv/bin/pip install -r requirements.txt
+
+# Create non-root user to avoid buildozer warnings
+RUN useradd -m -s /bin/bash builder && \
+    chown -R builder:builder /app
+
+# Switch to non-root user
+USER builder
+
+# Set PATH to use virtual environment
+ENV PATH="/app/venv/bin:${PATH}"
+
+# Let buildozer download and setup Android SDK/NDK automatically
+# This is more reliable than trying to pre-install them
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "🚀 Building Android APK with buildozer..."\n\
+echo "📋 Java version: $(java -version 2>&1 | head -1)"\n\
+echo "📋 Python version: $(python --version)"\n\
+echo "📋 Buildozer version: $(buildozer --version)"\n\
+echo ""\n\
+echo "🏗️ Starting build (buildozer will download Android SDK/NDK)..."\n\
+buildozer android debug\n\
+echo ""\n\
+if [ -d "bin" ] && [ -n "$(ls bin/*.apk 2>/dev/null)" ]; then\n\
+    echo "✅ Build completed successfully!"\n\
+    echo "📱 APK files:"\n\
+    ls -la bin/*.apk\n\
+    # Copy APKs to shared volume if available\n\
+    if [ -w "/app/bin" ]; then\n\
+        cp bin/*.apk /app/bin/ 2>/dev/null || true\n\
+    fi\n\
+else\n\
+    echo "❌ Build failed - no APK files found"\n\
+    exit 1\n\
+fi\n\
+' > /app/build.sh && chmod +x /app/build.sh
+
+# Default command
+CMD ["/app/build.sh"]

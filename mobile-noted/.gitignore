@@ -1,0 +1,40 @@
+# Buildozer files and Android build artifacts
+.buildozer/
+bin/
+*.apk
+*.aab
+
+# Python virtual environments
+venv/
+build_env/
+env/
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Build logs
+*.log
+
+# Large embedded Python distributions
+Python-3.10.14/
+Python-3.10.14.tgz
+
+# Local configuration files that shouldn't be shared
+*.local
+config.local.*
