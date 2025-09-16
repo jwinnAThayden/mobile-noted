@@ -1,13 +1,13 @@
 [app]
 
 # (str) Title of your application
-title = Mobile Noted
+title = Simple Mobile Noted
 
 # (str) Package name
-package.name = mobilenoted
+package.name = simplemobilenoted
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = com.haydenbeverage.mobilenoted
+package.domain = com.haydenbeverage.simplemobilenoted
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -24,8 +24,8 @@ version = 1.0
 
 # (list) Application requirements
 # Note: android and pyjnius are automatically included by buildozer for Android builds
-# Using compatible versions to avoid jnius compilation issues
-requirements = python3,kivy==2.1.0,kivymd==1.1.1,plyer==2.1.0
+# Using minimal stable versions to avoid compilation issues
+requirements = python3,kivy
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
