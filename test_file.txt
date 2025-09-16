@@ -1,0 +1,7 @@
+This is a test file for verifying that file opening works in tabbed mode.
+
+The file opening functionality should now work in both:
+1. Paned view mode
+2. Tabbed view mode
+
+Each opened file should appear as a new tab with the file content loaded.

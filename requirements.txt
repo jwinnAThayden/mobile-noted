@@ -1,0 +1,4 @@
+javac
+android-sdk
+android-ndk
+cython
