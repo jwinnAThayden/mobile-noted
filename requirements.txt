@@ -1,8 +1,2 @@
-# Web Mobile Noted - Production Dependencies
-flask>=2.3.0
-gunicorn>=20.1.0
-flask-session>=0.5.0
-flask-limiter>=3.5.0
-flask-wtf>=1.1.0
-werkzeug>=2.3.0
-python-dateutil>=2.8.0
+Flask==3.0.0
+gunicorn==21.2.0
