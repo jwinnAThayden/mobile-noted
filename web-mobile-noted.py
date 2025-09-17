@@ -39,8 +39,8 @@ PASSWORD_HASH = os.environ.get('NOTED_PASSWORD_HASH', generate_password_hash('se
 Session(app)
 csrf = CSRFProtect(app)
 limiter = Limiter(
-    app,
     key_func=get_remote_address,
+    app=app,
     default_limits=["100 per hour", "20 per minute"]
 )
 
