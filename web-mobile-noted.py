@@ -13,6 +13,7 @@ from flask_wtf.csrf import CSRFProtect, validate_csrf
 from werkzeug.security import check_password_hash, generate_password_hash
 import json
 import os
+import sys
 import uuid
 from datetime import datetime, timedelta
 import logging
@@ -62,6 +63,16 @@ DEVICE_COOKIE_NAME = 'noted_device_id'
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Create session directory in a Railway-compatible location (after logger is defined)
+session_dir = os.path.join(os.path.dirname(__file__), 'flask_session')
+try:
+    os.makedirs(session_dir, exist_ok=True)
+    app.config['SESSION_FILE_DIR'] = session_dir
+    logger.info(f"Session directory created: {session_dir}")
+except Exception as e:
+    logger.warning(f"Could not create session directory, using default: {e}")
+    # Railway will use /tmp if we can't create our own directory
 
 # Device Trust System
 def generate_device_fingerprint():
@@ -312,7 +323,7 @@ def login():
             password = data.get('password', '')
             remember_device = data.get('remember_device', False)
             
-            if username == USERNAME and check_password_hash(PASSWORD_HASH, password):
+            if username == USERNAME and PASSWORD_HASH and check_password_hash(PASSWORD_HASH, password):
                 # Set session
                 session['authenticated'] = True
                 session['username'] = username
@@ -496,6 +507,35 @@ def save_notes(notes):
     except Exception as e:
         logger.error(f"Error saving notes: {e}")
         return False
+
+@app.route('/health')
+def health_check():
+    """Simple health check endpoint for Railway"""
+    return jsonify({
+        'status': 'healthy',
+        'app': 'Web Mobile Noted',
+        'timestamp': datetime.now().isoformat(),
+        'environment': 'production' if (os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT')) else 'development'
+    })
+
+@app.route('/debug-info')
+def debug_info():
+    """Debug information endpoint (only for troubleshooting)"""
+    if not (os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT')):
+        return "Debug info only available in production", 403
+    
+    return jsonify({
+        'status': 'running',
+        'python_version': sys.version,
+        'environment_vars': {
+            'PORT': os.environ.get('PORT'),
+            'RAILWAY_ENVIRONMENT': os.environ.get('RAILWAY_ENVIRONMENT'),
+            'NOTED_USERNAME': 'SET' if os.environ.get('NOTED_USERNAME') else 'NOT_SET',
+            'NOTED_PASSWORD_HASH': 'SET' if os.environ.get('NOTED_PASSWORD_HASH') else 'NOT_SET'
+        },
+        'session_dir': app.config.get('SESSION_FILE_DIR', 'default'),
+        'notes_dir': NOTES_DIR
+    })
 
 @app.route('/')
 @login_required
