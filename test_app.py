@@ -4,7 +4,9 @@ Minimal test app for Railway debugging
 """
 
 from flask import Flask
+import os
 
+# Create the app at module level for Gunicorn
 app = Flask(__name__)
 
 @app.route('/')
@@ -13,9 +15,19 @@ def hello():
 
 @app.route('/health')
 def health():
-    return {'status': 'ok', 'message': 'Test app is running'}
+    return {'status': 'ok', 'message': 'Test app is running', 'port': os.environ.get('PORT', 'not set')}
 
+@app.route('/debug')
+def debug():
+    return {
+        'status': 'debug',
+        'port': os.environ.get('PORT', 'not set'),
+        'environment': 'railway' if 'RAILWAY_ENVIRONMENT' in os.environ else 'local',
+        'python_path': os.getcwd()
+    }
+
+# For direct execution (testing)
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    print(f"Starting Flask app on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=True)
