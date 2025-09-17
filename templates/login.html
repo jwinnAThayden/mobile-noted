@@ -285,7 +285,6 @@
 
         <!-- Login form -->
         <form class="login-form" id="loginForm" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             
             <div class="form-group">
                 <label for="username">Username</label>
@@ -315,7 +314,7 @@
 
             <div class="form-group">
                 <label class="checkbox-label">
-                    <input type="checkbox" id="remember_device" name="remember_device" value="true">
+                    <input type="checkbox" id="trust_device" name="trust_device" value="true">
                     <span class="checkbox-custom"></span>
                     🔒 Remember this device for 30 days
                 </label>
@@ -354,7 +353,7 @@
             
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            const rememberDevice = document.getElementById('remember_device').checked;
+            const rememberDevice = document.getElementById('trust_device').checked;
             
             if (!username || !password) {
                 showError('Please enter both username and password');
@@ -368,7 +367,7 @@
 
             try {
                 const formData = new FormData(loginForm);
-                formData.set('remember_device', rememberDevice);
+                formData.set('trust_device', rememberDevice);
                 
                 const response = await fetch('/login', {
                     method: 'POST',

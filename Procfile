@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT --workers 1 simple-web-noted:app
+web: gunicorn --bind 0.0.0.0:$PORT --workers 1 secure-web-noted:app
