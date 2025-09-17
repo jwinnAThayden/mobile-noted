@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Noted">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Noted">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-config" content="/static/browserconfig.xml">
+    <title>📝 Mobile Noted - Personal Notes</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/static/icon-512.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icon-192.png">
+    <link rel="shortcut icon" href="/static/icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.delete {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn.delete:hover {
+            box-shadow: 0 6px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .notes-container {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .note-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .note-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .note-meta {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .note-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .note-btn:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .note-btn.delete:hover {
+            background: #ffe6e6;
+            color: #dc3545;
+        }
+
+        .note-text {
+            width: 100%;
+            border: none;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: vertical;
+            min-height: 120px;
+            background: transparent;
+            color: #333;
+        }
+
+        .note-text:focus {
+            outline: none;
+            background: #fafafa;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 4em;
+            margin-bottom: 20px;
+            display: block;
+            opacity: 0.3;
+        }
+
+        .status {
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 14px;
+            background: #e8f5e8;
+            color: #2d5a2d;
+            border-radius: 5px;
+            margin: 10px 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status.show {
+            opacity: 1;
+        }
+
+        .status.error {
+            background: #ffe8e8;
+            color: #5a2d2d;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .note-text {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+
+        /* Scrollbar styling */
+        .notes-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .notes-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .notes-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .notes-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Mobile Noted</h1>
+            <div class="subtitle">Web-based note taking • Works on any device</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="addNewNote()">➕ New Note</button>
+            <button class="btn" onclick="saveAllNotes()">💾 Save All</button>
+            <button class="btn delete" onclick="deleteAllNotes()">🗑️ Clear All</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="notes-container" id="notesContainer">
+            <div class="empty-state" id="emptyState">
+                <i>📝</i>
+                <h3>No notes yet</h3>
+                <p>Click "New Note" to get started!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let notes = [];
+        let saveTimeout = null;
+
+        // Load notes when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotes();
+            addInstallButtonToControls();
+        });
+
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status show ${isError ? 'error' : ''}`;
+            
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 3000);
+        }
+
+        async function loadNotes() {
+            try {
+                const response = await fetch('/api/notes');
+                const data = await response.json();
+                
+                if (data.success) {
+                    notes = data.notes;
+                    renderNotes();
+                } else {
+                    showStatus('Failed to load notes: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Error loading notes: ' + error.message, true);
+            }
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            if (notes.length === 0) {
+                emptyState.style.display = 'block';
+                container.innerHTML = '';
+                container.appendChild(emptyState);
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            container.innerHTML = '';
+
+            notes.forEach(note => {
+                const noteElement = createNoteElement(note);
+                container.appendChild(noteElement);
+            });
+        }
+
+        function createNoteElement(note) {
+            const noteDiv = document.createElement('div');
+            noteDiv.className = 'note-card';
+            noteDiv.setAttribute('data-note-id', note.id);
+
+            const modifiedDate = new Date(note.modified).toLocaleString();
+            
+            noteDiv.innerHTML = `
+                <div class="note-header">
+                    <div class="note-meta">Modified: ${modifiedDate}</div>
+                    <div class="note-actions">
+                        <button class="note-btn" onclick="saveNote('${note.id}')" title="Save">💾</button>
+                        <button class="note-btn delete" onclick="deleteNote('${note.id}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+                <textarea class="note-text" placeholder="Start typing your note..."
+                          oninput="onNoteChange('${note.id}')"
+                          onblur="saveNote('${note.id}')">${note.text}</textarea>
+            `;
+
+            return noteDiv;
+        }
+
+        function onNoteChange(noteId) {
+            // Auto-save after 2 seconds of no typing
+            if (saveTimeout) {
+                clearTimeout(saveTimeout);
+            }
+            
+            saveTimeout = setTimeout(() => {
+                saveNote(noteId);
+            }, 2000);
+        }
+
+        async function addNewNote() {
+            try {
+                const response = await fetch('/api/notes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: ''
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    notes.unshift(data.note);
+                    renderNotes();
+                    showStatus('New note created!');
+                    
+                    // Focus on the new note
+                    setTimeout(() => {
+                        const newNoteTextarea = document.querySelector(`[data-note-id="${data.note.id}"] .note-text`);
+                        if (newNoteTextarea) {
+                            newNoteTextarea.focus();
+                        }
+                    }, 100);
+                } else {
+                    showStatus('Failed to create note: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Error creating note: ' + error.message, true);
+            }
+        }
+
+        async function saveNote(noteId) {
+            const noteElement = document.querySelector(`[data-note-id="${noteId}"]`);
+            if (!noteElement) return;
+
+            const textarea = noteElement.querySelector('.note-text');
+            const text = textarea.value;
+
+            try {
+                const response = await fetch(`/api/notes/${noteId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update local note data
+                    const noteIndex = notes.findIndex(n => n.id === noteId);
+                    if (noteIndex !== -1) {
+                        notes[noteIndex] = data.note;
+                        
+                        // Update the modified time display
+                        const metaElement = noteElement.querySelector('.note-meta');
+                        const modifiedDate = new Date(data.note.modified).toLocaleString();
+                        metaElement.textContent = `Modified: ${modifiedDate}`;
+                    }
+                    
+                    showStatus('Note saved!');
+                } else {
+                    showStatus('Failed to save note: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Error saving note: ' + error.message, true);
+            }
+        }
+
+        async function deleteNote(noteId) {
+            if (!confirm('Are you sure you want to delete this note?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/notes/${noteId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    notes = notes.filter(n => n.id !== noteId);
+                    renderNotes();
+                    showStatus('Note deleted!');
+                } else {
+                    showStatus('Failed to delete note: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Error deleting note: ' + error.message, true);
+            }
+        }
+
+        async function saveAllNotes() {
+            const noteElements = document.querySelectorAll('.note-card');
+            let savedCount = 0;
+            
+            for (const noteElement of noteElements) {
+                const noteId = noteElement.getAttribute('data-note-id');
+                await saveNote(noteId);
+                savedCount++;
+            }
+            
+            showStatus(`Saved ${savedCount} notes!`);
+        }
+
+        async function deleteAllNotes() {
+            if (!confirm('Are you sure you want to delete ALL notes? This cannot be undone!')) {
+                return;
+            }
+
+            try {
+                const deletePromises = notes.map(note => 
+                    fetch(`/api/notes/${note.id}`, { method: 'DELETE' })
+                );
+                
+                await Promise.all(deletePromises);
+                notes = [];
+                renderNotes();
+                showStatus('All notes deleted!');
+            } catch (error) {
+                showStatus('Error deleting notes: ' + error.message, true);
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+N or Cmd+N for new note
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                addNewNote();
+            }
+            
+            // Ctrl+S or Cmd+S for save all
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveAllNotes();
+            }
+        });
+
+        // Prevent form submission on Enter in textareas
+        document.addEventListener('keydown', function(e) {
+            if (e.target.classList.contains('note-text') && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                addNewNote();
+            }
+        });
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(function(registration) {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(function(registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        }
+
+        // Enhanced PWA Install prompt
+        let deferredPrompt;
+        let installButton = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Create persistent install button
+            showInstallButton();
+        });
+
+        function showInstallButton() {
+            if (installButton) return; // Already showing
+            
+            const installBanner = document.createElement('div');
+            installBanner.id = 'install-banner';
+            installBanner.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; text-align: center; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                    <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px;">
+                        <span style="font-size: 1.1em;">📱 Install as App</span>
+                        <button id="install-app-btn" style="background: white; color: #667eea; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 14px;">Install Now</button>
+                        <button id="dismiss-install" style="background: transparent; color: white; border: 1px solid white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px;">Later</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(installBanner);
+            installButton = installBanner;
+            
+            // Add event listeners
+            document.getElementById('install-app-btn').addEventListener('click', installApp);
+            document.getElementById('dismiss-install').addEventListener('click', () => {
+                installBanner.remove();
+                installButton = null;
+            });
+            
+            // Adjust body padding to account for banner
+            document.body.style.paddingTop = '70px';
+        }
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                        showStatus('App installing... Check your home screen!');
+                        if (installButton) {
+                            installButton.remove();
+                            installButton = null;
+                            document.body.style.paddingTop = '0';
+                        }
+                    } else {
+                        showStatus('Installation cancelled', true);
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Fallback instructions for iOS
+                if (navigator.userAgent.match(/iPhone|iPad|iPod/)) {
+                    showStatus('On iOS: Tap Share button → Add to Home Screen', false);
+                } else {
+                    showStatus('App installation not available on this device', true);
+                }
+            }
+        }
+
+        // Show install instructions for iOS users
+        if (navigator.userAgent.match(/iPhone|iPad|iPod/) && !navigator.standalone) {
+            setTimeout(() => {
+                const iosInstructions = document.createElement('div');
+                iosInstructions.innerHTML = `
+                    <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); color: white; padding: 15px; border-radius: 10px; text-align: center; z-index: 1000;">
+                        <div>📱 Install this app on your iPhone:</div>
+                        <div style="margin: 10px 0; font-size: 14px;">Tap <strong>Share</strong> button → <strong>Add to Home Screen</strong></div>
+                        <button onclick="this.parentElement.remove()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 5px; margin-top: 10px;">Got it!</button>
+                    </div>
+                `;
+                document.body.appendChild(iosInstructions);
+            }, 3000);
+        }
+
+        // Detect when app is installed and running as PWA
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('App was installed');
+            showStatus('App installed successfully! 🎉');
+            if (installButton) {
+                installButton.remove();
+                installButton = null;
+                document.body.style.paddingTop = '0';
+            }
+        });
+
+        // Add install button to controls if not already available
+        function addInstallButtonToControls() {
+            if (!deferredPrompt && !navigator.standalone) return;
+            
+            const controls = document.querySelector('.controls');
+            const existingInstallBtn = document.getElementById('install-btn-control');
+            
+            if (!existingInstallBtn) {
+                const installBtn = document.createElement('button');
+                installBtn.id = 'install-btn-control';
+                installBtn.className = 'btn';
+                installBtn.innerHTML = '📱 Install App';
+                installBtn.onclick = installApp;
+                controls.appendChild(installBtn);
+            }
+        }
+
+        // Check if running as installed PWA
+        if (navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('Running as installed PWA');
+            document.title = '📝 Noted';
+        }
+    </script>
+</body>
+</html>
