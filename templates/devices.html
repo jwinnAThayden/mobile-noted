@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#667eea">
+    <title>🔒 Trusted Devices - Mobile Noted</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icon-192.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+
+        .nav-bar {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .device-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .device-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .device-card.current {
+            border-color: #667eea;
+            border-width: 2px;
+        }
+
+        .device-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .device-header.current {
+            background: #e3f2fd;
+        }
+
+        .device-info {
+            flex-grow: 1;
+        }
+
+        .device-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .device-name.current::after {
+            content: " (Current Device)";
+            color: #667eea;
+            font-weight: normal;
+            font-size: 0.9em;
+        }
+
+        .device-meta {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .device-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-action.delete:hover {
+            background: #ffe6e6;
+            color: #dc3545;
+        }
+
+        .device-details {
+            padding: 15px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .no-devices {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .no-devices i {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.3;
+        }
+
+        .add-current-device {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            margin: 20px auto;
+            display: block;
+        }
+
+        .add-current-device:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .status {
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 14px;
+            background: #e8f5e8;
+            color: #2d5a2d;
+            border-radius: 5px;
+            margin: 10px 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status.show {
+            opacity: 1;
+        }
+
+        .status.error {
+            background: #ffe8e8;
+            color: #5a2d2d;
+        }
+
+        .trust-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .trust-info h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .trust-info ul {
+            color: #856404;
+            font-size: 0.9em;
+            line-height: 1.6;
+            margin-left: 20px;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .container {
+                margin: 5px;
+                border-radius: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .nav-bar {
+                flex-direction: column;
+            }
+
+            .nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .device-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .device-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                gap: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Trusted Devices</h1>
+            <p class="subtitle">Manage devices that can access your notes without login</p>
+        </div>
+
+        <div class="nav-bar">
+            <a href="/" class="nav-btn">📝 Back to Notes</a>
+            <a href="/logout" class="nav-btn">🚪 Logout</a>
+        </div>
+
+        <div class="content">
+            <div class="trust-info">
+                <h3>🛡️ How Device Trust Works</h3>
+                <ul>
+                    <li>Trusted devices can access your notes without login for 30 days</li>
+                    <li>Each device is identified by browser fingerprint and unique ID</li>
+                    <li>Remove trust from any device you no longer use</li>
+                    <li>Current device is marked with a blue border</li>
+                </ul>
+            </div>
+
+            <div id="status" class="status"></div>
+
+            {% if not devices %}
+            <div class="no-devices">
+                <i>🔒</i>
+                <h3>No Trusted Devices</h3>
+                <p>You haven't trusted any devices yet. Trust this device to skip login for 30 days.</p>
+                <button class="add-current-device" onclick="trustCurrentDevice()">
+                    🔐 Trust This Device
+                </button>
+            </div>
+            {% else %}
+            <div class="devices-list">
+                {% for device in devices %}
+                <div class="device-card {% if device.is_current %}current{% endif %}">
+                    <div class="device-header {% if device.is_current %}current{% endif %}">
+                        <div class="device-info">
+                            <div class="device-name {% if device.is_current %}current{% endif %}">
+                                {{ device.name }}
+                            </div>
+                            <div class="device-meta">
+                                Added {{ device.created_at | replace('T', ' ') | truncate(19, True, '') }}
+                            </div>
+                        </div>
+                        <div class="device-actions">
+                            {% if not device.is_current %}
+                            <button class="btn-action delete" onclick="removeDevice('{{ device.key }}', '{{ device.name }}')" title="Remove Trust">
+                                🗑️ Remove
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Last Used:</span>
+                            <span class="detail-value">{{ device.last_used | replace('T', ' ') | truncate(19, True, '') }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expires:</span>
+                            <span class="detail-value">{{ device.expires_at | replace('T', ' ') | truncate(19, True, '') }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">IP Address:</span>
+                            <span class="detail-value">{{ device.ip_address }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <button class="add-current-device" onclick="trustCurrentDevice()">
+                    🔐 Trust This Device
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        let csrfToken = null;
+
+        // Get CSRF token
+        async function getCsrfToken() {
+            if (!csrfToken) {
+                try {
+                    const response = await fetch('/login');
+                    const text = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+                    const tokenInput = doc.querySelector('input[name="csrf_token"]');
+                    if (tokenInput) {
+                        csrfToken = tokenInput.value;
+                    }
+                } catch (error) {
+                    console.warn('Could not fetch CSRF token:', error);
+                }
+            }
+            return csrfToken;
+        }
+
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status show ${isError ? 'error' : ''}`;
+            
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 5000);
+        }
+
+        async function removeDevice(deviceKey, deviceName) {
+            if (!confirm(`Remove trust from "${deviceName}"?\n\nThis device will need to login again to access your notes.`)) {
+                return;
+            }
+
+            try {
+                const token = await getCsrfToken();
+                const response = await fetch(`/api/devices/${deviceKey}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': token
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus(data.message);
+                    // Remove device card from UI
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showStatus('Failed to remove device: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Error removing device: ' + error.message, true);
+            }
+        }
+
+        async function trustCurrentDevice() {
+            const deviceName = prompt('Enter a name for this device (optional):', '');
+            if (deviceName === null) return; // User cancelled
+
+            try {
+                const token = await getCsrfToken();
+                const response = await fetch('/api/devices/current/trust', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': token
+                    },
+                    body: JSON.stringify({
+                        name: deviceName.trim() || undefined
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus(data.message);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showStatus('Failed to trust device: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Error trusting device: ' + error.message, true);
+            }
+        }
+
+        // Pre-fetch CSRF token on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            getCsrfToken();
+        });
+    </script>
+</body>
+</html>
