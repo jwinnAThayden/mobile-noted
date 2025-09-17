@@ -625,23 +625,29 @@ def static_files(filename):
     return send_from_directory(os.path.join(app.root_path, 'static'), filename)
 
 if __name__ == '__main__':
-    print("🔐 Starting Secure Web Mobile Noted...")
-    print("🛡️  Security features enabled:")
-    print("   - Authentication required")
-    print("   - Rate limiting active")
-    print("   - CSRF protection enabled")
-    print("   - Security headers added")
-    print(f"   - Username: {USERNAME}")
-    print(f"   - Session timeout: {app.config['PERMANENT_SESSION_LIFETIME']} seconds")
-    print("📱 Access on mobile: http://your-ip-address:5000")
-    print("💻 Access on desktop: http://localhost:5000")
-    print("🔧 To stop: Press Ctrl+C")
-    print("\n✅ Authentication configured via environment variables")
+    # Only run development server if not in production
+    is_production = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT')
     
-    # Get port from environment variable (for cloud hosting) or default to 5000
-    port = int(os.environ.get('PORT', 5000))
-    
-    # Disable debug in production
-    debug_mode = os.environ.get('FLASK_ENV') == 'development'
-    
-    app.run(host='0.0.0.0', port=port, debug=debug_mode)
+    if not is_production:
+        print("🔐 Starting Secure Web Mobile Noted (Development Mode)...")
+        print("🛡️  Security features enabled:")
+        print("   - Authentication required")
+        print("   - Rate limiting active")
+        print("   - CSRF protection enabled")
+        print("   - Security headers added")
+        print(f"   - Username: {USERNAME}")
+        print(f"   - Session timeout: {app.config['PERMANENT_SESSION_LIFETIME']} seconds")
+        print("📱 Access on mobile: http://your-ip-address:5000")
+        print("💻 Access on desktop: http://localhost:5000")
+        print("🔧 To stop: Press Ctrl+C")
+        print("\n✅ Authentication configured via environment variables")
+        
+        # Get port from environment variable (for cloud hosting) or default to 5000
+        port = int(os.environ.get('PORT', 5000))
+        
+        # Disable debug in production
+        debug_mode = os.environ.get('FLASK_ENV') == 'development'
+        
+        app.run(host='0.0.0.0', port=port, debug=debug_mode)
+    else:
+        print("🚀 Production mode - using Gunicorn via Procfile")
