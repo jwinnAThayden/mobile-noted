@@ -31,9 +31,15 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 app.config['SESSION_FILE_THRESHOLD'] = 100
 app.config['WTF_CSRF_TIME_LIMIT'] = 3600
 
-# Authentication Configuration
-USERNAME = os.environ.get('NOTED_USERNAME', 'admin')
-PASSWORD_HASH = os.environ.get('NOTED_PASSWORD_HASH', generate_password_hash('secure123'))  # Change default!
+# Authentication Configuration - MUST be set via environment variables
+USERNAME = os.environ.get('NOTED_USERNAME')
+PASSWORD_HASH = os.environ.get('NOTED_PASSWORD_HASH')
+
+# Validate required authentication environment variables
+if not USERNAME:
+    raise ValueError("NOTED_USERNAME environment variable must be set")
+if not PASSWORD_HASH:
+    raise ValueError("NOTED_PASSWORD_HASH environment variable must be set")
 
 # Initialize security extensions
 Session(app)
@@ -630,7 +636,7 @@ if __name__ == '__main__':
     print("📱 Access on mobile: http://your-ip-address:5000")
     print("💻 Access on desktop: http://localhost:5000")
     print("🔧 To stop: Press Ctrl+C")
-    print("\n⚠️  IMPORTANT: Change default password by setting NOTED_PASSWORD_HASH environment variable!")
+    print("\n✅ Authentication configured via environment variables")
     
     # Get port from environment variable (for cloud hosting) or default to 5000
     port = int(os.environ.get('PORT', 5000))
