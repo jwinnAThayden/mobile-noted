@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 Simple Mobile Noted</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .note-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .note-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .note-meta {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .note-content {
+            padding: 15px;
+        }
+
+        .note-link {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .note-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #666;
+            max-height: 100px;
+            overflow: hidden;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .notes-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Simple Mobile Noted</h1>
+            <p>Your notes, simplified</p>
+        </div>
+
+        <div class="controls">
+            <a href="/new" class="btn">➕ New Note</a>
+            <a href="/api/notes" class="btn">📊 View JSON</a>
+        </div>
+
+        <div class="notes-grid">
+            {% if notes %}
+                {% for note in notes %}
+                <div class="note-card">
+                    <div class="note-header">
+                        <div class="note-meta">
+                            {{ note.last_modified[:10] if note.last_modified else 'No date' }}
+                        </div>
+                        <form method="POST" action="/delete/{{ note.id }}" style="display: inline;">
+                            <button type="submit" onclick="return confirm('Delete this note?')" 
+                                    style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+                                🗑️
+                            </button>
+                        </form>
+                    </div>
+                    <div class="note-content">
+                        <a href="/note/{{ note.id }}" class="note-link">
+                            <div class="note-text">
+                                {{ note.content[:200] if note.content else 'Empty note' }}
+                                {% if note.content and note.content|length > 200 %}...{% endif %}
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <h3>📝 No notes yet</h3>
+                    <p>Click "New Note" to get started!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

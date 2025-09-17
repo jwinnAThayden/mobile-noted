@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 Edit Note - Simple Mobile Noted</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn.save {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn.delete {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        }
+
+        .note-form {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .note-textarea {
+            flex: 1;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: inherit;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: none;
+            min-height: 400px;
+            background: white;
+        }
+
+        .note-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .note-meta {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .note-textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 {% if note.id %}Edit Note{% else %}New Note{% endif %}</h1>
+        </div>
+
+        <div class="controls">
+            <a href="/" class="btn">← Back to Notes</a>
+            <button type="submit" form="note-form" class="btn save">💾 Save</button>
+            {% if note.id %}
+                <form method="POST" action="/delete/{{ note.id }}" style="flex: 1;">
+                    <button type="submit" onclick="return confirm('Delete this note?')" 
+                            class="btn delete" style="width: 100%;">🗑️ Delete</button>
+                </form>
+            {% endif %}
+        </div>
+
+        <form id="note-form" method="POST" action="/save" class="note-form">
+            <input type="hidden" name="note_id" value="{{ note.id if note.id else '' }}">
+            <textarea name="content" class="note-textarea" 
+                      placeholder="Start typing your note here..." 
+                      autofocus>{{ note.content if note.content else '' }}</textarea>
+            
+            {% if note.last_modified %}
+            <div class="note-meta">
+                Last modified: {{ note.last_modified[:19].replace('T', ' ') }}
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <script>
+        // Auto-save functionality
+        let saveTimeout;
+        const textarea = document.querySelector('.note-textarea');
+        
+        textarea.addEventListener('input', function() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(function() {
+                // Auto-save after 3 seconds of no typing
+                document.getElementById('note-form').submit();
+            }, 3000);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+S or Cmd+S to save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                document.getElementById('note-form').submit();
+            }
+        });
+
+        // Prevent accidental navigation away with unsaved changes
+        let originalContent = textarea.value;
+        window.addEventListener('beforeunload', function(e) {
+            if (textarea.value !== originalContent) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // Update original content when form is submitted
+        document.getElementById('note-form').addEventListener('submit', function() {
+            originalContent = textarea.value;
+        });
+    </script>
+</body>
+</html>
