@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT --workers 1 minimal:app
+web: gunicorn --bind 0.0.0.0:$PORT --workers 1 --log-level info debug_app:app
