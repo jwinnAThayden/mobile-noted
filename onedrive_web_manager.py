@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # --- Configuration ---
 CLIENT_ID = os.environ.get("NOTED_CLIENT_ID") 
 AUTHORITY = "https://login.microsoftonline.com/common"
-SCOPES = ["https://graph.microsoft.com/Files.ReadWrite"]
+SCOPES = ["Files.ReadWrite.AppFolder", "User.Read"]
 
 # API Endpoint for the app's special folder in the user's OneDrive
 GRAPH_API_ENDPOINT = "https://graph.microsoft.com/v1.0/me/drive/special/approot"
@@ -231,8 +231,36 @@ class WebOneDriveManager:
                 del self._auth_flows[session_id]
                 return {"status": "expired", "message": "Authentication flow expired"}
             
-            # Try to complete the device flow
-            result = self.app.acquire_token_by_device_flow(flow_data["flow"])
+            # Add timeout protection to prevent worker timeout
+            import signal
+            import threading
+            
+            def timeout_handler():
+                raise TimeoutError("Authentication check timed out")
+            
+            # Use a threading timer for timeout (works on all platforms)
+            timeout_timer = threading.Timer(8.0, timeout_handler)  # 8 second timeout
+            result = None
+            
+            try:
+                timeout_timer.start()
+                
+                # Try to complete the device flow with timeout protection
+                result = self.app.acquire_token_by_device_flow(flow_data["flow"])
+                
+            except TimeoutError:
+                logger.info(f"OneDrive: Device flow check timed out for session {session_id}")
+                return {"status": "pending", "message": "Authentication check in progress..."}
+            
+            except Exception as e:
+                # Handle specific MSAL timeout/network issues
+                if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'network']):
+                    logger.info(f"OneDrive: Network/timeout issue during auth check: {e}")
+                    return {"status": "pending", "message": "Authentication check in progress..."}
+                raise e
+            
+            finally:
+                timeout_timer.cancel()
             
             if "access_token" in result:
                 self.access_token = result["access_token"]
@@ -371,31 +399,28 @@ class WebOneDriveManager:
             logger.error(f"OneDrive: Failed to get note {note_id}: {e}")
             return None
 
-    def save_note(self, note_data, note_id=None):
+    def get_note_content(self, item_id):
+        """Get the content of a specific note by its OneDrive item ID. Matches desktop interface."""
+        return self.get_note(item_id)
+
+    def save_note(self, file_name, content_dict):
         """
-        Save a note to OneDrive.
-        If note_id is provided, update existing note.
-        Otherwise, create new note.
+        Save a note to OneDrive. Creates or overwrites the file.
+        Content is a dictionary that will be saved as a JSON string.
+        Compatible with desktop version format.
         """
         try:
-            content = json.dumps(note_data, indent=2)
+            # Ensure file_name ends with .json
+            if not file_name.endswith(".json"):
+                file_name += ".json"
             
-            if note_id:
-                # Update existing note
-                response = self._make_graph_request(
-                    "PUT", 
-                    f"/me/drive/items/{note_id}/content",
-                    data=content
-                )
-            else:
-                # Create new note with timestamp-based filename
-                filename = f"web_note_{int(time.time())}.json"
-                
-                response = self._make_graph_request(
-                    "PUT",
-                    f"/me/drive/special/approot:/{filename}:/content",
-                    data=content
-                )
+            content = json.dumps(content_dict, indent=2)
+            
+            response = self._make_graph_request(
+                "PUT",
+                f"/me/drive/special/approot:/{file_name}:/content",
+                data=content
+            )
                 
             result = response.json()
             logger.info(f"OneDrive: Note saved successfully: {result.get('name', 'unknown')}")
@@ -452,16 +477,16 @@ class WebOneDriveManager:
                     
                     if filename in onedrive_map:
                         # Update existing note
-                        onedrive_id = onedrive_map[filename]["id"]
-                        saved_id = self.save_note(cloud_note_data, onedrive_id)
+                        saved_id = self.save_note(filename, cloud_note_data)
                         if saved_id:
                             note_data["onedrive_id"] = saved_id
                             sync_stats["updated"] += 1
                         else:
                             sync_stats["errors"] += 1
                     else:
-                        # Create new note
-                        saved_id = self.save_note(cloud_note_data)
+                        # Create new note with timestamp-based filename
+                        new_filename = f"web_note_{note_id}_{int(time.time())}.json"
+                        saved_id = self.save_note(new_filename, cloud_note_data)
                         if saved_id:
                             note_data["onedrive_id"] = saved_id
                             sync_stats["created"] += 1

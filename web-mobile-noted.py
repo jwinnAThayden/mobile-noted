@@ -767,6 +767,7 @@ def start_onedrive_auth():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/onedrive/auth/check', methods=['GET'])
+@limiter.limit("30 per minute")  # Higher limit for auth polling
 @login_required
 def check_onedrive_auth():
     """Check OneDrive authentication flow status"""
@@ -783,6 +784,26 @@ def check_onedrive_auth():
         
     except Exception as e:
         logger.error(f"Error checking OneDrive auth: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/onedrive/auth/simple-check', methods=['GET'])
+@limiter.limit("60 per minute")  # Higher limit for simple checks
+def simple_onedrive_check():
+    """Simple OneDrive authentication status check without session requirements"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        # Basic check without requiring session
+        authenticated = onedrive_manager.is_authenticated()
+        return jsonify({
+            'success': True, 
+            'authenticated': authenticated,
+            'status': 'authenticated' if authenticated else 'not_authenticated'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error checking simple OneDrive status: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/onedrive/auth/cancel', methods=['POST'])
