@@ -1047,6 +1047,53 @@ def test_onedrive_auth():
             'manager_exists': onedrive_manager is not None
         })
 
+@app.route('/onedrive/get-token')
+def get_onedrive_token():
+    """Get current OneDrive token for Railway environment variable setup"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({
+            'success': False,
+            'error': 'OneDrive not available'
+        })
+    
+    try:
+        # Check if authenticated
+        if not onedrive_manager.is_authenticated():
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated with OneDrive. Please authenticate first.',
+                'instructions': 'Click the OneDrive button and complete authentication, then visit this page again.'
+            })
+        
+        # Get current token cache
+        token_data = onedrive_manager._token_cache.serialize()
+        
+        if token_data and len(token_data) > 10:
+            return jsonify({
+                'success': True,
+                'authenticated': True,
+                'token': token_data,
+                'instructions': {
+                    'step1': 'Copy the token value above',
+                    'step2': 'Go to Railway Dashboard → Your Project → Variables',
+                    'step3': 'Add new variable: ONEDRIVE_TOKEN_CACHE',
+                    'step4': 'Paste the token as the value',
+                    'step5': 'Railway will redeploy and remember your OneDrive connection!'
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'No valid token found',
+                'suggestion': 'Try re-authenticating with OneDrive'
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error retrieving token: {str(e)}'
+        })
+
 @app.route('/test/onedrive/direct-flow')
 def test_direct_device_flow():
     """Direct test of device flow without OneDrive manager"""
