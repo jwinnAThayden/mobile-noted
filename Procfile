@@ -1,1 +1,1 @@
-web: gunicorn secure-web-noted:app
+web: gunicorn --bind 0.0.0.0:$PORT secure-web-noted:app
