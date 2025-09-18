@@ -1496,9 +1496,21 @@
             try {
                 showStatus('Syncing to OneDrive...', false);
                 
-                const response = await authenticatedFetch('/api/onedrive/sync/push', {
+                // Try authenticated endpoint first
+                let response = await authenticatedFetch('/api/onedrive/sync/push', {
                     method: 'POST'
                 });
+                
+                // If that fails, try the simple endpoint
+                if (!response) {
+                    console.log('Trying simple OneDrive sync endpoint...');
+                    response = await fetch('/api/simple/onedrive/sync/push', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                }
                 
                 if (!response) return;
                 const data = await response.json();
@@ -1528,12 +1540,27 @@
                 
                 showStatus('Syncing from OneDrive...', false);
                 
-                const response = await authenticatedFetch('/api/onedrive/sync/pull', {
+                // Try authenticated endpoint first
+                let response = await authenticatedFetch('/api/onedrive/sync/pull', {
                     method: 'POST',
                     body: JSON.stringify({
                         merge_strategy: mergeStrategy
                     })
                 });
+                
+                // If that fails, try the simple endpoint
+                if (!response) {
+                    console.log('Trying simple OneDrive sync endpoint...');
+                    response = await fetch('/api/simple/onedrive/sync/pull', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            merge_strategy: mergeStrategy
+                        })
+                    });
+                }
                 
                 if (!response) return;
                 const data = await response.json();

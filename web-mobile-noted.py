@@ -832,7 +832,7 @@ def sync_to_onedrive():
         return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
     
     try:
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         if not onedrive_manager.is_authenticated():
             return jsonify({
@@ -865,7 +865,7 @@ def sync_from_onedrive():
         return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
     
     try:
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         if not onedrive_manager.is_authenticated():
             return jsonify({
@@ -1155,6 +1155,80 @@ def simple_onedrive_status():
             'auth_enabled': AUTH_ENABLED,
             'debug': True
         })
+
+@app.route('/api/simple/onedrive/sync/push', methods=['POST'])
+def simple_sync_to_onedrive():
+    """Sync local notes to OneDrive without login requirement"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        # Don't validate CSRF when auth is disabled
+        if AUTH_ENABLED:
+            validate_csrf(request.headers.get('X-CSRFToken'))
+        
+        if not onedrive_manager.is_authenticated():
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated with OneDrive'
+            }), 401
+        
+        # Load local notes
+        local_notes = load_notes()
+        
+        # Sync to OneDrive
+        result = onedrive_manager.sync_notes_to_cloud(local_notes)
+        
+        if result['success']:
+            # Save updated notes with OneDrive IDs
+            save_notes(result['notes'])
+            
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error syncing to OneDrive: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/simple/onedrive/sync/pull', methods=['POST'])
+def simple_sync_from_onedrive():
+    """Load notes from OneDrive without login requirement"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        # Don't validate CSRF when auth is disabled
+        if AUTH_ENABLED:
+            validate_csrf(request.headers.get('X-CSRFToken'))
+        
+        if not onedrive_manager.is_authenticated():
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated with OneDrive'
+            }), 401
+        
+        # Get merge strategy from request (default: 'replace')
+        data = request.get_json() or {}
+        merge_strategy = data.get('merge_strategy', 'replace')
+        
+        # Load from OneDrive
+        result = onedrive_manager.load_notes_from_cloud()
+        
+        if result['success']:
+            if merge_strategy == 'replace':
+                # Replace all local notes
+                save_notes(result['notes'])
+            elif merge_strategy == 'merge':
+                # Merge with local notes (OneDrive takes precedence for conflicts)
+                local_notes = load_notes()
+                local_notes.update(result['notes'])
+                save_notes(local_notes)
+                result['notes'] = local_notes
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error loading from OneDrive: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/simple/onedrive/auth/start', methods=['POST'])
 def simple_start_onedrive_auth():
