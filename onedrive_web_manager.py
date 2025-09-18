@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # --- Configuration ---
 CLIENT_ID = os.environ.get("NOTED_CLIENT_ID") 
 AUTHORITY = "https://login.microsoftonline.com/common"
-SCOPES = ["Files.ReadWrite.AppFolder", "User.Read", "offline_access"]
+SCOPES = ["https://graph.microsoft.com/Files.ReadWrite"]
 
 # API Endpoint for the app's special folder in the user's OneDrive
 GRAPH_API_ENDPOINT = "https://graph.microsoft.com/v1.0/me/drive/special/approot"
