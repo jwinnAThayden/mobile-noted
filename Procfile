@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT --workers 1 simple-diagnostic:app
+web: gunicorn --bind 0.0.0.0:$PORT --workers 1 super-simple-diagnostic:app
