@@ -9,7 +9,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 from flask_session import Session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_wtf.csrf import CSRFProtect, validate_csrf
+from flask_wtf.csrf import CSRFProtect, validate_csrf, CSRFError
 from werkzeug.security import check_password_hash, generate_password_hash
 import json
 import os
@@ -50,15 +50,6 @@ if not AUTH_ENABLED:
     print("INFO: Authentication disabled - NOTED_USERNAME and NOTED_PASSWORD_HASH not set")
     print("INFO: Running in open access mode for Railway deployment")
 
-# Initialize security extensions
-Session(app)
-csrf = CSRFProtect(app)
-limiter = Limiter(
-    key_func=get_remote_address,
-    app=app,
-    default_limits=["100 per hour", "20 per minute"]
-)
-
 # Configuration
 NOTES_DIR = os.path.join(os.path.dirname(__file__), 'web_notes')
 TRUSTED_DEVICES_FILE = os.path.join(NOTES_DIR, 'trusted_devices.json')
@@ -71,6 +62,21 @@ DEVICE_COOKIE_NAME = 'noted_device_id'
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Initialize security extensions after logger setup
+Session(app)
+if AUTH_ENABLED:
+    csrf = CSRFProtect(app)
+    logger.info("🛡️  CSRF protection enabled")
+else:
+    csrf = None
+    logger.info("⚠️  CSRF protection disabled (no authentication)")
+    
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=["100 per hour", "20 per minute"]
+)
 
 # Initialize OneDrive Manager
 onedrive_manager = None
@@ -933,6 +939,36 @@ def debug_onedrive():
         }
     }
     return jsonify(debug_info)
+
+@app.route('/api/simple/onedrive/status')
+def simple_onedrive_status():
+    """Simple OneDrive status without auth/CSRF - for debugging"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({
+            'available': False,
+            'authenticated': False,
+            'error': onedrive_error_message or 'OneDrive not available',
+            'auth_enabled': AUTH_ENABLED,
+            'debug': True
+        })
+    
+    try:
+        status = onedrive_manager.get_auth_status()
+        return jsonify({
+            'available': True,
+            'authenticated': status['authenticated'],
+            'account_info': status['account_info'],
+            'auth_enabled': AUTH_ENABLED,
+            'debug': True
+        })
+    except Exception as e:
+        return jsonify({
+            'available': True,
+            'authenticated': False,
+            'error': str(e),
+            'auth_enabled': AUTH_ENABLED,
+            'debug': True
+        })
 
 if __name__ == '__main__':
     # Only run development server if not in production
