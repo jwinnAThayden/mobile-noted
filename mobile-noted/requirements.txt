@@ -5,5 +5,9 @@ kivymd>=1.0.0
 plyer>=2.0.0
 pyenchant>=3.0.0
 
+# OneDrive integration dependencies
+msal>=1.20.0
+requests>=2.28.0
+
 # Note: android package is only available when building for Android with buildozer
 # It will be automatically included during the Android build process

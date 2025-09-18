@@ -18,6 +18,15 @@ except ImportError:
     SPELLCHECK_AVAILABLE = False
     print("Warning: pyenchant not installed. Spellcheck disabled.")
 
+# Import OneDrive manager for cloud sync
+try:
+    from onedrive_manager import OneDriveManager
+    ONEDRIVE_AVAILABLE = True
+except ImportError:
+    OneDriveManager = None
+    ONEDRIVE_AVAILABLE = False
+    print("Warning: OneDriveManager not available. Cloud sync disabled.")
+
 import kivy
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -564,6 +573,20 @@ class MobileNotedApp(App):
         self.onedrive_path = None
         self.custom_storage_path = None
         
+        # OneDrive Manager initialization for cloud sync
+        self.onedrive_manager = None
+        if ONEDRIVE_AVAILABLE:
+            try:
+                client_id = os.environ.get("NOTED_CLIENT_ID")
+                if client_id:
+                    self.onedrive_manager = OneDriveManager()
+                    Logger.info("MobileNoted: OneDrive Manager initialized successfully")
+                else:
+                    Logger.info("MobileNoted: NOTED_CLIENT_ID not set, OneDrive sync disabled")
+            except Exception as e:
+                Logger.error(f"MobileNoted: Failed to initialize OneDrive Manager: {e}")
+                self.onedrive_manager = None
+        
         # Storage
         self.setup_storage()
         
@@ -940,11 +963,81 @@ class MobileNotedApp(App):
         spellcheck_layout.add_widget(spellcheck_switch)
         content.add_widget(spellcheck_layout)
         
-        # OneDrive configuration (only on non-Android platforms)
+        # OneDrive Cloud Sync configuration
+        # Cloud sync status
+        cloud_status_text = "OneDrive: Not Connected"
+        if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+            cloud_status_text = "OneDrive: Connected ✓"
+        elif not ONEDRIVE_AVAILABLE:
+            cloud_status_text = "OneDrive: Not Available"
+            
+        cloud_status_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
+        cloud_status_layout.add_widget(Label(text=cloud_status_text, size_hint_x=0.7, color=(0, 1, 0, 1) if "Connected" in cloud_status_text else (1, 1, 1, 1)))
+        
+        # OneDrive auth button
+        if ONEDRIVE_AVAILABLE:
+            auth_text = "Logout" if (self.onedrive_manager and self.onedrive_manager.is_authenticated()) else "Connect"
+            auth_button = Button(text=auth_text, size_hint_x=0.3, background_color=(0.8, 0.2, 0.2, 1) if auth_text == "Logout" else (0.2, 0.8, 0.2, 1))
+            cloud_status_layout.add_widget(auth_button)
+        
+        content.add_widget(cloud_status_layout)
+        
+        # OneDrive sync buttons (only if available)
+        if ONEDRIVE_AVAILABLE:
+            sync_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=40, spacing=5)
+            
+            sync_now_button = Button(
+                text='Sync Now',
+                size_hint_x=0.5,
+                background_color=(0.2, 0.2, 0.8, 1),
+                disabled=not (self.onedrive_manager and self.onedrive_manager.is_authenticated())
+            )
+            
+            load_cloud_button = Button(
+                text='Load from Cloud',
+                size_hint_x=0.5,
+                background_color=(0.6, 0.2, 0.8, 1),
+                disabled=not (self.onedrive_manager and self.onedrive_manager.is_authenticated())
+            )
+            
+            sync_buttons_layout.add_widget(sync_now_button)
+            sync_buttons_layout.add_widget(load_cloud_button)
+            content.add_widget(sync_buttons_layout)
+            
+            # Bind OneDrive button events
+            def handle_auth_button(instance):
+                if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+                    # Logout
+                    if self.onedrive_manager.logout():
+                        auth_button.text = "Connect"
+                        auth_button.background_color = (0.2, 0.8, 0.2, 1)
+                        sync_now_button.disabled = True
+                        load_cloud_button.disabled = True
+                        cloud_status_layout.children[1].text = "OneDrive: Not Connected"
+                        cloud_status_layout.children[1].color = (1, 1, 1, 1)
+                else:
+                    # Start authentication
+                    popup.dismiss()
+                    self.show_onedrive_auth(instance)
+            
+            def handle_sync_now(instance):
+                popup.dismiss()
+                self.sync_to_onedrive(instance)
+            
+            def handle_load_cloud(instance):
+                popup.dismiss()
+                self.load_from_onedrive(instance)
+            
+            if ONEDRIVE_AVAILABLE:
+                auth_button.bind(on_press=handle_auth_button)
+                sync_now_button.bind(on_press=handle_sync_now)
+                load_cloud_button.bind(on_press=handle_load_cloud)
+
+        # OneDrive configuration (only on non-Android platforms for local folder detection)
         if platform != 'android':
-            # OneDrive enable/disable
+            # OneDrive enable/disable for local folder detection
             onedrive_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
-            onedrive_layout.add_widget(Label(text='Use OneDrive storage:', size_hint_x=0.7))
+            onedrive_layout.add_widget(Label(text='Use OneDrive local folder:', size_hint_x=0.7))
             
             onedrive_switch = Switch(active=self.use_onedrive, size_hint_x=0.3)
             onedrive_layout.add_widget(onedrive_switch)
@@ -952,7 +1045,7 @@ class MobileNotedApp(App):
             
             # OneDrive path display
             onedrive_path_display = Label(
-                text=f'OneDrive path: {self.onedrive_path or "Not detected"}',
+                text=f'OneDrive local path: {self.onedrive_path or "Not detected"}',
                 size_hint_y=None,
                 height=40,
                 text_size=(None, None),
@@ -1284,14 +1377,37 @@ Converted from desktop Noted app."""
         popup.open()
     
     def load_notes(self):
-        """Load notes from storage."""
+        """Load notes from storage with OneDrive sync."""
         try:
-            for note_id in self.notes_db.keys():
-                note_data = self.notes_db.get(note_id)
-                if note_data:
-                    note_card = NoteCard(note_data, self)
-                    self.notes.append(note_card)
-                    self.notes_container.add_widget(note_card)
+            # First try to load from OneDrive if authenticated
+            onedrive_loaded = False
+            if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+                try:
+                    onedrive_notes = self.onedrive_manager.list_notes()
+                    if onedrive_notes:
+                        Logger.info(f"Loading {len(onedrive_notes)} notes from OneDrive")
+                        for note_info in onedrive_notes:
+                            note_data = self.onedrive_manager.get_note(note_info["id"])
+                            if note_data:
+                                # Create note card with OneDrive ID
+                                note_card = NoteCard(note_data, self)
+                                setattr(note_card, 'onedrive_id', note_info["id"])
+                                self.notes.append(note_card)
+                                self.notes_container.add_widget(note_card)
+                        onedrive_loaded = True
+                except Exception as e:
+                    Logger.warning(f"Failed to load from OneDrive: {e}")
+            
+            # Load from local storage if OneDrive not available or failed
+            if not onedrive_loaded:
+                Logger.info("Loading notes from local storage")
+                for note_id in self.notes_db.keys():
+                    note_data = self.notes_db.get(note_id)
+                    if note_data:
+                        note_card = NoteCard(note_data, self)
+                        self.notes.append(note_card)
+                        self.notes_container.add_widget(note_card)
+                        
         except Exception as e:
             Logger.warning(f"Failed to load notes: {e}")
     
@@ -1300,9 +1416,35 @@ Converted from desktop Noted app."""
         return [child for child in self.notes_container.children if isinstance(child, NoteCard)]
     
     def save_note_data(self, note_id: str, note_data: Dict[str, Any]):
-        """Save note data to storage."""
+        """Save note data to storage with OneDrive sync."""
         try:
+            # Save to local storage first
             self.notes_db.put(note_id, **note_data)
+            
+            # Sync to OneDrive if authenticated and available
+            if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+                try:
+                    # Find the note card to get OneDrive ID
+                    onedrive_id = None
+                    for note in self.notes:
+                        if getattr(note, 'note_id', None) == note_id:
+                            onedrive_id = getattr(note, 'onedrive_id', None)
+                            break
+                    
+                    # Save to OneDrive
+                    saved_id = self.onedrive_manager.save_note(note_data, onedrive_id)
+                    
+                    # Update local note with OneDrive ID if new
+                    if saved_id and not onedrive_id:
+                        for note in self.notes:
+                            if getattr(note, 'note_id', None) == note_id:
+                                setattr(note, 'onedrive_id', saved_id)
+                                break
+                    
+                except Exception as e:
+                    Logger.warning(f"OneDrive sync failed during save: {e}")
+                    # Continue with local save even if OneDrive fails
+                    
         except Exception as e:
             Logger.warning(f"Failed to save note data: {e}")
     
@@ -1374,6 +1516,336 @@ Converted from desktop Noted app."""
     def on_resume(self):
         """Handle app resume (Android)."""
         pass
+
+    # === OneDrive Cloud Sync Methods ===
+    
+    def show_onedrive_auth(self, instance):
+        """Show OneDrive authentication dialog."""
+        if not self.onedrive_manager:
+            self._show_error_popup("OneDrive Not Available", "OneDrive integration is not available. Please check your configuration.")
+            return
+            
+        if self.onedrive_manager.is_authenticated():
+            self._show_onedrive_account_info()
+        else:
+            self._start_onedrive_authentication()
+    
+    def _start_onedrive_authentication(self):
+        """Start the OneDrive authentication process."""
+        try:
+            user_code, verification_url, flow = self.onedrive_manager.start_device_flow_auth()
+            
+            if not user_code:
+                self._show_error_popup("Authentication Error", "Failed to start OneDrive authentication. Please try again.")
+                return
+                
+            # Create authentication popup
+            content = BoxLayout(orientation='vertical', padding=20, spacing=15)
+            
+            # Instructions
+            instructions = Label(
+                text="To authenticate with OneDrive:",
+                font_size='16sp',
+                color=(1, 1, 1, 1),
+                size_hint_y=None,
+                height='40dp'
+            )
+            content.add_widget(instructions)
+            
+            # User code display
+            code_label = Label(
+                text=f"Device Code: [b]{user_code}[/b]",
+                markup=True,
+                font_size='20sp',
+                color=(0.2, 0.8, 0.2, 1),
+                size_hint_y=None,
+                height='50dp'
+            )
+            content.add_widget(code_label)
+            
+            # URL display
+            url_label = Label(
+                text=f"Visit: {verification_url}",
+                font_size='14sp',
+                color=(0.5, 0.5, 1, 1),
+                size_hint_y=None,
+                height='40dp'
+            )
+            content.add_widget(url_label)
+            
+            # Status label
+            status_label = Label(
+                text="Waiting for authentication...",
+                font_size='14sp',
+                color=(1, 1, 0, 1),
+                size_hint_y=None,
+                height='40dp'
+            )
+            content.add_widget(status_label)
+            
+            # Buttons
+            button_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height='50dp', spacing=10)
+            
+            cancel_button = Button(
+                text='Cancel',
+                size_hint_x=0.5,
+                background_color=(0.7, 0.3, 0.3, 1)
+            )
+            button_layout.add_widget(cancel_button)
+            
+            content.add_widget(button_layout)
+            
+            # Create popup
+            popup = Popup(
+                title='OneDrive Authentication',
+                content=content,
+                size_hint=(0.9, 0.7),
+                auto_dismiss=False
+            )
+            
+            # Complete authentication in background
+            def complete_auth():
+                auth_thread = self.onedrive_manager.complete_device_flow_auth(flow)
+                
+                # Monitor authentication
+                def check_auth_status(dt):
+                    if not auth_thread.is_alive():
+                        # Authentication completed
+                        if self.onedrive_manager.is_authenticated():
+                            status_label.text = "Authentication successful! Syncing notes..."
+                            status_label.color = (0, 1, 0, 1)
+                            Clock.schedule_once(lambda dt: self._complete_onedrive_setup(popup), 2)
+                        else:
+                            status_label.text = "Authentication failed. Please try again."
+                            status_label.color = (1, 0, 0, 1)
+                        return False  # Stop checking
+                    return True  # Continue checking
+                
+                Clock.schedule_interval(check_auth_status, 1.0)
+            
+            cancel_button.bind(on_press=popup.dismiss)
+            
+            popup.open()
+            complete_auth()
+            
+        except Exception as e:
+            Logger.error(f"OneDrive authentication error: {e}")
+            self._show_error_popup("Authentication Error", f"Failed to authenticate with OneDrive: {str(e)}")
+    
+    def _complete_onedrive_setup(self, auth_popup):
+        """Complete OneDrive setup after successful authentication."""
+        auth_popup.dismiss()
+        
+        # Sync existing notes to OneDrive
+        self.sync_to_onedrive()
+        
+        # Show success message
+        self._show_info_popup("OneDrive Connected", "OneDrive authentication successful! Your notes will now be synced to the cloud.")
+    
+    def _show_onedrive_account_info(self):
+        """Show OneDrive account information and logout option."""
+        content = BoxLayout(orientation='vertical', padding=20, spacing=15)
+        
+        info_label = Label(
+            text="OneDrive Account Connected",
+            font_size='18sp',
+            color=(0, 1, 0, 1),
+            size_hint_y=None,
+            height='50dp'
+        )
+        content.add_widget(info_label)
+        
+        # Buttons
+        button_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height='50dp', spacing=10)
+        
+        sync_button = Button(
+            text='Sync Now',
+            size_hint_x=0.33,
+            background_color=(0.2, 0.8, 0.2, 1)
+        )
+        
+        logout_button = Button(
+            text='Logout',
+            size_hint_x=0.33,
+            background_color=(0.8, 0.2, 0.2, 1)
+        )
+        
+        close_button = Button(
+            text='Close',
+            size_hint_x=0.33,
+            background_color=(0.5, 0.5, 0.5, 1)
+        )
+        
+        button_layout.add_widget(sync_button)
+        button_layout.add_widget(logout_button)
+        button_layout.add_widget(close_button)
+        content.add_widget(button_layout)
+        
+        popup = Popup(
+            title='OneDrive Status',
+            content=content,
+            size_hint=(0.8, 0.4),
+            auto_dismiss=False
+        )
+        
+        def sync_now(instance):
+            popup.dismiss()
+            self.sync_to_onedrive()
+        
+        def logout_onedrive(instance):
+            if self.onedrive_manager.logout():
+                popup.dismiss()
+                self._show_info_popup("OneDrive", "Logged out of OneDrive successfully.")
+            else:
+                self._show_error_popup("OneDrive", "Failed to logout of OneDrive.")
+        
+        sync_button.bind(on_press=sync_now)
+        logout_button.bind(on_press=logout_onedrive)
+        close_button.bind(on_press=popup.dismiss)
+        
+        popup.open()
+    
+    def sync_to_onedrive(self, instance=None):
+        """Sync all local notes to OneDrive."""
+        if not self.onedrive_manager or not self.onedrive_manager.is_authenticated():
+            self._show_error_popup("OneDrive Sync", "OneDrive is not connected. Please authenticate first.")
+            return
+        
+        try:
+            # Collect current notes data
+            notes_data = {}
+            for note in self.notes:
+                note_id = getattr(note, 'note_id', str(uuid.uuid4()))
+                notes_data[note_id] = {
+                    "title": getattr(note, 'title', 'Untitled'),
+                    "text": note.text_input.text,
+                    "created": getattr(note, 'created_date', datetime.now().isoformat()),
+                    "modified": datetime.now().isoformat(),
+                    "note_id": note_id
+                }
+            
+            # Perform sync
+            synced_data = self.onedrive_manager.sync_local_notes(notes_data)
+            
+            # Update notes with OneDrive IDs
+            for note_id, note_data in synced_data.items():
+                for note in self.notes:
+                    if getattr(note, 'note_id', None) == note_id:
+                        if 'onedrive_id' in note_data:
+                            note.onedrive_id = note_data['onedrive_id']
+                        break
+            
+            self._show_info_popup("OneDrive Sync", f"Successfully synced {len(synced_data)} notes to OneDrive.")
+            
+        except Exception as e:
+            Logger.error(f"OneDrive sync error: {e}")
+            self._show_error_popup("OneDrive Sync Error", f"Failed to sync notes: {str(e)}")
+    
+    def load_from_onedrive(self, instance=None):
+        """Load notes from OneDrive."""
+        if not self.onedrive_manager or not self.onedrive_manager.is_authenticated():
+            self._show_error_popup("OneDrive Load", "OneDrive is not connected. Please authenticate first.")
+            return
+        
+        try:
+            # Get OneDrive notes
+            onedrive_notes = self.onedrive_manager.list_notes()
+            
+            if not onedrive_notes:
+                self._show_info_popup("OneDrive Load", "No notes found in OneDrive.")
+                return
+            
+            # Load each note
+            loaded_count = 0
+            for note_info in onedrive_notes:
+                note_data = self.onedrive_manager.get_note(note_info["id"])
+                if note_data:
+                    # Create new note card
+                    self.add_note_from_data(note_data, note_info["id"])
+                    loaded_count += 1
+            
+            self._show_info_popup("OneDrive Load", f"Successfully loaded {loaded_count} notes from OneDrive.")
+            
+        except Exception as e:
+            Logger.error(f"OneDrive load error: {e}")
+            self._show_error_popup("OneDrive Load Error", f"Failed to load notes: {str(e)}")
+    
+    def add_note_from_data(self, note_data, onedrive_id=None):
+        """Add a note card from data (used for OneDrive loading)."""
+        note_card = NoteCard(app=self)
+        
+        # Set note data
+        note_card.text_input.text = note_data.get("text", "")
+        note_card.title = note_data.get("title", "Untitled")
+        note_card.note_id = note_data.get("note_id", str(uuid.uuid4()))
+        note_card.created_date = note_data.get("created", datetime.now().isoformat())
+        
+        if onedrive_id:
+            note_card.onedrive_id = onedrive_id
+        
+        self.notes.append(note_card)
+        self.notes_container.add_widget(note_card)
+        
+        return note_card
+    
+    def _show_info_popup(self, title, message):
+        """Show information popup."""
+        content = BoxLayout(orientation='vertical', padding=20, spacing=15)
+        
+        label = Label(
+            text=message,
+            text_size=(None, None),
+            halign='center',
+            valign='middle'
+        )
+        content.add_widget(label)
+        
+        ok_button = Button(
+            text='OK',
+            size_hint_y=None,
+            height='50dp',
+            background_color=(0.2, 0.8, 0.2, 1)
+        )
+        content.add_widget(ok_button)
+        
+        popup = Popup(
+            title=title,
+            content=content,
+            size_hint=(0.8, 0.4)
+        )
+        
+        ok_button.bind(on_press=popup.dismiss)
+        popup.open()
+    
+    def _show_error_popup(self, title, message):
+        """Show error popup."""
+        content = BoxLayout(orientation='vertical', padding=20, spacing=15)
+        
+        label = Label(
+            text=message,
+            text_size=(None, None),
+            halign='center',
+            valign='middle',
+            color=(1, 0.3, 0.3, 1)
+        )
+        content.add_widget(label)
+        
+        ok_button = Button(
+            text='OK',
+            size_hint_y=None,
+            height='50dp',
+            background_color=(0.8, 0.2, 0.2, 1)
+        )
+        content.add_widget(ok_button)
+        
+        popup = Popup(
+            title=title,
+            content=content,
+            size_hint=(0.8, 0.4)
+        )
+        
+        ok_button.bind(on_press=popup.dismiss)
+        popup.open()
 
 
 if __name__ == '__main__':

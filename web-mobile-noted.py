@@ -955,6 +955,48 @@ def debug_onedrive():
     }
     return jsonify(debug_info)
 
+@app.route('/onedrive/setup')
+def onedrive_setup_guide():
+    """OneDrive setup instructions - user-friendly guide"""
+    client_id = os.environ.get('NOTED_CLIENT_ID')
+    
+    if client_id:
+        status = "✅ NOTED_CLIENT_ID is configured"
+        if ONEDRIVE_AVAILABLE and onedrive_manager:
+            message = "🎉 OneDrive is fully configured and ready!"
+            next_steps = ["Click the OneDrive button in your app to start authentication"]
+        else:
+            message = "⚠️ OneDrive configuration found but initialization failed"
+            next_steps = [
+                "Check that your Client ID is correct",
+                "Ensure your Azure App Registration allows device flow",
+                f"Current error: {onedrive_error_message or 'Unknown'}"
+            ]
+    else:
+        status = "❌ NOTED_CLIENT_ID not set"
+        message = "🔧 OneDrive setup required"
+        next_steps = [
+            "1. Go to Azure Portal (portal.azure.com)",
+            "2. Navigate to Azure Active Directory → App registrations",
+            "3. Click 'New registration'",
+            "4. Name: 'Mobile Noted Railway'",
+            "5. Redirect URI: https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "6. Copy the 'Application (client) ID'",
+            "7. In Railway: Project → Variables → Add NOTED_CLIENT_ID",
+            "8. Paste the Client ID as the value",
+            "9. Railway will automatically redeploy"
+        ]
+    
+    return jsonify({
+        'status': status,
+        'message': message,
+        'client_id_configured': bool(client_id),
+        'onedrive_ready': ONEDRIVE_AVAILABLE and onedrive_manager is not None,
+        'next_steps': next_steps,
+        'debug_url': '/debug/onedrive',
+        'test_url': '/test/onedrive/auth'
+    })
+
 @app.route('/test/onedrive/auth')
 def test_onedrive_auth():
     """Test OneDrive authentication setup without session requirements"""
@@ -1008,18 +1050,39 @@ def test_onedrive_auth():
 @app.route('/api/simple/onedrive/status')
 def simple_onedrive_status():
     """Simple OneDrive status without auth/CSRF - for debugging"""
+    client_id = os.environ.get('NOTED_CLIENT_ID')
+    
     if not ONEDRIVE_AVAILABLE or not onedrive_manager:
-        # Check if it's a missing client ID issue
-        if not os.environ.get('NOTED_CLIENT_ID'):
-            error_message = 'OneDrive setup required: NOTED_CLIENT_ID environment variable missing. Set it in Railway dashboard with your Azure App Registration Client ID.'
+        # Provide detailed diagnostic information
+        if not client_id:
+            error_message = '🔑 OneDrive Setup Required: Set NOTED_CLIENT_ID environment variable in Railway dashboard.'
+            setup_instructions = {
+                'step1': 'Go to Railway dashboard → Your Project → Variables',
+                'step2': 'Add variable: NOTED_CLIENT_ID',
+                'step3': 'Value: Your Azure App Registration Client ID',
+                'step4': 'App will automatically redeploy with OneDrive enabled'
+            }
         else:
-            error_message = onedrive_error_message or 'OneDrive dependencies not available'
+            error_message = f'⚠️ OneDrive initialization failed: {onedrive_error_message or "Unknown error"}'
+            setup_instructions = {
+                'issue': 'OneDrive manager failed to initialize',
+                'client_id_length': len(client_id),
+                'possible_causes': ['Invalid Client ID format', 'MSAL library issue', 'Network connectivity']
+            }
             
         return jsonify({
             'available': False,
             'authenticated': False,
             'error': error_message,
-            'setup_required': not bool(os.environ.get('NOTED_CLIENT_ID')),
+            'setup_required': not bool(client_id),
+            'setup_instructions': setup_instructions,
+            'debug_info': {
+                'client_id_set': bool(client_id),
+                'client_id_length': len(client_id) if client_id else 0,
+                'onedrive_available': ONEDRIVE_AVAILABLE,
+                'manager_exists': onedrive_manager is not None,
+                'init_error': onedrive_error_message
+            },
             'auth_enabled': AUTH_ENABLED,
             'debug': True
         })

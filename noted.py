@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, simpledialog
 from tkinter import ttk
 import os
 import json
@@ -13,6 +13,13 @@ import requests
 import configparser
 import tkinter.font as tkfont
 import hashlib
+import webbrowser
+
+# Import OneDrive manager for cloud sync
+try:
+    from onedrive_manager import OneDriveManager
+except ImportError:
+    OneDriveManager = None
 
 
 class EditableBoxApp:
@@ -53,6 +60,20 @@ class EditableBoxApp:
         
         # View mode tracking - "paned" or "tabbed"
         self.current_view_mode = "paned"  # Start in paned mode, then switch to tabbed
+        
+        # OneDrive Manager initialization
+        self.onedrive_manager = None
+        if OneDriveManager:
+            try:
+                client_id = os.environ.get("NOTED_CLIENT_ID")
+                if client_id:
+                    self.onedrive_manager = OneDriveManager()
+                    print("DEBUG: OneDrive Manager initialized successfully")
+                else:
+                    print("DEBUG: NOTED_CLIENT_ID not set, OneDrive sync disabled")
+            except Exception as e:
+                print(f"DEBUG: Failed to initialize OneDrive Manager: {e}")
+                self.onedrive_manager = None
         self.notebook = None  # Will hold ttk.Notebook when in tabbed mode
 
         # Load last layout silently if it exists
@@ -83,6 +104,7 @@ class EditableBoxApp:
             {"label": "Equalize Boxes", "cmd": self.equalize_boxes, "style": {"bg": "#ADD8E6"}},  # light blue
             {"label": "Auto-Save Config", "cmd": self.configure_auto_save, "style": {"bg": "#DDA0DD"}},  # plum
             {"label": "AI Config", "cmd": self._set_ai_api_key, "style": {"bg": "#FFB6C1", "fg": "black"}},  # light pink
+            {"label": "Sync OneDrive", "cmd": self.authenticate_onedrive, "style": {"bg": "#0078D4", "fg": "white"}},  # Microsoft blue
             {"label": "Config Location", "cmd": self.show_config_location, "style": {"bg": "#98FB98", "fg": "black"}},  # pale green
             {"label": "About", "cmd": self.show_about, "style": {"bg": "#F0E68C", "fg": "black"}},  # khaki
             # Unified font button (left-click increases; right-click opens menu)
@@ -483,6 +505,37 @@ class EditableBoxApp:
                     except Exception:
                         pass
             self.text_boxes = []
+            
+            # First try to load from OneDrive if authenticated
+            if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+                print("DEBUG: OneDrive authenticated, loading notes from cloud...")
+                try:
+                    notes = self.onedrive_manager.list_notes()
+                    if notes:
+                        print(f"DEBUG: Found {len(notes)} notes in OneDrive")
+                        for note_item in notes:
+                            file_name = note_item.get("name", "")
+                            item_id = note_item.get("id", "")
+                            
+                            if file_name and item_id:
+                                note_data = self.onedrive_manager.get_note_content(item_id)
+                                if note_data and isinstance(note_data, dict):
+                                    content = note_data.get("content", "")
+                                    # Use the file name (without .json) as the note title
+                                    title = file_name.replace(".json", "") if file_name.endswith(".json") else file_name
+                                    self.add_text_box(content=content, file_path=f"onedrive:{item_id}", onedrive_name=title)
+                        
+                        print(f"DEBUG: Successfully loaded {len(notes)} notes from OneDrive")
+                        return  # Skip local layout loading
+                    else:
+                        print("DEBUG: No notes found in OneDrive, falling back to local layout")
+                except Exception as e:
+                    print(f"DEBUG: Failed to load from OneDrive: {e}")
+                    print("DEBUG: Falling back to local layout")
+            else:
+                print("DEBUG: OneDrive not authenticated, loading from local layout")
+            
+            # Load from local layout file (fallback or default behavior)
             layout = None
             if os.path.exists(self.layout_file):
                 try:
@@ -680,6 +733,441 @@ class EditableBoxApp:
             ttk.Button(btns, text="Close", command=win.destroy).pack(side="right")
         except Exception as e:
             messagebox.showerror("Error", f"Could not show about dialog: {e}")
+    
+    # OneDrive Integration Methods
+    def authenticate_onedrive(self):
+        """Initiate OneDrive authentication."""
+        if not self.onedrive_manager:
+            if not OneDriveManager:
+                messagebox.showerror("OneDrive Error", "OneDrive sync is not available. Please ensure the required dependencies are installed.")
+                return
+            client_id = os.environ.get("NOTED_CLIENT_ID")
+            if not client_id:
+                messagebox.showerror("OneDrive Error", "OneDrive sync is not configured. Please set the NOTED_CLIENT_ID environment variable with your Azure App Registration client ID.")
+                return
+            try:
+                self.onedrive_manager = OneDriveManager()
+            except Exception as e:
+                messagebox.showerror("OneDrive Error", f"Failed to initialize OneDrive Manager: {e}")
+                return
+
+        def auth_and_reload():
+            """Background authentication thread"""
+            try:
+                flow = self.onedrive_manager.app.initiate_device_flow(scopes=self.onedrive_manager.SCOPES)
+                if "user_code" not in flow:
+                    self.root.after(0, lambda: messagebox.showerror("Authentication Failed", "Could not initiate device flow."))
+                    return
+
+                # Show authentication dialog
+                self.root.after(0, lambda: self._show_auth_dialog(flow))
+                
+                # Wait for user to complete authentication
+                result = self.onedrive_manager.app.acquire_token_by_device_flow(flow)
+                
+                if result and "access_token" in result:
+                    self.onedrive_manager.access_token = result["access_token"]
+                    self.onedrive_manager.account = self.onedrive_manager.get_account()
+                    self.onedrive_manager._save_cache()
+                    
+                    # Show success and offer to load notes
+                    user_info = self.onedrive_manager.get_user_info()
+                    user_name = user_info.get("name", "Unknown") if user_info else "Unknown"
+                    
+                    def success_callback():
+                        result = messagebox.askyesno("OneDrive Connected", 
+                            f"Successfully connected to OneDrive as {user_name}!\n\nWould you like to load your notes from OneDrive now?")
+                        if result:
+                            self._load_notes_from_onedrive()
+                    
+                    self.root.after(0, success_callback)
+                else:
+                    self.root.after(0, lambda: messagebox.showerror("Authentication Failed", "Authentication failed or was cancelled."))
+                    
+            except Exception as e:
+                self.root.after(0, lambda: messagebox.showerror("Authentication Error", f"Authentication error: {e}"))
+
+        # Start authentication in background thread
+        threading.Thread(target=auth_and_reload, daemon=True).start()
+
+    def _show_auth_dialog(self, flow):
+        """Show non-blocking authentication dialog with device code"""
+        auth_window = tk.Toplevel(self.root)
+        auth_window.title("OneDrive Authentication")
+        auth_window.geometry("450x300")
+        auth_window.transient(self.root)
+        auth_window.grab_set()
+        
+        # Center the window
+        auth_window.update_idletasks()
+        x = (auth_window.winfo_screenwidth() // 2) - (auth_window.winfo_width() // 2)
+        y = (auth_window.winfo_screenheight() // 2) - (auth_window.winfo_height() // 2)
+        auth_window.geometry(f"+{x}+{y}")
+        
+        main_frame = tk.Frame(auth_window, padx=20, pady=20)
+        main_frame.pack(fill="both", expand=True)
+        
+        tk.Label(main_frame, text="OneDrive Authentication", font=("Segoe UI", 14, "bold")).pack(pady=(0, 10))
+        tk.Label(main_frame, text="Please complete the following steps:", font=("Segoe UI", 10)).pack(pady=(0, 15))
+        
+        steps_frame = tk.Frame(main_frame)
+        steps_frame.pack(fill="x", pady=(0, 15))
+        
+        tk.Label(steps_frame, text="1. Click the button below to open Microsoft sign-in", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+        
+        button_frame = tk.Frame(steps_frame)
+        button_frame.pack(fill="x", pady=(5, 10))
+        
+        def open_browser():
+            webbrowser.open(flow['verification_uri'])
+        
+        tk.Button(button_frame, text="Open Microsoft Sign-in", command=open_browser, 
+                 bg="#0078D4", fg="white", font=("Segoe UI", 9, "bold")).pack(side="left")
+        
+        tk.Label(steps_frame, text="2. Enter this code when prompted:", font=("Segoe UI", 9)).pack(anchor="w", pady=(5, 2))
+        
+        code_frame = tk.Frame(steps_frame)
+        code_frame.pack(fill="x", pady=(0, 10))
+        
+        code_entry = tk.Entry(code_frame, font=("Consolas", 12, "bold"), justify="center", 
+                             bg="#f0f0f0", state="readonly")
+        code_entry.insert(0, flow['user_code'])
+        code_entry.pack(fill="x", pady=2)
+        
+        def copy_code():
+            auth_window.clipboard_clear()
+            auth_window.clipboard_append(flow['user_code'])
+            copy_btn.config(text="Copied!", state="disabled")
+            auth_window.after(2000, lambda: copy_btn.config(text="Copy Code", state="normal"))
+        
+        copy_btn = tk.Button(code_frame, text="Copy Code", command=copy_code, font=("Segoe UI", 8))
+        copy_btn.pack(pady=5)
+        
+        tk.Label(steps_frame, text="3. Complete sign-in in your browser, then close this dialog", font=("Segoe UI", 9)).pack(anchor="w", pady=(5, 2))
+        
+        button_bottom = tk.Frame(main_frame)
+        button_bottom.pack(fill="x", pady=(10, 0))
+        
+        tk.Button(button_bottom, text="Close", command=auth_window.destroy).pack(side="right")
+        
+        # Auto-open browser
+        webbrowser.open(flow['verification_uri'])
+
+    def _load_notes_from_onedrive(self):
+        """Load notes from OneDrive and populate the UI"""
+        if not self.onedrive_manager or not self.onedrive_manager.is_authenticated():
+            messagebox.showwarning("OneDrive", "Not authenticated with OneDrive. Please sync first.")
+            return
+        
+        try:
+            # Clear existing boxes first
+            self._clear_all_boxes()
+            
+            notes = self.onedrive_manager.list_notes()
+            if not notes:
+                messagebox.showinfo("OneDrive", "No notes found in your OneDrive app folder. The app folder will be created when you save your first note.")
+                self.add_text_box()  # Add empty box
+                return
+            
+            # Load each note
+            for note_item in notes:
+                file_name = note_item.get("name", "")
+                item_id = note_item.get("id", "")
+                
+                if file_name and item_id:
+                    note_data = self.onedrive_manager.get_note_content(item_id)
+                    if note_data and isinstance(note_data, dict):
+                        content = note_data.get("content", "")
+                        # Use the file name (without .json) as the note title
+                        title = file_name.replace(".json", "") if file_name.endswith(".json") else file_name
+                        self.add_text_box(content=content, file_path=f"onedrive:{item_id}", onedrive_name=title)
+            
+            messagebox.showinfo("OneDrive", f"Loaded {len(notes)} notes from OneDrive!")
+            
+        except Exception as e:
+            messagebox.showerror("OneDrive Error", f"Failed to load notes from OneDrive: {e}")
+
+    def _clear_all_boxes(self):
+        """Clear all text boxes from the current view"""
+        if self.current_view_mode == "tabbed" and hasattr(self, 'notebook') and self.notebook:
+            # Clear all tabs
+            for i in reversed(range(len(self.notebook.tabs()))):
+                self.notebook.forget(i)
+        elif self.current_view_mode == "paned":
+            # Clear paned boxes
+            for box in self.text_boxes:
+                outer_frame = box.get("outer_frame")
+                if outer_frame and outer_frame.winfo_exists():
+                    outer_frame.destroy()
+        
+        # Clear the text_boxes list
+        self.text_boxes = []
+
+    def _save_to_onedrive_by_id(self, content, item_id, file_title):
+        """Save content to an existing OneDrive file by item ID"""
+        try:
+            # Get the current file name to preserve it
+            notes = self.onedrive_manager.list_notes()
+            file_name = None
+            for note in notes:
+                if note.get("id") == item_id:
+                    file_name = note.get("name")
+                    break
+            
+            if not file_name:
+                file_name = "note.json"  # Fallback
+            
+            # Create note data structure
+            note_data = {
+                "content": content,
+                "last_modified": time.time(),
+                "title": file_title.cget("text") if file_title else "Untitled"
+            }
+            
+            # Save to OneDrive
+            result = self.onedrive_manager.save_note(file_name, note_data)
+            if result:
+                # Update the box as saved
+                for box in self.text_boxes:
+                    text_widget = box.get("text_box")
+                    if text_widget and text_widget.get("1.0", tk.END).strip() == content:
+                        box["saved"] = True
+                        self._set_box_saved_sig(box, text_widget)
+                        try:
+                            idx = self.text_boxes.index(box)
+                            self._update_dirty_indicator(idx)
+                        except Exception:
+                            pass
+                        break
+                
+                print(f"DEBUG: Successfully saved to OneDrive: {file_name}")
+            else:
+                messagebox.showerror("OneDrive Error", "Failed to save to OneDrive")
+                
+        except Exception as e:
+            messagebox.showerror("OneDrive Error", f"Failed to save to OneDrive: {e}")
+
+    def _save_new_to_onedrive(self, content, text_box, file_title):
+        """Save new content to OneDrive with a new file name"""
+        try:
+            # Prompt for file name
+            file_name = simpledialog.askstring("Save to OneDrive", 
+                "Enter a name for your note:", 
+                initialvalue="New Note")
+            
+            if not file_name:
+                return
+            
+            # Ensure .json extension
+            if not file_name.endswith(".json"):
+                file_name += ".json"
+            
+            # Create note data structure
+            note_data = {
+                "content": content,
+                "last_modified": time.time(),
+                "title": file_name.replace(".json", "")
+            }
+            
+            # Save to OneDrive
+            result = self.onedrive_manager.save_note(file_name, note_data)
+            if result:
+                item_id = result.get("id")
+                if item_id:
+                    # Update the box with OneDrive path
+                    for box in self.text_boxes:
+                        if box.get("text_box") == text_box:
+                            box["file_path"] = f"onedrive:{item_id}"
+                            box["saved"] = True
+                            self._set_box_saved_sig(box, text_box)
+                            try:
+                                idx = self.text_boxes.index(box)
+                                self._update_dirty_indicator(idx)
+                            except Exception:
+                                pass
+                            break
+                    
+                    # Update file title
+                    if file_title:
+                        display_name = note_data["title"]
+                        file_title.config(text=display_name)
+                    
+                    print(f"DEBUG: Successfully saved new note to OneDrive: {file_name}")
+                    messagebox.showinfo("OneDrive", f"Note saved to OneDrive as '{note_data['title']}'")
+            else:
+                messagebox.showerror("OneDrive Error", "Failed to save to OneDrive")
+                
+        except Exception as e:
+            messagebox.showerror("OneDrive Error", f"Failed to save to OneDrive: {e}")
+
+    def _open_from_onedrive(self):
+        """Show dialog to select and open notes from OneDrive"""
+        try:
+            notes = self.onedrive_manager.list_notes()
+            if not notes:
+                messagebox.showinfo("OneDrive", "No notes found in your OneDrive app folder.")
+                return
+            
+            # Create selection dialog
+            selection_window = tk.Toplevel(self.root)
+            selection_window.title("Open from OneDrive")
+            selection_window.geometry("500x400")
+            selection_window.transient(self.root)
+            selection_window.grab_set()
+            
+            # Center the window
+            selection_window.update_idletasks()
+            x = (selection_window.winfo_screenwidth() // 2) - (selection_window.winfo_width() // 2)
+            y = (selection_window.winfo_screenheight() // 2) - (selection_window.winfo_height() // 2)
+            selection_window.geometry(f"+{x}+{y}")
+            
+            main_frame = tk.Frame(selection_window, padx=20, pady=20)
+            main_frame.pack(fill="both", expand=True)
+            
+            tk.Label(main_frame, text="Select OneDrive Notes to Open", font=("Segoe UI", 12, "bold")).pack(pady=(0, 10))
+            
+            # Scrollable listbox
+            list_frame = tk.Frame(main_frame)
+            list_frame.pack(fill="both", expand=True, pady=(0, 10))
+            
+            listbox = tk.Listbox(list_frame, selectmode=tk.MULTIPLE, font=("Segoe UI", 10))
+            scrollbar = tk.Scrollbar(list_frame, orient=tk.VERTICAL, command=listbox.yview)
+            listbox.config(yscrollcommand=scrollbar.set)
+            
+            # Populate with notes
+            for i, note in enumerate(notes):
+                name = note.get("name", "").replace(".json", "")
+                # Try to get some content preview
+                try:
+                    item_id = note.get("id")
+                    note_data = self.onedrive_manager.get_note_content(item_id)
+                    if note_data:
+                        content = note_data.get("content", "")[:50]  # First 50 chars
+                        if len(content) < len(note_data.get("content", "")):
+                            content += "..."
+                        display_text = f"{name} - {content}"
+                    else:
+                        display_text = name
+                except Exception:
+                    display_text = name
+                
+                listbox.insert(tk.END, display_text)
+            
+            listbox.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+            
+            # Buttons
+            button_frame = tk.Frame(main_frame)
+            button_frame.pack(fill="x", pady=(10, 0))
+            
+            def open_selected():
+                selected_indices = listbox.curselection()
+                if not selected_indices:
+                    messagebox.showwarning("No Selection", "Please select one or more notes to open.")
+                    return
+                
+                # Open each selected note
+                for index in selected_indices:
+                    note = notes[index]
+                    item_id = note.get("id")
+                    name = note.get("name", "").replace(".json", "")
+                    
+                    try:
+                        note_data = self.onedrive_manager.get_note_content(item_id)
+                        if note_data:
+                            content = note_data.get("content", "")
+                            self.add_text_box(content=content, file_path=f"onedrive:{item_id}", onedrive_name=name)
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Failed to open {name}: {e}")
+                
+                selection_window.destroy()
+            
+            def select_all():
+                listbox.select_set(0, tk.END)
+            
+            def cancel():
+                selection_window.destroy()
+            
+            tk.Button(button_frame, text="Select All", command=select_all).pack(side="left", padx=(0, 10))
+            tk.Button(button_frame, text="Cancel", command=cancel).pack(side="right")
+            tk.Button(button_frame, text="Open Selected", command=open_selected, 
+                     bg="#0078D4", fg="white", font=("Segoe UI", 9, "bold")).pack(side="right", padx=(0, 10))
+            
+        except Exception as e:
+            messagebox.showerror("OneDrive Error", f"Failed to load OneDrive notes: {e}")
+
+    def _save_all_to_onedrive_on_exit(self):
+        """Save all unsaved notes to OneDrive before exit"""
+        try:
+            unsaved_count = 0
+            saved_count = 0
+            
+            for box_data in self.text_boxes:
+                text_widget = box_data.get("text_box")
+                file_path = box_data.get("file_path", "")
+                
+                if not text_widget:
+                    continue
+                
+                content = text_widget.get("1.0", tk.END).strip()
+                if not content:
+                    continue  # Skip empty boxes
+                
+                try:
+                    # Check if this is an existing OneDrive file
+                    if file_path.startswith("onedrive:"):
+                        item_id = file_path.replace("onedrive:", "")
+                        if item_id:
+                            self._save_to_onedrive_by_id(content, item_id, None)
+                            saved_count += 1
+                    elif file_path:
+                        # Existing local file - ask if they want to move to OneDrive
+                        filename = os.path.basename(file_path)
+                        note_data = {
+                            "content": content,
+                            "last_modified": time.time(),
+                            "title": filename.replace(".txt", "")
+                        }
+                        
+                        json_filename = note_data["title"] + ".json"
+                        result = self.onedrive_manager.save_note(json_filename, note_data)
+                        if result:
+                            saved_count += 1
+                            print(f"DEBUG: Moved {filename} to OneDrive")
+                    else:
+                        # New unsaved content - save to OneDrive with auto-generated name
+                        unsaved_count += 1
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        note_data = {
+                            "content": content,
+                            "last_modified": time.time(),
+                            "title": f"Untitled_{timestamp}"
+                        }
+                        
+                        json_filename = note_data["title"] + ".json"
+                        result = self.onedrive_manager.save_note(json_filename, note_data)
+                        if result:
+                            saved_count += 1
+                            print(f"DEBUG: Auto-saved unsaved content as {note_data['title']}")
+                        
+                except Exception as e:
+                    print(f"DEBUG: Error saving note to OneDrive: {e}")
+                    # Fall back to local save
+                    try:
+                        if file_path and not file_path.startswith("onedrive:"):
+                            with open(file_path, "w", encoding="utf-8") as f:
+                                f.write(content)
+                            saved_count += 1
+                    except Exception:
+                        pass
+            
+            if saved_count > 0 or unsaved_count > 0:
+                print(f"DEBUG: OneDrive sync on exit - saved: {saved_count}, total processed: {unsaved_count + saved_count}")
+            
+        except Exception as e:
+            print(f"DEBUG: Error during OneDrive exit sync: {e}")
+            # Fallback to regular save
+            self._save_all_open_files()
 
     def dock_move(self, direction):
         """Move window to different screen positions."""
@@ -728,13 +1216,36 @@ class EditableBoxApp:
             return 0, 0, 800, 600
 
     def save_box(self, text_box, file_path, file_title):
-        """Save content of a text box to file."""
+        """Save content of a text box to file or OneDrive."""
         try:
             content = text_box.get("1.0", tk.END).strip()
             # If no content, skip without prompting
             if not content:
                 return
             
+            # Check if this is an OneDrive file or if OneDrive sync should be used
+            is_onedrive_file = file_path and file_path.startswith("onedrive:")
+            use_onedrive = self.onedrive_manager and self.onedrive_manager.is_authenticated()
+            
+            if is_onedrive_file:
+                # Save to OneDrive - extract item ID from path
+                item_id = file_path.replace("onedrive:", "")
+                if item_id:
+                    self._save_to_onedrive_by_id(content, item_id, file_title)
+                    return
+            elif use_onedrive and not file_path:
+                # New file with OneDrive available - prompt for save location
+                result = messagebox.askyesnocancel("Save Location", 
+                    "Where would you like to save this note?\n\nYes = OneDrive (sync across devices)\nNo = Local file\nCancel = Don't save")
+                if result is True:  # OneDrive
+                    self._save_new_to_onedrive(content, text_box, file_title)
+                    return
+                elif result is False:  # Local file
+                    pass  # Continue with local file save below
+                else:  # Cancel
+                    return
+            
+            # Local file save logic (original behavior)
             if not file_path:
                 file_path = filedialog.asksaveasfilename(
                     defaultextension=".txt",
@@ -851,6 +1362,19 @@ class EditableBoxApp:
             except Exception:
                 pass
 
+            # Check if OneDrive is available and offer choice
+            if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+                result = messagebox.askyesnocancel("Open Files", 
+                    "Where would you like to open files from?\n\nYes = OneDrive notes\nNo = Local files\nCancel = Cancel")
+                if result is True:  # OneDrive
+                    self._open_from_onedrive()
+                    return
+                elif result is False:  # Local files
+                    pass  # Continue with local file dialog below
+                else:  # Cancel
+                    return
+            
+            # Local file opening (original behavior)
             file_paths = filedialog.askopenfilenames(
                 filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
                 initialdir=self._get_default_save_directory()
@@ -1185,7 +1709,7 @@ class EditableBoxApp:
         x2, y2, w2, h2 = r2
         return not (x1 + w1 <= x2 or x2 + w2 <= x1 or y1 + h1 <= y2 or y2 + h2 <= y1)
 
-    def add_text_box(self, content="", file_path="", font_size: int | None = None):
+    def add_text_box(self, content="", file_path="", font_size: int | None = None, onedrive_name: str | None = None):
         """Add a new text box for editing."""
         try:
             if self.current_view_mode == "tabbed":
@@ -2680,13 +3204,19 @@ class EditableBoxApp:
             pass
 
     def _on_close_request(self):
-        """Handle window close: save files, layout, and geometry."""
+        """Handle window close: save files, layout, and geometry with OneDrive sync."""
         try:
-            self._save_all_open_files()
+            # Special handling for OneDrive authenticated users
+            if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+                self._save_all_to_onedrive_on_exit()
+            else:
+                self._save_all_open_files()
         except Exception:
             pass
         try:
-            self.save_layout_to_file()
+            # For OneDrive users, don't save local layout since notes are in cloud
+            if not (self.onedrive_manager and self.onedrive_manager.is_authenticated()):
+                self.save_layout_to_file()
         except Exception:
             pass
         try:
