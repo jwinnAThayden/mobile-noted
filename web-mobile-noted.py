@@ -40,15 +40,15 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 app.config['SESSION_FILE_THRESHOLD'] = 100
 app.config['WTF_CSRF_TIME_LIMIT'] = 3600
 
-# Authentication Configuration - MUST be set via environment variables
+# Authentication Configuration - Optional for Railway deployment
 USERNAME = os.environ.get('NOTED_USERNAME')
 PASSWORD_HASH = os.environ.get('NOTED_PASSWORD_HASH')
 
-# Validate required authentication environment variables
-if not USERNAME:
-    raise ValueError("NOTED_USERNAME environment variable must be set")
-if not PASSWORD_HASH:
-    raise ValueError("NOTED_PASSWORD_HASH environment variable must be set")
+# Authentication is optional - if not set, app runs without authentication
+AUTH_ENABLED = USERNAME and PASSWORD_HASH
+if not AUTH_ENABLED:
+    print("INFO: Authentication disabled - NOTED_USERNAME and NOTED_PASSWORD_HASH not set")
+    print("INFO: Running in open access mode for Railway deployment")
 
 # Initialize security extensions
 Session(app)
@@ -295,6 +295,10 @@ def login_required(f):
     """Decorator to require authentication for routes"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Skip authentication if not enabled
+        if not AUTH_ENABLED:
+            return f(*args, **kwargs)
+            
         # Check if user is already authenticated
         if session.get('authenticated'):
             return f(*args, **kwargs)
@@ -326,6 +330,10 @@ def login_required(f):
 @limiter.limit("5 per minute")
 def login():
     """Login page and authentication"""
+    # If authentication is disabled, redirect to main app
+    if not AUTH_ENABLED:
+        return redirect(url_for('index'))
+        
     if session.get('authenticated'):
         return redirect(url_for('index'))
     
