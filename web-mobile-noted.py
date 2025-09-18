@@ -749,10 +749,17 @@ def start_onedrive_auth():
                 'auth_flow': auth_flow
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': 'Failed to start authentication flow'
-            }), 500
+            # Check if it's a missing client ID issue
+            if not os.environ.get('NOTED_CLIENT_ID'):
+                return jsonify({
+                    'success': False,
+                    'error': 'OneDrive not configured: NOTED_CLIENT_ID environment variable is missing. Please set it in Railway dashboard.'
+                }), 503
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to start OneDrive authentication flow - check server logs for details'
+                }), 500
             
     except Exception as e:
         logger.error(f"Error starting OneDrive auth: {e}")
@@ -950,10 +957,17 @@ def debug_onedrive():
 def simple_onedrive_status():
     """Simple OneDrive status without auth/CSRF - for debugging"""
     if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        # Check if it's a missing client ID issue
+        if not os.environ.get('NOTED_CLIENT_ID'):
+            error_message = 'OneDrive setup required: NOTED_CLIENT_ID environment variable missing. Set it in Railway dashboard with your Azure App Registration Client ID.'
+        else:
+            error_message = onedrive_error_message or 'OneDrive dependencies not available'
+            
         return jsonify({
             'available': False,
             'authenticated': False,
-            'error': onedrive_error_message or 'OneDrive not available',
+            'error': error_message,
+            'setup_required': not bool(os.environ.get('NOTED_CLIENT_ID')),
             'auth_enabled': AUTH_ENABLED,
             'debug': True
         })
@@ -992,11 +1006,24 @@ def simple_start_onedrive_auth():
         
         auth_flow = onedrive_manager.start_device_flow_auth(session_id)
         
-        logger.info(f"🔗 Started OneDrive device flow for session {session_id}")
-        return jsonify({
-            'success': True,
-            'auth_flow': auth_flow
-        })
+        if auth_flow:
+            logger.info(f"🔗 Started OneDrive device flow for session {session_id}")
+            return jsonify({
+                'success': True,
+                'auth_flow': auth_flow
+            })
+        else:
+            # Check if it's a missing client ID issue
+            if not os.environ.get('NOTED_CLIENT_ID'):
+                return jsonify({
+                    'success': False,
+                    'error': 'OneDrive setup required: Please set NOTED_CLIENT_ID environment variable with your Azure App Registration Client ID in Railway dashboard.'
+                }), 503
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'OneDrive authentication flow failed to start - check server logs'
+                }), 500
             
     except Exception as e:
         logger.error(f"Error starting OneDrive auth: {e}")
