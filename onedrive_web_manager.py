@@ -142,11 +142,16 @@ class WebOneDriveManager:
                 raise ValueError("MSAL app not initialized")
                 
             flow = self.app.initiate_device_flow(scopes=SCOPES)
-            logger.info(f"Device flow initiated, response keys: {list(flow.keys())}")
+            logger.info(f"🔍 Device flow initiated, response keys: {list(flow.keys())}")
+            
+            # Check for errors in flow response
+            if "error" in flow:
+                logger.error(f"🔍 Device flow returned error: {flow.get('error')} - {flow.get('error_description', 'No description')}")
+                return None
             
             if "user_code" not in flow:
-                logger.error(f"Device flow missing user_code. Full response: {flow}")
-                raise ValueError("Failed to create device flow - missing user_code")
+                logger.error(f"🔍 Device flow missing user_code. Full response: {flow}")
+                return None
             
             # Store flow for this session
             self._auth_flows[session_id] = {

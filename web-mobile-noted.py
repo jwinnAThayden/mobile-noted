@@ -1159,7 +1159,10 @@ def simple_onedrive_status():
 @app.route('/api/simple/onedrive/auth/start', methods=['POST'])
 def simple_start_onedrive_auth():
     """Start OneDrive auth without CSRF/auth requirements"""
+    logger.info("🔍 Simple OneDrive auth endpoint called")
+    
     if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        logger.error(f"OneDrive not available: ONEDRIVE_AVAILABLE={ONEDRIVE_AVAILABLE}, manager={onedrive_manager is not None}")
         return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
     
     try:
@@ -1169,30 +1172,39 @@ def simple_start_onedrive_auth():
         
         session_id = session.get('session_id', str(uuid.uuid4()))
         session['session_id'] = session_id
+        logger.info(f"🔍 Starting device flow for session: {session_id}")
         
         auth_flow = onedrive_manager.start_device_flow_auth(session_id)
+        logger.info(f"🔍 Device flow result: {auth_flow is not None}")
         
         if auth_flow:
             logger.info(f"🔗 Started OneDrive device flow for session {session_id}")
+            logger.info(f"🔍 Auth flow keys: {list(auth_flow.keys()) if auth_flow else 'None'}")
             return jsonify({
                 'success': True,
                 'auth_flow': auth_flow
             })
         else:
+            logger.error("🔍 start_device_flow_auth returned None")
             # Check if it's a missing client ID issue
             if not os.environ.get('NOTED_CLIENT_ID'):
+                logger.error("🔍 NOTED_CLIENT_ID not found")
                 return jsonify({
                     'success': False,
                     'error': 'OneDrive setup required: Please set NOTED_CLIENT_ID environment variable with your Azure App Registration Client ID in Railway dashboard.'
                 }), 503
             else:
+                client_id = os.environ.get('NOTED_CLIENT_ID', '')
+                logger.error(f"🔍 NOTED_CLIENT_ID is set but auth flow failed: {client_id[:8] if client_id else 'None'}...")
                 return jsonify({
                     'success': False,
                     'error': 'OneDrive authentication flow failed to start - check server logs'
                 }), 500
             
     except Exception as e:
-        logger.error(f"Error starting OneDrive auth: {e}")
+        logger.error(f"🔍 Exception in simple OneDrive auth: {e}")
+        import traceback
+        logger.error(f"🔍 Traceback: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
