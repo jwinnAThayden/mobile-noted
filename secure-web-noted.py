@@ -32,7 +32,10 @@ if not USERNAME or not PASSWORD:
 # Directories
 NOTES_DIR = 'web_notes'
 TRUSTED_DEVICES_FILE = 'trusted_devices.json'
-DEVICE_TRUST_DURATION = timedelta(days=30)
+DEVICE_TRUST_DURATION = timedelta(days=1)
+
+# Set session lifetime to 1 day
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
 
 # Ensure directories exist
 os.makedirs(NOTES_DIR, exist_ok=True)
