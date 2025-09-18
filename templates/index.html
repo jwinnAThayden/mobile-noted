@@ -606,6 +606,11 @@
                                 <strong id="deviceCode"></strong>
                                 <button onclick="copyDeviceCode()" class="copy-btn">📋</button>
                             </div>
+                            <p style="font-size: 14px; color: #666; margin: 10px 0;">
+                                <strong>📱 Instructions:</strong> Open the link above in any browser (phone/computer), 
+                                enter the code, and sign in with your Microsoft account. 
+                                <br><strong>⏱️ You have 30 minutes</strong> to complete this step.
+                            </p>
                             <div class="auth-progress">
                                 <div id="authProgressText">Waiting for authorization...</div>
                                 <div class="progress-bar">
@@ -1372,7 +1377,7 @@
             showOneDriveControls('authenticating');
             
             // Start checking auth status
-            const expiresIn = authFlow.expires_in || 900; // 15 minutes default
+            const expiresIn = authFlow.expires_in || 1800; // 30 minutes default
             let elapsed = 0;
             
             oneDriveAuthTimer = setInterval(() => {

@@ -202,7 +202,7 @@ class WebOneDriveManager:
             return {
                 "user_code": flow["user_code"],
                 "verification_uri": flow["verification_uri"],
-                "expires_in": flow.get("expires_in", 900),  # 15 minutes default
+                "expires_in": flow.get("expires_in", 1800),  # 30 minutes default
                 "interval": flow.get("interval", 5)  # 5 seconds default
             }
         except Exception as e:
@@ -227,7 +227,7 @@ class WebOneDriveManager:
         
         try:
             # Check if flow has expired
-            if time.time() - flow_data["started_at"] > flow_data["flow"].get("expires_in", 900):
+            if time.time() - flow_data["started_at"] > flow_data["flow"].get("expires_in", 1800):
                 del self._auth_flows[session_id]
                 return {"status": "expired", "message": "Authentication flow expired"}
             
