@@ -970,6 +970,32 @@ def simple_onedrive_status():
             'debug': True
         })
 
+@app.route('/api/simple/onedrive/auth/start', methods=['POST'])
+def simple_start_onedrive_auth():
+    """Start OneDrive auth without CSRF/auth requirements"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        # Don't validate CSRF when auth is disabled
+        if AUTH_ENABLED:
+            validate_csrf(request.headers.get('X-CSRFToken'))
+        
+        session_id = session.get('session_id', str(uuid.uuid4()))
+        session['session_id'] = session_id
+        
+        auth_flow = onedrive_manager.start_device_flow_auth(session_id)
+        
+        logger.info(f"🔗 Started OneDrive device flow for session {session_id}")
+        return jsonify({
+            'success': True,
+            'auth_flow': auth_flow
+        })
+            
+    except Exception as e:
+        logger.error(f"Error starting OneDrive auth: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     # Only run development server if not in production
     is_production = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT')
