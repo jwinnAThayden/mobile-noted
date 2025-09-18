@@ -1047,6 +1047,57 @@ def test_onedrive_auth():
             'manager_exists': onedrive_manager is not None
         })
 
+@app.route('/test/onedrive/direct-flow')
+def test_direct_device_flow():
+    """Direct test of device flow without OneDrive manager"""
+    try:
+        client_id = os.environ.get('NOTED_CLIENT_ID')
+        if not client_id:
+            return jsonify({
+                'success': False,
+                'error': 'NOTED_CLIENT_ID not set',
+                'setup_required': True
+            })
+        
+        # Import MSAL directly
+        from msal import PublicClientApplication
+        
+        # Create app directly  
+        app = PublicClientApplication(
+            client_id,
+            authority="https://login.microsoftonline.com/common"
+        )
+        
+        # Try device flow directly
+        scopes = ["https://graph.microsoft.com/Files.ReadWrite"]
+        flow = app.initiate_device_flow(scopes=scopes)
+        
+        if "user_code" in flow:
+            return jsonify({
+                'success': True,
+                'direct_flow_works': True,
+                'user_code': flow['user_code'],
+                'verification_uri': flow['verification_uri'],
+                'expires_in': flow.get('expires_in', 900),
+                'message': 'Direct device flow successful - OneDrive manager may have issues'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'direct_flow_works': False,
+                'flow_response': flow,
+                'error': 'No user_code in flow response'
+            })
+            
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': f'Direct flow failed: {str(e)}',
+            'traceback': traceback.format_exc(),
+            'client_id_configured': bool(os.environ.get('NOTED_CLIENT_ID'))
+        })
+
 @app.route('/api/simple/onedrive/status')
 def simple_onedrive_status():
     """Simple OneDrive status without auth/CSRF - for debugging"""
