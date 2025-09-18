@@ -24,8 +24,16 @@ SCOPES = ["https://graph.microsoft.com/Files.ReadWrite"]
 # API Endpoint for the app's special folder in the user's OneDrive
 GRAPH_API_ENDPOINT = "https://graph.microsoft.com/v1.0/me/drive/special/approot"
 
-# Use web-specific token cache location
-TOKEN_CACHE_FILE = os.path.join(os.path.dirname(__file__), "web_notes", "onedrive_token_cache.json")
+# For Railway deployment, store token cache in a persistent location
+# Railway containers are ephemeral, but we can use session storage
+IS_RAILWAY = os.environ.get('RAILWAY_ENVIRONMENT') is not None
+
+if IS_RAILWAY:
+    # On Railway, use a more persistent directory structure
+    TOKEN_CACHE_FILE = "/app/flask_session/onedrive_token_cache.json"
+else:
+    # Local development
+    TOKEN_CACHE_FILE = os.path.join(os.path.dirname(__file__), "web_notes", "onedrive_token_cache.json")
 
 class WebOneDriveManager:
     """
@@ -47,14 +55,8 @@ class WebOneDriveManager:
             # Ensure cache directory exists
             os.makedirs(os.path.dirname(TOKEN_CACHE_FILE), exist_ok=True)
             
-            # Load existing token cache
-            if os.path.exists(TOKEN_CACHE_FILE):
-                try:
-                    with open(TOKEN_CACHE_FILE, "r") as f:
-                        self._token_cache.deserialize(f.read())
-                        logger.info("Token cache loaded successfully")
-                except Exception as e:
-                    logger.warning(f"OneDrive: Failed to load token cache: {e}")
+            # Load existing token cache (Railway-aware)
+            self._load_token_cache()
 
             self.app = msal.PublicClientApplication(
                 CLIENT_ID,
@@ -79,13 +81,48 @@ class WebOneDriveManager:
             logger.error(f"Initialization traceback: {traceback.format_exc()}")
             raise
 
+    def _load_token_cache(self):
+        """Load token cache from persistent storage."""
+        try:
+            # First try environment variable (for Railway persistence)
+            token_data = os.environ.get('ONEDRIVE_TOKEN_CACHE')
+            if token_data:
+                self._token_cache.deserialize(token_data)
+                logger.info("✅ Token cache loaded from environment variable")
+                return
+            
+            # Fallback to file-based cache
+            if os.path.exists(TOKEN_CACHE_FILE):
+                with open(TOKEN_CACHE_FILE, "r") as f:
+                    self._token_cache.deserialize(f.read())
+                    logger.info("✅ Token cache loaded from file")
+            else:
+                logger.info("ℹ️ No existing token cache found - fresh start")
+                
+        except Exception as e:
+            logger.warning(f"OneDrive: Failed to load token cache: {e}")
+
     def _save_cache(self):
-        """Save the token cache to a file with thread safety."""
+        """Save token cache with Railway persistence support."""
         if self._token_cache.has_state_changed:
             try:
                 with self._cache_lock:
+                    token_data = self._token_cache.serialize()
+                    
+                    # Always try to save to file (for session persistence)
+                    os.makedirs(os.path.dirname(TOKEN_CACHE_FILE), exist_ok=True)
                     with open(TOKEN_CACHE_FILE, "w") as f:
-                        f.write(self._token_cache.serialize())
+                        f.write(token_data)
+                    
+                    # Log token for Railway environment variable setup
+                    if IS_RAILWAY and token_data and len(token_data) > 10:
+                        logger.info("🔑 FOR RAILWAY PERSISTENCE:")
+                        logger.info("Copy the token below and set it as ONEDRIVE_TOKEN_CACHE environment variable in Railway:")
+                        logger.info(f"TOKEN: {token_data}")
+                        logger.info("This will preserve your OneDrive connection across deployments!")
+                    
+                    logger.info("✅ Token cache saved successfully")
+                    
             except Exception as e:
                 logger.error(f"OneDrive: Failed to save token cache: {e}")
 
