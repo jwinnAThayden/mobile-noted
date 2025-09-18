@@ -244,22 +244,317 @@
             }
         }
 
+        /* OneDrive Panel Styles */
+        .onedrive-panel, .cloud-notes-browser {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 500px;
+            width: 90vw;
+            max-height: 70vh;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .panel-content {
+            padding: 20px;
+            max-height: calc(70vh - 80px);
+            overflow-y: auto;
+        }
+
+        .onedrive-status {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .account-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .onedrive-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .onedrive-btn {
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+        }
+
+        .onedrive-btn:hover {
+            background: linear-gradient(135deg, #106ebe 0%, #005a9e 100%);
+        }
+
+        .device-flow-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .device-flow-info h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+
+        .device-code {
+            background: white;
+            border: 2px dashed #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .device-code strong {
+            font-size: 1.5em;
+            color: #1976d2;
+            letter-spacing: 2px;
+        }
+
+        .copy-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .copy-btn:hover {
+            background: #1976d2;
+        }
+
+        .auth-progress {
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 8px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #2196f3, #21cbf3);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: progressPulse 2s infinite;
+        }
+
+        @keyframes progressPulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .device-flow-actions, .sync-actions, .auth-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sync-options {
+            padding: 10px 0;
+        }
+
+        .sync-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .cloud-notes-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .cloud-note-item {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cloud-note-item:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .cloud-note-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .cloud-note-meta {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        /* Setup and error message styles */
+        .setup-instructions, .error-message {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .setup-instructions h4, .error-message h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+
+        .setup-instructions h5 {
+            margin: 15px 0 5px 0;
+            color: #6c757d;
+        }
+
+        .setup-instructions ol {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .setup-instructions li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .setup-instructions code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .setup-instructions a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .setup-instructions a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        /* OneDrive floating button */
+        .onedrive-float-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 120, 212, 0.3);
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .onedrive-float-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 120, 212, 0.4);
+        }
+
+        .onedrive-float-btn.connected {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .onedrive-float-btn.error {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
         /* Scrollbar styling */
-        .notes-container::-webkit-scrollbar {
+        .notes-container::-webkit-scrollbar, .panel-content::-webkit-scrollbar, .cloud-notes-list::-webkit-scrollbar {
             width: 8px;
         }
 
-        .notes-container::-webkit-scrollbar-track {
+        .notes-container::-webkit-scrollbar-track, .panel-content::-webkit-scrollbar-track, .cloud-notes-list::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 4px;
         }
 
-        .notes-container::-webkit-scrollbar-thumb {
+        .notes-container::-webkit-scrollbar-thumb, .panel-content::-webkit-scrollbar-thumb, .cloud-notes-list::-webkit-scrollbar-thumb {
             background: #c1c1c1;
             border-radius: 4px;
         }
 
-        .notes-container::-webkit-scrollbar-thumb:hover {
+        .notes-container::-webkit-scrollbar-thumb:hover, .panel-content::-webkit-scrollbar-thumb:hover, .cloud-notes-list::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
     </style>
@@ -278,6 +573,85 @@
             <button class="btn" onclick="logout()" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">🚪 Logout</button>
         </div>
 
+        <!-- OneDrive Integration Panel -->
+        <div id="onedrivePanel" class="onedrive-panel" style="display: none;">
+            <div class="panel-header">
+                <h3>☁️ OneDrive Sync</h3>
+                <button class="close-btn" onclick="hideOneDrivePanel()">✕</button>
+            </div>
+            <div class="panel-content">
+                <div id="onedriveStatus" class="onedrive-status">
+                    <div class="status-indicator">
+                        <span id="statusIcon">⚡</span>
+                        <span id="statusText">Checking connection...</span>
+                    </div>
+                    <div id="accountInfo" class="account-info" style="display: none;">
+                        <small id="accountEmail"></small>
+                    </div>
+                </div>
+                
+                <div id="onedriveControls" class="onedrive-controls">
+                    <!-- Auth controls -->
+                    <div id="authControls" style="display: none;">
+                        <button class="btn onedrive-btn" onclick="startOneDriveAuth()">🔗 Connect OneDrive</button>
+                    </div>
+                    
+                    <!-- Device flow display -->
+                    <div id="deviceFlowDisplay" style="display: none;">
+                        <div class="device-flow-info">
+                            <h4>Connect Your Device</h4>
+                            <p>Go to <strong id="verificationUrl"></strong></p>
+                            <div class="device-code">
+                                <span>Code: </span>
+                                <strong id="deviceCode"></strong>
+                                <button onclick="copyDeviceCode()" class="copy-btn">📋</button>
+                            </div>
+                            <div class="auth-progress">
+                                <div id="authProgressText">Waiting for authorization...</div>
+                                <div class="progress-bar">
+                                    <div id="progressFill" class="progress-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="device-flow-actions">
+                            <button class="btn onedrive-btn" onclick="checkAuthProgress()">🔄 Check Status</button>
+                            <button class="btn delete" onclick="cancelOneDriveAuth()">❌ Cancel</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Sync controls -->
+                    <div id="syncControls" style="display: none;">
+                        <div class="sync-actions">
+                            <button class="btn onedrive-btn" onclick="syncToOneDrive()">⬆️ Push to Cloud</button>
+                            <button class="btn onedrive-btn" onclick="syncFromOneDrive()">⬇️ Pull from Cloud</button>
+                            <button class="btn" onclick="showOneDriveNotes()">📋 View Cloud Notes</button>
+                        </div>
+                        <div class="sync-options">
+                            <label>
+                                <input type="checkbox" id="autoSync" onchange="toggleAutoSync()"> 
+                                Auto-sync changes
+                            </label>
+                        </div>
+                        <div class="auth-actions">
+                            <button class="btn delete" onclick="logoutOneDrive()">🚪 Disconnect</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OneDrive Notes Browser -->
+        <div id="cloudNotesBrowser" class="cloud-notes-browser" style="display: none;">
+            <div class="panel-header">
+                <h3>☁️ Cloud Notes</h3>
+                <button class="close-btn" onclick="hideCloudNotesBrowser()">✕</button>
+            </div>
+            <div class="panel-content">
+                <div id="cloudNotesStatus">Loading cloud notes...</div>
+                <div id="cloudNotesList" class="cloud-notes-list"></div>
+            </div>
+        </div>
+
         <div id="status" class="status"></div>
 
         <div class="notes-container" id="notesContainer">
@@ -288,6 +662,11 @@
             </div>
         </div>
     </div>
+
+    <!-- OneDrive Floating Action Button -->
+    <button id="onedriveFloatBtn" class="onedrive-float-btn" onclick="showOneDrivePanel()">
+        ☁️
+    </button>
 
     <script>
         let notes = [];
@@ -714,6 +1093,470 @@
             console.log('Running as installed PWA');
             document.title = '📝 Noted';
         }
+
+        // ========= OneDrive Integration =========
+        
+        let oneDriveAuthTimer = null;
+        let autoSyncEnabled = false;
+        
+        // Load OneDrive status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkOneDriveStatus();
+            
+            // Check status periodically
+            setInterval(checkOneDriveStatus, 30000); // Every 30 seconds
+        });
+
+        // Check OneDrive connection status
+        async function checkOneDriveStatus() {
+            try {
+                const response = await authenticatedFetch('/api/onedrive/status');
+                if (!response) return;
+                
+                const data = await response.json();
+                updateOneDriveUI(data);
+            } catch (error) {
+                console.warn('OneDrive status check failed:', error);
+                updateOneDriveUI({
+                    available: false,
+                    authenticated: false,
+                    error: error.message
+                });
+            }
+        }
+
+        // Update OneDrive UI based on status
+        function updateOneDriveUI(status) {
+            const floatBtn = document.getElementById('onedriveFloatBtn');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            const accountInfo = document.getElementById('accountInfo');
+            const accountEmail = document.getElementById('accountEmail');
+            
+            if (!status.available) {
+                floatBtn.className = 'onedrive-float-btn error';
+                
+                if (status.setup_required) {
+                    floatBtn.title = 'OneDrive setup required - click for details';
+                    if (statusIcon) statusIcon.textContent = '⚙️';
+                    if (statusText) statusText.innerHTML = 'OneDrive Setup Required<br><small>Click to see setup instructions</small>';
+                } else {
+                    floatBtn.title = 'OneDrive not available';
+                    if (statusIcon) statusIcon.textContent = '❌';
+                    if (statusText) statusText.textContent = status.error || 'OneDrive not available';
+                }
+                
+                showOneDriveControls('unavailable', status);
+                return;
+            }
+            
+            if (status.authenticated) {
+                floatBtn.className = 'onedrive-float-btn connected';
+                floatBtn.title = 'Connected to OneDrive';
+                if (statusIcon) statusIcon.textContent = '✅';
+                if (statusText) statusText.textContent = 'Connected to OneDrive';
+                
+                if (status.account_info && status.account_info.username) {
+                    if (accountEmail) accountEmail.textContent = status.account_info.username;
+                    if (accountInfo) accountInfo.style.display = 'block';
+                }
+                
+                showOneDriveControls('authenticated');
+            } else {
+                floatBtn.className = 'onedrive-float-btn';
+                floatBtn.title = 'OneDrive available - click to connect';
+                if (statusIcon) statusIcon.textContent = '⚡';
+                if (statusText) statusText.textContent = 'OneDrive available';
+                if (accountInfo) accountInfo.style.display = 'none';
+                showOneDriveControls('unauthenticated');
+            }
+        }
+
+        // Show appropriate OneDrive controls
+        function showOneDriveControls(state, statusData = null) {
+            const authControls = document.getElementById('authControls');
+            const deviceFlowDisplay = document.getElementById('deviceFlowDisplay');
+            const syncControls = document.getElementById('syncControls');
+            
+            if (!authControls) return; // Panel not shown yet
+            
+            // Hide all first
+            authControls.style.display = 'none';
+            deviceFlowDisplay.style.display = 'none';
+            syncControls.style.display = 'none';
+            
+            switch (state) {
+                case 'unavailable':
+                    // Show setup instructions if needed
+                    if (statusData && statusData.setup_required) {
+                        authControls.innerHTML = `
+                            <div class="setup-instructions">
+                                <h4>🔧 OneDrive Setup Required</h4>
+                                <p>To enable OneDrive synchronization, your Railway deployment needs the <code>NOTED_CLIENT_ID</code> environment variable.</p>
+                                
+                                <h5>Setup Steps:</h5>
+                                <ol style="text-align: left; padding-left: 20px;">
+                                    <li>Create an Azure App Registration at <a href="https://portal.azure.com" target="_blank">portal.azure.com</a></li>
+                                    <li>Configure Microsoft Graph API permissions: <code>Files.ReadWrite.AppFolder</code></li>
+                                    <li>Copy the Application (Client) ID</li>
+                                    <li>Set <code>NOTED_CLIENT_ID</code> environment variable in Railway</li>
+                                    <li>Redeploy your application</li>
+                                </ol>
+                                
+                                <p><small>See <strong>ONEDRIVE_RAILWAY_DEPLOYMENT.md</strong> for detailed instructions.</small></p>
+                            </div>
+                        `;
+                        authControls.style.display = 'block';
+                    } else {
+                        authControls.innerHTML = `
+                            <div class="error-message">
+                                <h4>❌ OneDrive Unavailable</h4>
+                                <p>${statusData ? statusData.error : 'OneDrive integration is not available.'}</p>
+                            </div>
+                        `;
+                        authControls.style.display = 'block';
+                    }
+                    break;
+                case 'unauthenticated':
+                    authControls.innerHTML = '<button class="btn onedrive-btn" onclick="startOneDriveAuth()">🔗 Connect OneDrive</button>';
+                    authControls.style.display = 'block';
+                    break;
+                case 'authenticating':
+                    deviceFlowDisplay.style.display = 'block';
+                    break;
+                case 'authenticated':
+                    syncControls.style.display = 'block';
+                    break;
+            }
+        }
+
+        // Show/hide OneDrive panel
+        function showOneDrivePanel() {
+            document.getElementById('onedrivePanel').style.display = 'block';
+            checkOneDriveStatus(); // Refresh status when opening
+        }
+
+        function hideOneDrivePanel() {
+            document.getElementById('onedrivePanel').style.display = 'none';
+            
+            // Cancel any active auth flow
+            if (oneDriveAuthTimer) {
+                clearInterval(oneDriveAuthTimer);
+                oneDriveAuthTimer = null;
+            }
+        }
+
+        // Start OneDrive authentication
+        async function startOneDriveAuth() {
+            try {
+                const response = await authenticatedFetch('/api/onedrive/auth/start', {
+                    method: 'POST'
+                });
+                
+                if (!response) return;
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayDeviceFlow(data.auth_flow);
+                } else {
+                    showStatus('Failed to start OneDrive authentication: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Error starting OneDrive auth: ' + error.message, true);
+            }
+        }
+
+        // Display device flow authentication UI
+        function displayDeviceFlow(authFlow) {
+            const verificationUrl = document.getElementById('verificationUrl');
+            const deviceCode = document.getElementById('deviceCode');
+            const progressFill = document.getElementById('progressFill');
+            
+            verificationUrl.textContent = authFlow.verification_uri;
+            deviceCode.textContent = authFlow.user_code;
+            
+            showOneDriveControls('authenticating');
+            
+            // Start checking auth status
+            const expiresIn = authFlow.expires_in || 900; // 15 minutes default
+            let elapsed = 0;
+            
+            oneDriveAuthTimer = setInterval(() => {
+                elapsed += 5;
+                const progress = (elapsed / expiresIn) * 100;
+                progressFill.style.width = Math.min(progress, 100) + '%';
+                
+                if (elapsed >= expiresIn) {
+                    clearInterval(oneDriveAuthTimer);
+                    oneDriveAuthTimer = null;
+                    showStatus('Authentication expired. Please try again.', true);
+                    checkOneDriveStatus();
+                }
+            }, 5000);
+            
+            // Check status immediately
+            checkAuthProgress();
+        }
+
+        // Check authentication progress
+        async function checkAuthProgress() {
+            try {
+                const response = await authenticatedFetch('/api/onedrive/auth/check');
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                const progressText = document.getElementById('authProgressText');
+                
+                switch (data.status) {
+                    case 'success':
+                        if (oneDriveAuthTimer) {
+                            clearInterval(oneDriveAuthTimer);
+                            oneDriveAuthTimer = null;
+                        }
+                        showStatus('OneDrive connected successfully! ✅');
+                        checkOneDriveStatus();
+                        break;
+                        
+                    case 'pending':
+                        progressText.textContent = data.message;
+                        // Continue polling
+                        setTimeout(checkAuthProgress, 5000);
+                        break;
+                        
+                    case 'error':
+                    case 'expired':
+                        if (oneDriveAuthTimer) {
+                            clearInterval(oneDriveAuthTimer);
+                            oneDriveAuthTimer = null;
+                        }
+                        showStatus(data.message, true);
+                        checkOneDriveStatus();
+                        break;
+                        
+                    default:
+                        progressText.textContent = 'Checking authentication status...';
+                        setTimeout(checkAuthProgress, 5000);
+                }
+            } catch (error) {
+                showStatus('Error checking auth progress: ' + error.message, true);
+            }
+        }
+
+        // Cancel OneDrive authentication
+        async function cancelOneDriveAuth() {
+            try {
+                if (oneDriveAuthTimer) {
+                    clearInterval(oneDriveAuthTimer);
+                    oneDriveAuthTimer = null;
+                }
+                
+                await authenticatedFetch('/api/onedrive/auth/cancel', {
+                    method: 'POST'
+                });
+                
+                checkOneDriveStatus();
+                showStatus('Authentication cancelled');
+            } catch (error) {
+                showStatus('Error cancelling auth: ' + error.message, true);
+            }
+        }
+
+        // Copy device code to clipboard
+        function copyDeviceCode() {
+            const deviceCode = document.getElementById('deviceCode').textContent;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(deviceCode).then(() => {
+                    showStatus('Device code copied to clipboard!');
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(deviceCode);
+                });
+            } else {
+                fallbackCopyTextToClipboard(deviceCode);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showStatus('Device code copied to clipboard!');
+            } catch (err) {
+                showStatus('Failed to copy device code', true);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Sync notes to OneDrive
+        async function syncToOneDrive() {
+            try {
+                showStatus('Syncing to OneDrive...', false);
+                
+                const response = await authenticatedFetch('/api/onedrive/sync/push', {
+                    method: 'POST'
+                });
+                
+                if (!response) return;
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    showStatus(`Synced to OneDrive: ${stats.created} created, ${stats.updated} updated`);
+                    
+                    // Reload notes to get updated IDs
+                    loadNotes();
+                } else {
+                    showStatus('Sync failed: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Sync error: ' + error.message, true);
+            }
+        }
+
+        // Sync notes from OneDrive
+        async function syncFromOneDrive(mergeStrategy = 'merge') {
+            try {
+                if (mergeStrategy === 'replace') {
+                    if (!confirm('This will replace all your local notes with cloud notes. Continue?')) {
+                        return;
+                    }
+                }
+                
+                showStatus('Syncing from OneDrive...', false);
+                
+                const response = await authenticatedFetch('/api/onedrive/sync/pull', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        merge_strategy: mergeStrategy
+                    })
+                });
+                
+                if (!response) return;
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    showStatus(`Synced from OneDrive: ${stats.loaded} notes loaded`);
+                    
+                    // Reload notes with cloud data
+                    loadNotes();
+                } else {
+                    showStatus('Sync failed: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Sync error: ' + error.message, true);
+            }
+        }
+
+        // Show OneDrive notes browser
+        async function showOneDriveNotes() {
+            try {
+                const browser = document.getElementById('cloudNotesBrowser');
+                const status = document.getElementById('cloudNotesStatus');
+                const list = document.getElementById('cloudNotesList');
+                
+                browser.style.display = 'block';
+                status.textContent = 'Loading cloud notes...';
+                list.innerHTML = '';
+                
+                const response = await authenticatedFetch('/api/onedrive/notes');
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    status.textContent = `Found ${data.count} notes in OneDrive`;
+                    
+                    if (data.notes.length === 0) {
+                        list.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No notes found in OneDrive</p>';
+                    } else {
+                        data.notes.forEach(note => {
+                            const noteItem = document.createElement('div');
+                            noteItem.className = 'cloud-note-item';
+                            noteItem.innerHTML = `
+                                <div class="cloud-note-name">${note.name}</div>
+                                <div class="cloud-note-meta">
+                                    Modified: ${new Date(note.modified).toLocaleString()}<br>
+                                    Size: ${(note.size / 1024).toFixed(1)} KB
+                                </div>
+                            `;
+                            list.appendChild(noteItem);
+                        });
+                    }
+                } else {
+                    status.textContent = 'Failed to load cloud notes: ' + data.error;
+                }
+            } catch (error) {
+                document.getElementById('cloudNotesStatus').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        function hideCloudNotesBrowser() {
+            document.getElementById('cloudNotesBrowser').style.display = 'none';
+        }
+
+        // Logout from OneDrive
+        async function logoutOneDrive() {
+            if (!confirm('Are you sure you want to disconnect from OneDrive?')) {
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch('/api/onedrive/logout', {
+                    method: 'POST'
+                });
+                
+                if (!response) return;
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('Disconnected from OneDrive');
+                    checkOneDriveStatus();
+                } else {
+                    showStatus('Failed to disconnect: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Logout error: ' + error.message, true);
+            }
+        }
+
+        // Toggle auto-sync
+        function toggleAutoSync() {
+            const checkbox = document.getElementById('autoSync');
+            autoSyncEnabled = checkbox.checked;
+            
+            if (autoSyncEnabled) {
+                showStatus('Auto-sync enabled');
+                // Auto-sync after note changes
+            } else {
+                showStatus('Auto-sync disabled');
+            }
+        }
+
+        // Enhanced save note with auto-sync
+        const originalSaveNote = saveNote;
+        saveNote = async function(noteId) {
+            const result = await originalSaveNote(noteId);
+            
+            // Auto-sync if enabled and connected
+            if (autoSyncEnabled && document.getElementById('onedriveFloatBtn').classList.contains('connected')) {
+                setTimeout(() => {
+                    syncToOneDrive();
+                }, 2000); // Sync 2 seconds after save
+            }
+            
+            return result;
+        };
     </script>
 </body>
 </html>

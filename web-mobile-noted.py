@@ -22,6 +22,14 @@ import secrets
 import hashlib
 from dateutil import parser
 
+# OneDrive integration
+try:
+    from onedrive_web_manager import WebOneDriveManager
+    ONEDRIVE_AVAILABLE = True
+except ImportError as e:
+    print(f"OneDrive integration unavailable: {e}")  # Will use proper logger after it's defined
+    ONEDRIVE_AVAILABLE = False
+
 app = Flask(__name__)
 
 # Security Configuration
@@ -63,6 +71,24 @@ DEVICE_COOKIE_NAME = 'noted_device_id'
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Initialize OneDrive Manager
+onedrive_manager = None
+onedrive_error_message = None
+
+if ONEDRIVE_AVAILABLE and 'WebOneDriveManager' in globals():
+    try:
+        onedrive_manager = WebOneDriveManager()
+        logger.info("✅ OneDrive manager initialized successfully")
+    except Exception as e:
+        onedrive_error_message = str(e)
+        logger.warning(f"⚠️  OneDrive integration disabled: {e}")
+        if "NOTED_CLIENT_ID" in str(e):
+            logger.info("💡 To enable OneDrive: Set NOTED_CLIENT_ID environment variable with your Azure App Registration Client ID")
+        ONEDRIVE_AVAILABLE = False
+else:
+    logger.info("⚠️  OneDrive integration not available (import failed)")
+    onedrive_error_message = "OneDrive dependencies not installed"
 
 # Create session directory in a Railway-compatible location (after logger is defined)
 session_dir = os.path.join(os.path.dirname(__file__), 'flask_session')
@@ -651,6 +677,221 @@ def delete_note(note_id):
             return jsonify({'success': False, 'error': 'Failed to delete note'}), 500
     except Exception as e:
         logger.error(f"Error deleting note: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# OneDrive Integration Endpoints
+@app.route('/api/onedrive/status', methods=['GET'])
+@login_required
+def onedrive_status():
+    """Get OneDrive authentication status"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        error_msg = onedrive_error_message or 'OneDrive integration not available'
+        return jsonify({
+            'available': False,
+            'error': error_msg,
+            'setup_required': 'NOTED_CLIENT_ID' in error_msg if error_msg else False
+        }), 503
+    
+    try:
+        status = onedrive_manager.get_auth_status()
+        return jsonify({
+            'available': True,
+            'authenticated': status['authenticated'],
+            'account_info': status['account_info']
+        })
+    except Exception as e:
+        logger.error(f"Error getting OneDrive status: {e}")
+        return jsonify({
+            'available': True,
+            'authenticated': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/onedrive/auth/start', methods=['POST'])
+@login_required
+@limiter.limit("5 per minute")
+def start_onedrive_auth():
+    """Start OneDrive device flow authentication"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        validate_csrf(request.headers.get('X-CSRFToken'))
+        
+        session_id = session.get('session_id', str(uuid.uuid4()))
+        session['session_id'] = session_id
+        
+        auth_flow = onedrive_manager.start_device_flow_auth(session_id)
+        
+        if auth_flow:
+            return jsonify({
+                'success': True,
+                'auth_flow': auth_flow
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to start authentication flow'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Error starting OneDrive auth: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/onedrive/auth/check', methods=['GET'])
+@login_required
+def check_onedrive_auth():
+    """Check OneDrive authentication flow status"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        session_id = session.get('session_id')
+        if not session_id:
+            return jsonify({'success': False, 'error': 'No active session'}), 400
+        
+        result = onedrive_manager.check_device_flow_status(session_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error checking OneDrive auth: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/onedrive/auth/cancel', methods=['POST'])
+@login_required
+def cancel_onedrive_auth():
+    """Cancel OneDrive authentication flow"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        validate_csrf(request.headers.get('X-CSRFToken'))
+        
+        session_id = session.get('session_id')
+        if session_id:
+            success = onedrive_manager.cancel_device_flow(session_id)
+            return jsonify({'success': success})
+        else:
+            return jsonify({'success': False, 'error': 'No active session'}), 400
+            
+    except Exception as e:
+        logger.error(f"Error canceling OneDrive auth: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/onedrive/logout', methods=['POST'])
+@login_required
+def onedrive_logout():
+    """Logout from OneDrive"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        validate_csrf(request.headers.get('X-CSRFToken'))
+        
+        success = onedrive_manager.logout()
+        return jsonify({'success': success})
+        
+    except Exception as e:
+        logger.error(f"Error logging out from OneDrive: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/onedrive/sync/push', methods=['POST'])
+@login_required
+@limiter.limit("10 per minute")
+def sync_to_onedrive():
+    """Sync local notes to OneDrive"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        validate_csrf(request.headers.get('X-CSRFToken'))
+        
+        if not onedrive_manager.is_authenticated():
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated with OneDrive'
+            }), 401
+        
+        # Load local notes
+        local_notes = load_notes()
+        
+        # Sync to OneDrive
+        result = onedrive_manager.sync_notes_to_cloud(local_notes)
+        
+        if result['success']:
+            # Save updated notes with OneDrive IDs
+            save_notes(result['notes'])
+            
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error syncing to OneDrive: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/onedrive/sync/pull', methods=['POST'])
+@login_required
+@limiter.limit("10 per minute")
+def sync_from_onedrive():
+    """Load notes from OneDrive"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        validate_csrf(request.headers.get('X-CSRFToken'))
+        
+        if not onedrive_manager.is_authenticated():
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated with OneDrive'
+            }), 401
+        
+        # Get merge strategy from request (default: 'replace')
+        data = request.get_json() or {}
+        merge_strategy = data.get('merge_strategy', 'replace')
+        
+        # Load from OneDrive
+        result = onedrive_manager.load_notes_from_cloud()
+        
+        if result['success']:
+            if merge_strategy == 'replace':
+                # Replace all local notes
+                save_notes(result['notes'])
+            elif merge_strategy == 'merge':
+                # Merge with local notes (OneDrive takes precedence for conflicts)
+                local_notes = load_notes()
+                local_notes.update(result['notes'])
+                save_notes(local_notes)
+                result['notes'] = local_notes
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error syncing from OneDrive: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/onedrive/notes', methods=['GET'])
+@login_required
+def list_onedrive_notes():
+    """List notes from OneDrive without downloading"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        if not onedrive_manager.is_authenticated():
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated with OneDrive'
+            }), 401
+        
+        notes_list = onedrive_manager.list_notes()
+        return jsonify({
+            'success': True,
+            'notes': notes_list,
+            'count': len(notes_list)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error listing OneDrive notes: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/favicon.ico')
