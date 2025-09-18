@@ -38,28 +38,46 @@ class WebOneDriveManager:
         if not CLIENT_ID:
             raise ValueError("NOTED_CLIENT_ID environment variable is required for OneDrive integration")
         
-        self._token_cache = msal.SerializableTokenCache()
-        self._cache_lock = Lock()
+        logger.info(f"Initializing WebOneDriveManager with CLIENT_ID: {CLIENT_ID[:8]}...")
         
-        # Ensure cache directory exists
-        os.makedirs(os.path.dirname(TOKEN_CACHE_FILE), exist_ok=True)
-        
-        # Load existing token cache
-        if os.path.exists(TOKEN_CACHE_FILE):
-            try:
-                with open(TOKEN_CACHE_FILE, "r") as f:
-                    self._token_cache.deserialize(f.read())
-            except Exception as e:
-                logger.warning(f"OneDrive: Failed to load token cache: {e}")
+        try:
+            self._token_cache = msal.SerializableTokenCache()
+            self._cache_lock = Lock()
+            
+            # Ensure cache directory exists
+            os.makedirs(os.path.dirname(TOKEN_CACHE_FILE), exist_ok=True)
+            
+            # Load existing token cache
+            if os.path.exists(TOKEN_CACHE_FILE):
+                try:
+                    with open(TOKEN_CACHE_FILE, "r") as f:
+                        self._token_cache.deserialize(f.read())
+                        logger.info("Token cache loaded successfully")
+                except Exception as e:
+                    logger.warning(f"OneDrive: Failed to load token cache: {e}")
 
-        self.app = msal.PublicClientApplication(
-            CLIENT_ID,
-            authority=AUTHORITY,
-            token_cache=self._token_cache
-        )
-        self.account = None
-        self.access_token = None
-        self._auth_flows = {}  # Store active auth flows by session ID
+            self.app = msal.PublicClientApplication(
+                CLIENT_ID,
+                authority=AUTHORITY,
+                token_cache=self._token_cache
+            )
+            
+            if not self.app:
+                raise ValueError("Failed to create MSAL PublicClientApplication")
+                
+            logger.info("MSAL PublicClientApplication created successfully")
+            
+            self.account = None
+            self.access_token = None
+            self._auth_flows = {}  # Store active auth flows by session ID
+            
+            logger.info("WebOneDriveManager initialization completed successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize WebOneDriveManager: {e}")
+            import traceback
+            logger.error(f"Initialization traceback: {traceback.format_exc()}")
+            raise
 
     def _save_cache(self):
         """Save the token cache to a file with thread safety."""
@@ -113,10 +131,22 @@ class WebOneDriveManager:
         Returns flow data for frontend display.
         """
         try:
+            logger.info(f"Starting device flow for session {session_id}")
+            logger.info(f"CLIENT_ID available: {bool(CLIENT_ID)}")
+            logger.info(f"MSAL app initialized: {self.app is not None}")
+            
+            if not CLIENT_ID:
+                raise ValueError("CLIENT_ID is not set")
+            
+            if not self.app:
+                raise ValueError("MSAL app not initialized")
+                
             flow = self.app.initiate_device_flow(scopes=SCOPES)
+            logger.info(f"Device flow initiated, response keys: {list(flow.keys())}")
             
             if "user_code" not in flow:
-                raise ValueError("Failed to create device flow")
+                logger.error(f"Device flow missing user_code. Full response: {flow}")
+                raise ValueError("Failed to create device flow - missing user_code")
             
             # Store flow for this session
             self._auth_flows[session_id] = {
@@ -124,6 +154,8 @@ class WebOneDriveManager:
                 "started_at": time.time(),
                 "completed": False
             }
+            
+            logger.info(f"Device flow stored successfully for session {session_id}")
             
             return {
                 "user_code": flow["user_code"],
@@ -133,6 +165,9 @@ class WebOneDriveManager:
             }
         except Exception as e:
             logger.error(f"OneDrive: Device flow initiation failed: {e}")
+            logger.error(f"Exception type: {type(e).__name__}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             return None
 
     def check_device_flow_status(self, session_id):
