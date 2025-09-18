@@ -106,9 +106,9 @@ class EditableBoxApp:
             {"label": "AI Config", "cmd": self._set_ai_api_key, "style": {"bg": "#FFB6C1", "fg": "black"}},  # light pink
             {"label": "OneDrive Sync", "cmd": self.authenticate_onedrive, "style": {"bg": "#0078D4", "fg": "white"}},  # Microsoft blue
             {"label": "Config Location", "cmd": self.show_config_location, "style": {"bg": "#98FB98", "fg": "black"}},  # pale green
-            {"label": "About", "cmd": self.show_about, "style": {"bg": "#F0E68C", "fg": "black"}},  # khaki
             # Unified font button (left-click increases; right-click opens menu)
             {"label": "Font +/-", "cmd": lambda: self._change_focused_font_size(+1), "style": {"bg": "#0078D4", "fg": "white", "activebackground": "#106EBE"}},
+            {"label": "About", "cmd": self.show_about, "style": {"bg": "#F0E68C", "fg": "black"}},  # khaki - moved to end
         ]
         # Create toolbar buttons on startup
         self.toolbar_main_buttons = []
@@ -3057,7 +3057,19 @@ class EditableBoxApp:
         try:
             if hasattr(self, 'status_bar'):
                 current_time = datetime.now().strftime("%H:%M:%S")
-                status_text = f"Boxes: {len(self.text_boxes)} | View: {self.current_view_mode} | {current_time}"
+                
+                # Add OneDrive status indicator
+                onedrive_status = "❌"
+                if self.onedrive_manager:
+                    try:
+                        if self.onedrive_manager.is_authenticated():
+                            onedrive_status = "✅"
+                        else:
+                            onedrive_status = "❓"
+                    except Exception:
+                        onedrive_status = "❌"
+                
+                status_text = f"Boxes: {len(self.text_boxes)} | View: {self.current_view_mode} | OneDrive: {onedrive_status} | {current_time}"
                 self.status_bar.config(text=status_text)
         except Exception as e:
             print(f"DEBUG: Error updating status bar: {e}")

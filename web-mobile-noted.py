@@ -36,8 +36,8 @@ app = Flask(__name__)
 # Security Configuration
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_PERMANENT'] = False
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+app.config['SESSION_PERMANENT'] = True  # Make sessions persistent
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 7  # 7 days for OneDrive auth persistence
 app.config['SESSION_FILE_THRESHOLD'] = 100
 app.config['WTF_CSRF_TIME_LIMIT'] = 3600
 
