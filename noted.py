@@ -104,7 +104,7 @@ class EditableBoxApp:
             {"label": "Equalize Boxes", "cmd": self.equalize_boxes, "style": {"bg": "#ADD8E6"}},  # light blue
             {"label": "Auto-Save Config", "cmd": self.configure_auto_save, "style": {"bg": "#DDA0DD"}},  # plum
             {"label": "AI Config", "cmd": self._set_ai_api_key, "style": {"bg": "#FFB6C1", "fg": "black"}},  # light pink
-            {"label": "Sync OneDrive", "cmd": self.authenticate_onedrive, "style": {"bg": "#0078D4", "fg": "white"}},  # Microsoft blue
+            {"label": "OneDrive Sync", "cmd": self.authenticate_onedrive, "style": {"bg": "#0078D4", "fg": "white"}},  # Microsoft blue
             {"label": "Config Location", "cmd": self.show_config_location, "style": {"bg": "#98FB98", "fg": "black"}},  # pale green
             {"label": "About", "cmd": self.show_about, "style": {"bg": "#F0E68C", "fg": "black"}},  # khaki
             # Unified font button (left-click increases; right-click opens menu)
@@ -770,15 +770,26 @@ class EditableBoxApp:
                     self.onedrive_manager.account = self.onedrive_manager.get_account()
                     self.onedrive_manager._save_cache()
                     
-                    # Show success and offer to load notes
+                    # Show success and offer sync options
                     user_info = self.onedrive_manager.get_user_info()
                     user_name = user_info.get("name", "Unknown") if user_info else "Unknown"
                     
                     def success_callback():
-                        result = messagebox.askyesno("OneDrive Connected", 
-                            f"Successfully connected to OneDrive as {user_name}!\n\nWould you like to load your notes from OneDrive now?")
-                        if result:
+                        # Ask what they want to do
+                        choice = messagebox.askyesnocancel("OneDrive Connected", 
+                            f"Successfully connected to OneDrive as {user_name}!\n\n"
+                            "What would you like to do?\n\n"
+                            "• YES = Save current notes TO OneDrive\n"
+                            "• NO = Load notes FROM OneDrive\n"
+                            "• CANCEL = Just authenticate (no sync)")
+                        
+                        if choice is True:
+                            # Save current notes to OneDrive
+                            self._sync_current_notes_to_onedrive()
+                        elif choice is False:
+                            # Load notes from OneDrive
                             self._load_notes_from_onedrive()
+                        # else: choice is None (Cancel) - do nothing
                     
                     self.root.after(0, success_callback)
                 else:
@@ -789,6 +800,85 @@ class EditableBoxApp:
 
         # Start authentication in background thread
         threading.Thread(target=auth_and_reload, daemon=True).start()
+
+    def _sync_current_notes_to_onedrive(self):
+        """Save all current notes to OneDrive"""
+        if not self.onedrive_manager:
+            messagebox.showerror("OneDrive Error", "OneDrive not authenticated. Please authenticate first.")
+            return
+        
+        try:
+            saved_count = 0
+            error_count = 0
+            
+            for i, box_data in enumerate(self.text_boxes):
+                text_widget = box_data.get("text_box")
+                file_path = box_data.get("file_path", "")
+                
+                if not text_widget:
+                    continue
+                
+                content = text_widget.get("1.0", tk.END).strip()
+                if not content:
+                    continue  # Skip empty boxes
+                
+                try:
+                    # Generate a meaningful filename
+                    if file_path and os.path.exists(file_path):
+                        # Use existing filename
+                        base_name = os.path.splitext(os.path.basename(file_path))[0]
+                    else:
+                        # Generate name from content or use index
+                        first_line = content.split('\n')[0][:30].strip()
+                        if first_line:
+                            # Clean the first line for filename
+                            import re
+                            base_name = re.sub(r'[^\w\s-]', '', first_line)
+                            base_name = re.sub(r'[-\s]+', '_', base_name)
+                        else:
+                            base_name = f"Note_{i+1}"
+                    
+                    # Create note data structure
+                    note_data = {
+                        "content": content,
+                        "last_modified": time.time(),
+                        "title": base_name,
+                        "source": "desktop_app"
+                    }
+                    
+                    filename = f"{base_name}.json"
+                    
+                    # Save to OneDrive
+                    result = self.onedrive_manager.save_note(filename, note_data)
+                    if result:
+                        saved_count += 1
+                        print(f"DEBUG: Saved note '{base_name}' to OneDrive")
+                        # Update the box to show it's saved to OneDrive
+                        box_data["file_path"] = f"onedrive:{result.get('id', '')}"
+                        box_data["saved"] = True
+                    else:
+                        error_count += 1
+                        print(f"DEBUG: Failed to save note '{base_name}' to OneDrive")
+                        
+                except Exception as e:
+                    error_count += 1
+                    print(f"DEBUG: Error saving note to OneDrive: {e}")
+            
+            # Show results
+            if saved_count > 0 and error_count == 0:
+                messagebox.showinfo("OneDrive Sync", f"Successfully saved {saved_count} notes to OneDrive!")
+            elif saved_count > 0 and error_count > 0:
+                messagebox.showwarning("OneDrive Sync", f"Saved {saved_count} notes to OneDrive, but {error_count} failed.")
+            elif saved_count == 0 and error_count > 0:
+                messagebox.showerror("OneDrive Sync", f"Failed to save any notes to OneDrive. {error_count} errors occurred.")
+            else:
+                messagebox.showinfo("OneDrive Sync", "No notes found to sync.")
+                
+        except Exception as e:
+            messagebox.showerror("OneDrive Sync Error", f"An error occurred during sync: {e}")
+            print(f"DEBUG: OneDrive sync error: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _show_auth_dialog(self, flow):
         """Show non-blocking authentication dialog with device code"""
