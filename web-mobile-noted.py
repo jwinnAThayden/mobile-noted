@@ -63,6 +63,12 @@ DEVICE_COOKIE_NAME = 'noted_device_id'
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Helper function for conditional CSRF validation
+def validate_csrf_if_enabled(csrf_token):
+    """Only validate CSRF if authentication is enabled"""
+    if AUTH_ENABLED:
+        validate_csrf(csrf_token)
+
 # Initialize security extensions after logger setup
 Session(app)
 if AUTH_ENABLED:
@@ -730,7 +736,7 @@ def start_onedrive_auth():
         return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
     
     try:
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         session_id = session.get('session_id', str(uuid.uuid4()))
         session['session_id'] = session_id
