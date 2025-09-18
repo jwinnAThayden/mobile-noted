@@ -24,11 +24,10 @@ USERNAME = os.environ.get('RAILWAY_USERNAME')
 PASSWORD = os.environ.get('RAILWAY_PASSWORD')
 
 if not USERNAME or not PASSWORD:
-    print("WARNING: RAILWAY_USERNAME and RAILWAY_PASSWORD environment variables not set!")
+    print("ERROR: RAILWAY_USERNAME and RAILWAY_PASSWORD environment variables MUST be set!")
     print("Please set these in your Railway dashboard under Variables.")
-    # For development, you can set defaults, but remove for production
-    USERNAME = 'admin'
-    PASSWORD = 'changeme123'
+    print("App will not start without proper authentication configuration.")
+    exit(1)
 
 # Directories
 NOTES_DIR = 'web_notes'
