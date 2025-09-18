@@ -827,6 +827,94 @@ def cancel_onedrive_auth():
         logger.error(f"Error canceling OneDrive auth: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/onedrive/debug/flow-status', methods=['GET'])
+@limiter.limit("20 per minute")
+def debug_device_flow():
+    """Debug endpoint to check device flow internal state"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        session_id = session.get('session_id')
+        if not session_id:
+            return jsonify({'success': False, 'error': 'No active session'}), 400
+        
+        # Get internal flow state
+        flows = getattr(onedrive_manager, '_auth_flows', {})
+        if session_id in flows:
+            flow_data = flows[session_id]
+            elapsed = time.time() - flow_data["started_at"]
+            timeout = flow_data.get("extended_expires_in", flow_data["flow"].get("expires_in", 2700))
+            
+            return jsonify({
+                'success': True,
+                'session_id': session_id,
+                'started_at': flow_data["started_at"],
+                'elapsed_seconds': elapsed,
+                'timeout_seconds': timeout,
+                'elapsed_minutes': elapsed / 60,
+                'timeout_minutes': timeout / 60,
+                'time_remaining_seconds': max(0, timeout - elapsed),
+                'time_remaining_minutes': max(0, timeout - elapsed) / 60,
+                'completed': flow_data.get("completed", False),
+                'original_timeout': flow_data.get("original_expires_in", "unknown"),
+                'extended_timeout': flow_data.get("extended_expires_in", "unknown")
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'message': 'No active device flow',
+                'session_id': session_id,
+                'available_flows': list(flows.keys())
+            })
+        
+    except Exception as e:
+        logger.error(f"Error in debug flow status: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/onedrive/extend-timeout', methods=['POST'])
+@limiter.limit("5 per minute")
+@login_required  
+def extend_device_flow_timeout():
+    """Extend the timeout for an active device flow"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        session_id = session.get('session_id')
+        if not session_id:
+            return jsonify({'success': False, 'error': 'No active session'}), 400
+        
+        # Get internal flow state
+        flows = getattr(onedrive_manager, '_auth_flows', {})
+        if session_id in flows:
+            flow_data = flows[session_id]
+            
+            # Extend timeout by another 30 minutes
+            additional_time = 1800  # 30 minutes
+            current_timeout = flow_data.get("extended_expires_in", flow_data["flow"].get("expires_in", 2700))
+            new_timeout = current_timeout + additional_time
+            
+            # Update the flow data
+            flow_data["extended_expires_in"] = new_timeout
+            flow_data["flow"]["expires_in"] = new_timeout
+            
+            logger.info(f"🕐 Extended device flow timeout for session {session_id} by {additional_time}s to {new_timeout}s total")
+            
+            return jsonify({
+                'success': True,
+                'message': f'Timeout extended by {additional_time/60} minutes',
+                'new_timeout_seconds': new_timeout,
+                'new_timeout_minutes': new_timeout / 60,
+                'added_minutes': additional_time / 60
+            })
+        else:
+            return jsonify({'success': False, 'error': 'No active device flow found'}), 400
+        
+    except Exception as e:
+        logger.error(f"Error extending device flow timeout: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/onedrive/logout', methods=['POST'])
 @login_required
 def onedrive_logout():

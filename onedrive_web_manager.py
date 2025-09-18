@@ -178,8 +178,13 @@ class WebOneDriveManager:
             if not self.app:
                 raise ValueError("MSAL app not initialized")
                 
+            # Initiate device flow with explicit timeout
             flow = self.app.initiate_device_flow(scopes=SCOPES)
             logger.info(f"🔍 Device flow initiated, response keys: {list(flow.keys())}")
+            
+            # Log the actual timeout from Microsoft
+            actual_timeout = flow.get("expires_in", 900)
+            logger.info(f"🕐 Microsoft set device flow timeout: {actual_timeout} seconds ({actual_timeout/60:.1f} minutes)")
             
             # Check for errors in flow response
             if "error" in flow:
@@ -190,11 +195,19 @@ class WebOneDriveManager:
                 logger.error(f"🔍 Device flow missing user_code. Full response: {flow}")
                 return None
             
+            # Override the timeout if it's too short (extend to 45 minutes max)
+            extended_timeout = max(actual_timeout, 2700)  # At least 45 minutes
+            flow["expires_in"] = extended_timeout
+            
+            logger.info(f"🕐 Extended device flow timeout to: {extended_timeout} seconds ({extended_timeout/60:.1f} minutes)")
+            
             # Store flow for this session
             self._auth_flows[session_id] = {
                 "flow": flow,
                 "started_at": time.time(),
-                "completed": False
+                "completed": False,
+                "original_expires_in": actual_timeout,
+                "extended_expires_in": extended_timeout
             }
             
             logger.info(f"Device flow stored successfully for session {session_id}")
@@ -202,7 +215,7 @@ class WebOneDriveManager:
             return {
                 "user_code": flow["user_code"],
                 "verification_uri": flow["verification_uri"],
-                "expires_in": flow.get("expires_in", 1800),  # 30 minutes default
+                "expires_in": extended_timeout,  # Return our extended timeout
                 "interval": flow.get("interval", 5)  # 5 seconds default
             }
         except Exception as e:
@@ -226,10 +239,16 @@ class WebOneDriveManager:
             return flow_data["result"]
         
         try:
-            # Check if flow has expired
-            if time.time() - flow_data["started_at"] > flow_data["flow"].get("expires_in", 1800):
+            # Check if flow has expired using our extended timeout
+            elapsed_time = time.time() - flow_data["started_at"]
+            timeout = flow_data.get("extended_expires_in", flow_data["flow"].get("expires_in", 2700))
+            
+            logger.info(f"🕐 Device flow check: {elapsed_time:.0f}s elapsed, timeout is {timeout}s ({timeout/60:.1f}min)")
+            
+            if elapsed_time > timeout:
+                logger.warning(f"🕐 Device flow expired after {elapsed_time:.0f}s (timeout: {timeout}s)")
                 del self._auth_flows[session_id]
-                return {"status": "expired", "message": "Authentication flow expired"}
+                return {"status": "expired", "message": f"Authentication flow expired after {timeout/60:.1f} minutes"}
             
             # Add timeout protection to prevent worker timeout
             import signal
