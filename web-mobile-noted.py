@@ -913,6 +913,27 @@ def static_files(filename):
     """Serve static files"""
     return send_from_directory(os.path.join(app.root_path, 'static'), filename)
 
+@app.route('/debug/onedrive')
+def debug_onedrive():
+    """Debug OneDrive integration status - no auth required"""
+    import sys
+    debug_info = {
+        'onedrive_available': ONEDRIVE_AVAILABLE,
+        'onedrive_manager_exists': onedrive_manager is not None,
+        'onedrive_error': onedrive_error_message,
+        'auth_enabled': AUTH_ENABLED,
+        'environment_vars': {
+            'NOTED_CLIENT_ID': bool(os.environ.get('NOTED_CLIENT_ID')),
+            'RAILWAY_ENVIRONMENT': bool(os.environ.get('RAILWAY_ENVIRONMENT')),
+            'PORT': os.environ.get('PORT', 'Not set')
+        },
+        'dependencies_check': {
+            'WebOneDriveManager_imported': 'WebOneDriveManager' in globals(),
+            'msal_available': 'msal' in sys.modules
+        }
+    }
+    return jsonify(debug_info)
+
 if __name__ == '__main__':
     # Only run development server if not in production
     is_production = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT')

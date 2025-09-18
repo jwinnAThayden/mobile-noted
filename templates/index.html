@@ -1113,6 +1113,18 @@
                 const response = await authenticatedFetch('/api/onedrive/status');
                 if (!response) return;
                 
+                // Check if response is actually JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.warn('OneDrive status returned non-JSON response:', await response.text());
+                    updateOneDriveUI({
+                        available: false,
+                        authenticated: false,
+                        error: 'Server returned non-JSON response'
+                    });
+                    return;
+                }
+                
                 const data = await response.json();
                 updateOneDriveUI(data);
             } catch (error) {
@@ -1254,6 +1266,16 @@
                 });
                 
                 if (!response) return;
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    showStatus('Server error: Expected JSON but got HTML response', true);
+                    console.error('Non-JSON response from auth start:', text);
+                    return;
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
