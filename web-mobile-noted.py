@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import uuid
+import time
 from datetime import datetime, timedelta
 import logging
 from functools import wraps
@@ -943,6 +944,7 @@ def debug_onedrive():
         'auth_enabled': AUTH_ENABLED,
         'environment_vars': {
             'NOTED_CLIENT_ID': bool(os.environ.get('NOTED_CLIENT_ID')),
+            'NOTED_CLIENT_ID_length': len(os.environ.get('NOTED_CLIENT_ID', '')),
             'RAILWAY_ENVIRONMENT': bool(os.environ.get('RAILWAY_ENVIRONMENT')),
             'PORT': os.environ.get('PORT', 'Not set')
         },
@@ -952,6 +954,56 @@ def debug_onedrive():
         }
     }
     return jsonify(debug_info)
+
+@app.route('/test/onedrive/auth')
+def test_onedrive_auth():
+    """Test OneDrive authentication setup without session requirements"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({
+            'success': False,
+            'error': 'OneDrive manager not available',
+            'onedrive_available': ONEDRIVE_AVAILABLE,
+            'manager_exists': onedrive_manager is not None,
+            'init_error': onedrive_error_message
+        })
+    
+    try:
+        # Test if we can start a device flow
+        test_session_id = f"test_{int(time.time())}"
+        
+        result = onedrive_manager.start_device_flow_auth(test_session_id)
+        
+        if result:
+            # Clean up the test flow
+            try:
+                if hasattr(onedrive_manager, '_auth_flows'):
+                    onedrive_manager._auth_flows.pop(test_session_id, None)
+            except:
+                pass
+                
+            return jsonify({
+                'success': True,
+                'message': 'OneDrive authentication flow can be started successfully',
+                'test_flow_keys': list(result.keys()) if result else []
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'start_device_flow_auth returned None',
+                'client_id_set': bool(os.environ.get('NOTED_CLIENT_ID')),
+                'manager_type': type(onedrive_manager).__name__
+            })
+            
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'error_type': type(e).__name__,
+            'traceback': traceback.format_exc(),
+            'client_id_set': bool(os.environ.get('NOTED_CLIENT_ID')),
+            'manager_exists': onedrive_manager is not None
+        })
 
 @app.route('/api/simple/onedrive/status')
 def simple_onedrive_status():
