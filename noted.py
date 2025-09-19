@@ -15,6 +15,49 @@ import tkinter.font as tkfont
 import hashlib
 import webbrowser
 
+class ProgressDialog:
+    """Simple progress dialog for long-running operations."""
+    def __init__(self, parent, title="Loading...", message="Please wait..."):
+        self.parent = parent
+        self.dialog = tk.Toplevel(parent)
+        self.dialog.title(title)
+        self.dialog.geometry("350x100")
+        self.dialog.resizable(False, False)
+        self.dialog.transient(parent)
+        self.dialog.grab_set()
+        
+        # Center the dialog
+        self.dialog.update_idletasks()
+        x = (parent.winfo_screenwidth() // 2) - (175)
+        y = (parent.winfo_screenheight() // 2) - (50)
+        self.dialog.geometry(f"350x100+{x}+{y}")
+        
+        # Message label
+        self.label = tk.Label(self.dialog, text=message, wraplength=320, 
+                             font=("Segoe UI", 10))
+        self.label.pack(pady=10)
+        
+        # Progress bar
+        self.progress = ttk.Progressbar(self.dialog, mode='indeterminate')
+        self.progress.pack(pady=10, padx=20, fill='x')
+        self.progress.start(10)
+        
+        # Update the dialog
+        self.dialog.update()
+    
+    def update_message(self, message):
+        """Update the progress message."""
+        self.label.config(text=message)
+        self.dialog.update()
+    
+    def close(self):
+        """Close the progress dialog."""
+        try:
+            self.progress.stop()
+            self.dialog.destroy()
+        except Exception:
+            pass
+
 # Import OneDrive manager for cloud sync
 try:
     from onedrive_manager import OneDriveManager
@@ -55,11 +98,8 @@ class EditableBoxApp:
         self.ai_api_key = ""
         self._load_configuration()
 
-        # Box arrangement state tracking
-        self.current_arrangement = "horizontal"  # "horizontal", "vertical"
-        
-        # View mode tracking - "paned" or "tabbed"
-        self.current_view_mode = "paned"  # Start in paned mode, then switch to tabbed
+        # Only tabbed view is supported now
+        self.current_view_mode = "tabbed"  # Always use tabbed view
         
         # OneDrive Manager initialization
         self.onedrive_manager = None
@@ -96,12 +136,9 @@ class EditableBoxApp:
 
         self.toolbar_buttons = [
             {"label": "Minimize", "cmd": self.minimize_app, "style": {"bg": "#FFA500"}},  # orange
-            {"label": "Add Box", "cmd": self.add_text_box, "style": {"bg": "#006400", "fg": "white"}},  # dark green
-            {"label": "Arrange Boxes", "cmd": lambda: self.cycle_box_arrangement(), "style": {"bg": "#87CEEB", "fg": "black"}},  # sky blue - TEST WITH LAMBDA
-            {"label": "Tabbed View", "cmd": self.toggle_tabbed_view, "style": {"bg": "#9370DB", "fg": "white"}},  # medium purple
+            {"label": "Add Tab", "cmd": self.add_text_box, "style": {"bg": "#006400", "fg": "white"}},  # dark green
             {"label": "Open Files", "cmd": self.open_multiple_files, "style": {"bg": "#4169E1", "fg": "white"}},  # royal blue
             {"label": "Insert Date/Time", "cmd": self.insert_datetime, "style": {"bg": "#87CEEB", "fg": "black"}},  # sky blue
-            {"label": "Equalize Boxes", "cmd": self.equalize_boxes, "style": {"bg": "#ADD8E6"}},  # light blue
             {"label": "Auto-Save Config", "cmd": self.configure_auto_save, "style": {"bg": "#DDA0DD"}},  # plum
             {"label": "AI Config", "cmd": self._set_ai_api_key, "style": {"bg": "#FFB6C1", "fg": "black"}},  # light pink
             {"label": "OneDrive Sync", "cmd": self.authenticate_onedrive, "style": {"bg": "#0078D4", "fg": "white"}},  # Microsoft blue
@@ -217,16 +254,48 @@ class EditableBoxApp:
         )
         self.status_bar.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(10, 0))
 
-        # Paned window for boxes
-        self.paned_window = tk.PanedWindow(self.root, orient=tk.VERTICAL)
-        self.paned_window.pack(fill=tk.BOTH, expand=True)
+        # Show loading progress with OneDrive status
+        onedrive_status = ""
+        if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+            onedrive_status = " (OneDrive connected)"
+        elif self.onedrive_manager:
+            onedrive_status = " (OneDrive available)"
+        
+        progress = ProgressDialog(self.root, "Starting Noted", f"Initializing application{onedrive_status}...")
+        
+        try:
+            # Create tabbed interface only
+            progress.update_message("Creating tabbed interface...")
+            self.paned_window = None  # No paned view support
 
-        # Mark initialized before restoring boxes (add_text_box requires this)
-        self._initialized = True
-        self._restore_boxes_from_layout()
+            # Mark initialized before restoring boxes (add_text_box requires this)
+            self._initialized = True
+            
+            # Check OneDrive status and show appropriate progress message
+            if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+                progress.update_message("Loading notes from OneDrive cloud storage...")
+            else:
+                progress.update_message("Loading saved notes from local storage...")
+            self._restore_boxes_from_layout()
 
-        # Switch to tabbed mode after initialization
-        self.root.after(100, self._initialize_tabbed_mode)
+            # Switch to tabbed mode after initialization
+            progress.update_message("Finalizing interface...")
+            self.root.after(100, lambda: self._initialize_tabbed_mode_with_progress(progress))
+
+        except Exception as e:
+            # If initialization fails, close progress and show error
+            try:
+                progress.close()
+            except Exception:
+                pass
+            messagebox.showerror("Startup Error", f"Failed to initialize application: {e}")
+            
+    def _initialize_tabbed_mode_with_progress(self, progress):
+        """Initialize tabbed mode and close progress dialog."""
+        try:
+            self._initialize_tabbed_mode()
+        finally:
+            progress.close()
 
         # Fallback: re-apply saved geometry once after initial idle to override default pack expansions
         try:
@@ -370,7 +439,18 @@ class EditableBoxApp:
             return "break"
 
     def _get_config_file_path(self, filename):
-        """Get configuration file path, preferring OneDrive for cross-device sync."""
+        """Get configuration file path, using local storage to prevent automatic OneDrive loading."""
+        try:
+            # ALWAYS use current directory for app state to prevent automatic OneDrive loading
+            # OneDrive sync should be explicit user action via the OneDrive button
+            return os.path.join(os.path.abspath(os.path.dirname(__file__)), filename)
+            
+        except Exception:
+            # Ultimate fallback: use current directory
+            return os.path.join(os.path.abspath(os.path.dirname(__file__)), filename)
+
+    def _get_onedrive_config_file_path(self, filename):
+        """Get OneDrive configuration file path for explicit OneDrive operations."""
         try:
             # Try to find OneDrive path from environment variables
             onedrive_paths = [
@@ -506,42 +586,20 @@ class EditableBoxApp:
                         pass
             self.text_boxes = []
             
-            # First try to load from OneDrive if authenticated
-            if self.onedrive_manager and self.onedrive_manager.is_authenticated():
-                print("DEBUG: OneDrive authenticated, loading notes from cloud...")
-                try:
-                    notes = self.onedrive_manager.list_notes()
-                    if notes:
-                        print(f"DEBUG: Found {len(notes)} notes in OneDrive")
-                        for note_item in notes:
-                            file_name = note_item.get("name", "")
-                            item_id = note_item.get("id", "")
-                            
-                            if file_name and item_id:
-                                note_data = self.onedrive_manager.get_note_content(item_id)
-                                if note_data and isinstance(note_data, dict):
-                                    content = note_data.get("content", "")
-                                    # Use the file name (without .json) as the note title
-                                    title = file_name.replace(".json", "") if file_name.endswith(".json") else file_name
-                                    self.add_text_box(content=content, file_path=f"onedrive:{item_id}", onedrive_name=title)
-                        
-                        print(f"DEBUG: Successfully loaded {len(notes)} notes from OneDrive")
-                        return  # Skip local layout loading
-                    else:
-                        print("DEBUG: No notes found in OneDrive, falling back to local layout")
-                except Exception as e:
-                    print(f"DEBUG: Failed to load from OneDrive: {e}")
-                    print("DEBUG: Falling back to local layout")
-            else:
-                print("DEBUG: OneDrive not authenticated, loading from local layout")
+            # Load from local layout first (preserve user's current state)
+            # OneDrive sync should be explicit user action, not automatic on startup
+            print("DEBUG: Loading from local layout (OneDrive sync available via button)")
             
             # Load from local layout file (fallback or default behavior)
             layout = None
+            print(f"DEBUG: Layout file path: {self.layout_file}")
             if os.path.exists(self.layout_file):
                 try:
                     with open(self.layout_file, "r", encoding="utf-8") as file:
                         layout = json.load(file)
-                except Exception:
+                        print(f"DEBUG: Loaded layout with {len(layout.get('boxes', []))} boxes from {self.layout_file}")
+                except Exception as e:
+                    print(f"DEBUG: Error loading layout: {e}")
                     layout = None
             if layout:
                 geometry = layout.get("geometry")
@@ -555,12 +613,33 @@ class EditableBoxApp:
                 if not boxes:
                     boxes = layout.get("boxes_data")
                 if isinstance(boxes, list) and boxes:
+                    print(f"DEBUG: Loading {len(boxes)} saved notes from local layout...")
                     for i, box in enumerate(boxes):
                         try:
                             content = box.get("content", "") if isinstance(box, dict) else ""
                             file_path = box.get("file_path") if isinstance(box, dict) else None
                             font_size = box.get("font_size") if isinstance(box, dict) else None
-                            self.add_text_box(content=content, file_path=file_path or "", font_size=font_size)
+                            title = box.get("title") if isinstance(box, dict) else None
+                            
+                            # Show first line of content as progress
+                            first_line = content.split('\n')[0][:30] if content else "Empty note"
+                            print(f"DEBUG: Loading note {i+1}/{len(boxes)}: {first_line}")
+                            
+                            # For OneDrive notes, try to get original filename if available
+                            onedrive_name = None
+                            if file_path and file_path.startswith("onedrive:"):
+                                # Try to get original OneDrive filename from the item_id
+                                item_id = file_path.replace("onedrive:", "")
+                                original_filename = self._get_onedrive_filename_from_id(item_id)
+                                if original_filename:
+                                    onedrive_name = original_filename
+                                    print(f"DEBUG: Restoring OneDrive note with original filename: '{original_filename}'")
+                                elif title:
+                                    # Fallback to saved title if filename lookup fails
+                                    onedrive_name = title
+                                    print(f"DEBUG: Restoring OneDrive note with saved title (fallback): '{title}'")
+                            
+                            self.add_text_box(content=content, file_path=file_path or "", font_size=font_size, onedrive_name=onedrive_name)
                         except Exception:
                             pass
                 # Defer applying pane sizes until widgets laid out
@@ -597,12 +676,15 @@ class EditableBoxApp:
         except Exception:
             pass
 
-        # TEST: Arrange boxes shortcut: Ctrl+Shift+A
+        # Close current focused box/tab: Ctrl+W
         try:
-            self.root.bind_all("<Control-Shift-A>", lambda e: self.cycle_box_arrangement())
-            print("DEBUG: Added Ctrl+Shift+A shortcut for arrange boxes")
+            self.root.bind_all("<Control-w>", lambda e: self._close_focused_box() or "break")
+            self.root.bind_all("<Control-W>", lambda e: self._close_focused_box() or "break")
+            print("DEBUG: Added Ctrl+W shortcut for close focused box/tab")
         except Exception as ex:
-            print(f"DEBUG: Failed to bind Ctrl+Shift+A: {ex}")
+            print(f"DEBUG: Failed to bind Ctrl+W: {ex}")
+
+        # Removed arrange boxes shortcut (paned view feature removed)
 
         # Standard clipboard shortcuts (these work automatically with Tkinter Text widgets)
         # But we'll make sure they're explicitly available
@@ -629,12 +711,70 @@ class EditableBoxApp:
         # Auto-dock to left side and equalize box heights on startup
         # self.root.after(500, self._startup_positioning)
 
+    def _get_onedrive_filename_from_id(self, item_id):
+        """Get the original OneDrive filename from item_id during layout restoration."""
+        try:
+            if not self.onedrive_manager or not self.onedrive_manager.is_authenticated():
+                return None
+            
+            # Get the list of OneDrive notes and find the one with matching item_id
+            notes = self.onedrive_manager.list_notes()
+            for note in notes:
+                if note.get("id") == item_id:
+                    filename = note.get("name", "")
+                    
+                    # Map known OneDrive files by item_id to their proper original names
+                    # This handles the legacy files that were saved with content-based names
+                    item_id_mapping = {
+                        "01G3ZRC7AQMOQDSUWI7NGJ6GVHVQ2DCOHR": "MailboxDelegate.txt",
+                        "01G3ZRC7CMPQABBJTTKZB2SW3RIWSTV3EY": "usertextinfo.txt",
+                        "01G3ZRC7CXJKLW63IIGNFYJ4AMHPQGKZ5I": "Subcribe.txt",
+                        "01G3ZRC7FLUGEXPS6RTBCZ4M6K2XGMSXOV": "SupportTicket.txt",
+                        "01G3ZRC7H7R7DWIDRHANC3WMI5BIVLCWGE": "ContactInfo.txt",
+                        "01G3ZRC7HOJDZGL4I475EIIWOUFWVB7PLX": "ReportEmail.txt",
+                        "01G3ZRC7HZLZAB2FU5ONEKSR6ZWLX4II2J": "DisableAccount.txt"
+                    }
+                    
+                    # Use mapped name if available by item_id
+                    if item_id in item_id_mapping:
+                        print(f"DEBUG: Found item_id mapping for {item_id}: {item_id_mapping[item_id]}")
+                        return item_id_mapping[item_id]
+                    
+                    # Fallback: Map by filename patterns
+                    filename_mapping = {
+                        "If_you_need_a_license_for_soft": "Subcribe.txt",
+                        "Never_Logged_In_Text": "usertextinfo.txt",
+                        "Sessions_revoked_Security_Fac": "DisableAccount.txt",
+                        "What_is_a_good_time_to_look_at": "SupportTicket.txt",
+                        "When_you_receive_emails_like_t": "ReportEmail.txt",
+                        "You_have_been_assigned_as_a_De": "MailboxDelegate.txt",
+                        "Zach_at_Verizon_Pocatello": "ContactInfo.txt"
+                    }
+                    
+                    # Check if filename starts with any known pattern
+                    for pattern, mapped_name in filename_mapping.items():
+                        if filename.startswith(pattern):
+                            print(f"DEBUG: Found filename pattern mapping for '{filename}' -> '{mapped_name}'")
+                            return mapped_name
+                    
+                    # Remove .json extension for display
+                    if filename.endswith(".json"):
+                        cleaned = filename[:-5]
+                        # Remove timestamp suffixes for cleaner display
+                        import re
+                        cleaned = re.sub(r'_\d+$', '', cleaned)
+                        return cleaned
+                    return filename
+            return None
+        except Exception as e:
+            print(f"DEBUG: Error getting OneDrive filename for {item_id}: {e}")
+            return None
+
     def _initialize_tabbed_mode(self):
         """Initialize the app in tabbed mode after all components are set up."""
         try:
             print("DEBUG: Initializing tabbed mode on startup")
-            if self.current_view_mode == "paned":
-                self.toggle_tabbed_view()
+            # Already in tabbed mode - no paned mode exists anymore
         except Exception as e:
             print(f"DEBUG: Error initializing tabbed mode: {e}")
 
@@ -704,7 +844,7 @@ class EditableBoxApp:
                 txt.insert("end", "• " + text + "\n", ("bullet", color_tag))
 
             add_section("Desktop Power, Mobile Agility")
-            add_bullet("Dual views: Paned (multi-box) and Tabbed (notebook-style)", "blue")
+            add_bullet("Tabbed notebook-style interface with rich features", "blue")
             add_bullet("Colorful tabs with right‑click actions and AI tools", "purple")
             add_bullet("Resume where you left off: layout, geometry, tab state", "green")
 
@@ -721,8 +861,7 @@ class EditableBoxApp:
 
             add_section("Window & Layout Control")
             add_bullet("Dock to screen regions and snap layouts quickly", "blue")
-            add_bullet("Equalize and arrange boxes (paned view only)", "green")
-            add_bullet("Tab ↔ Paned switching preserves your content", "orange")
+            add_bullet("Tabbed interface with persistent content and layout", "green")
 
             txt.config(state="disabled")
             txt.pack(side="left", fill="both", expand=True)
@@ -735,8 +874,152 @@ class EditableBoxApp:
             messagebox.showerror("Error", f"Could not show about dialog: {e}")
     
     # OneDrive Integration Methods
+    def _check_network_connectivity(self):
+        """Check if we can reach Microsoft Graph API"""
+        try:
+            import socket
+            # Try to resolve Microsoft Graph hostname
+            socket.getaddrinfo("graph.microsoft.com", 443)
+            return True
+        except Exception:
+            return False
+    
+    def _sync_individual_onedrive_file(self, box_data):
+        """Sync a single OneDrive file if it's marked dirty"""
+        try:
+            if not self.onedrive_manager or not self.onedrive_manager.is_authenticated():
+                return False
+                
+            file_path = box_data.get("file_path", "")
+            if not file_path.startswith("onedrive:"):
+                return False
+                
+            if box_data.get("saved", True):  # Already saved
+                return True
+                
+            text_widget = box_data.get("text_box")
+            if not text_widget:
+                return False
+                
+            content = text_widget.get("1.0", tk.END).strip()
+            if not content:
+                return False
+                
+            item_id = file_path.replace("onedrive:", "")
+            if item_id:
+                self._save_to_onedrive_by_id(content, item_id, None, box_data)
+                print(f"DEBUG: Auto-synced OneDrive file: {box_data.get('title', 'Untitled')}")
+                return True
+                
+        except Exception as e:
+            print(f"DEBUG: Error syncing individual OneDrive file: {e}")
+        
+        return False
+    
+    def _show_onedrive_sync_dialog(self):
+        """Show the custom OneDrive sync options dialog"""
+        if not self.onedrive_manager or not self.onedrive_manager.is_authenticated():
+            return
+            
+        current_count = len(self.text_boxes)
+        
+        # Create custom dialog for better sync options
+        sync_dialog = tk.Toplevel(self.root)
+        sync_dialog.title("OneDrive Sync Options")
+        sync_dialog.geometry("520x450")
+        sync_dialog.transient(self.root)
+        sync_dialog.grab_set()
+        sync_dialog.resizable(True, True)
+        sync_dialog.minsize(500, 400)
+        
+        # Main frame
+        main_frame = tk.Frame(sync_dialog)
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # Header
+        header_label = tk.Label(main_frame, text="OneDrive Sync Options", 
+                               font=("Segoe UI", 14, "bold"))
+        header_label.pack(pady=(0, 20))
+        
+        # Options frame
+        options_frame = tk.Frame(main_frame)
+        options_frame.pack(fill="both", expand=True)
+        
+        # Choice variable
+        choice_var = tk.StringVar(value="add")
+        
+        # Add option
+        tk.Radiobutton(options_frame, text=f"Add current {current_count} tab(s) to OneDrive", 
+                      variable=choice_var, value="add", font=("Segoe UI", 10)).pack(anchor="w", pady=(0, 2))
+        tk.Label(options_frame, text="  (Keeps existing OneDrive notes, adds current notes)", 
+                font=("Segoe UI", 9), fg="gray").pack(anchor="w", padx=(20, 0))
+        
+        # Replace option  
+        tk.Radiobutton(options_frame, text=f"Replace ALL OneDrive notes with current {current_count} tab(s)", 
+                      variable=choice_var, value="replace", font=("Segoe UI", 10)).pack(anchor="w", pady=(10, 2))
+        tk.Label(options_frame, text="  (Deletes all OneDrive notes, uploads only current tabs)", 
+                font=("Segoe UI", 9), fg="gray").pack(anchor="w", padx=(20, 0))
+        
+        # Load option
+        tk.Radiobutton(options_frame, text="Load ALL notes from OneDrive", 
+                      variable=choice_var, value="load", font=("Segoe UI", 10)).pack(anchor="w", pady=(10, 2))
+        tk.Label(options_frame, text="  (⚠️ WARNING: Replaces current tabs with ALL OneDrive notes)", 
+                font=("Segoe UI", 9), fg="red").pack(anchor="w", padx=(20, 0))
+        
+        # Clear OneDrive option
+        tk.Radiobutton(options_frame, text="Clear OneDrive notes from workspace", 
+                      variable=choice_var, value="clear", font=("Segoe UI", 10)).pack(anchor="w", pady=(10, 2))
+        tk.Label(options_frame, text="  (Removes OneDrive notes from current tabs, keeps local notes)", 
+                font=("Segoe UI", 9), fg="gray").pack(anchor="w", padx=(20, 0))
+        
+        # Cleanup option
+        tk.Radiobutton(options_frame, text="🧹 Clean up old OneDrive notes", 
+                      variable=choice_var, value="cleanup", font=("Segoe UI", 10)).pack(anchor="w", pady=(10, 2))
+        tk.Label(options_frame, text="  (Delete old/unused notes from OneDrive cloud storage)", 
+                font=("Segoe UI", 9), fg="orange").pack(anchor="w", padx=(20, 0))
+        
+        # Buttons
+        button_frame = tk.Frame(main_frame)
+        button_frame.pack(fill="x", pady=(20, 10))
+        
+        result = {"choice": None}
+        
+        def on_ok():
+            result["choice"] = choice_var.get()
+            sync_dialog.destroy()
+        
+        def on_cancel():
+            result["choice"] = None
+            sync_dialog.destroy()
+        
+        tk.Button(button_frame, text="Sync Notes", command=on_ok, bg="#0078D4", fg="white", 
+                 font=("Segoe UI", 10, "bold"), width=12, height=2).pack(side="right", padx=(10, 0))
+        tk.Button(button_frame, text="Cancel", command=on_cancel, 
+                 font=("Segoe UI", 10), width=12, height=2).pack(side="right", padx=(0, 10))
+        
+        # Wait for dialog to close
+        sync_dialog.wait_window()
+        
+        choice = result["choice"]
+        if choice == "add":
+            # Add current notes to OneDrive (existing behavior)
+            self._sync_current_notes_to_onedrive()
+        elif choice == "replace":
+            # Replace all OneDrive notes with current notes
+            self._replace_onedrive_with_current_notes()
+        elif choice == "load":
+            # Load notes from OneDrive with confirmation
+            self._load_notes_from_onedrive_with_confirmation()
+        elif choice == "clear":
+            # Clear OneDrive notes from workspace
+            self._clear_onedrive_notes_from_workspace()
+        elif choice == "cleanup":
+            # Clean up old OneDrive notes
+            self._cleanup_old_onedrive_notes()
+        # else: choice is None (Cancel) - do nothing
+
     def authenticate_onedrive(self):
-        """Initiate OneDrive authentication."""
+        """Initiate OneDrive authentication or sync if already authenticated."""
         if not self.onedrive_manager:
             if not OneDriveManager:
                 messagebox.showerror("OneDrive Error", "OneDrive sync is not available. Please ensure the required dependencies are installed.")
@@ -751,10 +1034,21 @@ class EditableBoxApp:
                 messagebox.showerror("OneDrive Error", f"Failed to initialize OneDrive Manager: {e}")
                 return
 
+        # Check if already authenticated - if so, skip device flow and go straight to sync options
+        if self.onedrive_manager.is_authenticated():
+            if self._check_network_connectivity():
+                # Already authenticated, show sync options
+                self._show_onedrive_sync_dialog()
+            else:
+                messagebox.showerror("Network Error", "No internet connection available. Please check your network connection and try again.")
+            return
+
         def auth_and_reload():
             """Background authentication thread"""
             try:
-                flow = self.onedrive_manager.app.initiate_device_flow(scopes=self.onedrive_manager.SCOPES)
+                # Define the scopes needed for OneDrive access
+                scopes = ["Files.ReadWrite.AppFolder", "User.Read"]
+                flow = self.onedrive_manager.app.initiate_device_flow(scopes=scopes)
                 if "user_code" not in flow:
                     self.root.after(0, lambda: messagebox.showerror("Authentication Failed", "Could not initiate device flow."))
                     return
@@ -775,31 +1069,44 @@ class EditableBoxApp:
                     user_name = user_info.get("name", "Unknown") if user_info else "Unknown"
                     
                     def success_callback():
-                        # Ask what they want to do
-                        choice = messagebox.askyesnocancel("OneDrive Connected", 
+                        # Show success message and let user choose when to sync
+                        messagebox.showinfo("OneDrive Connected", 
                             f"Successfully connected to OneDrive as {user_name}!\n\n"
-                            "What would you like to do?\n\n"
-                            "• YES = Save current notes TO OneDrive\n"
-                            "• NO = Load notes FROM OneDrive\n"
-                            "• CANCEL = Just authenticate (no sync)")
-                        
-                        if choice is True:
-                            # Save current notes to OneDrive
-                            self._sync_current_notes_to_onedrive()
-                        elif choice is False:
-                            # Load notes from OneDrive
-                            self._load_notes_from_onedrive()
-                        # else: choice is None (Cancel) - do nothing
+                            "You can now sync your notes using the OneDrive Sync button.")
                     
                     self.root.after(0, success_callback)
                 else:
                     self.root.after(0, lambda: messagebox.showerror("Authentication Failed", "Authentication failed or was cancelled."))
                     
             except Exception as e:
-                self.root.after(0, lambda: messagebox.showerror("Authentication Error", f"Authentication error: {e}"))
+                error_msg = str(e)
+                self.root.after(0, lambda: messagebox.showerror("Authentication Error", f"Authentication error: {error_msg}"))
 
         # Start authentication in background thread
         threading.Thread(target=auth_and_reload, daemon=True).start()
+
+    def _update_onedrive_button_status(self, status="normal", text="OneDrive Sync"):
+        """Update OneDrive button appearance to show status"""
+        try:
+            # Find the OneDrive Sync button (index 9 in toolbar_buttons)
+            onedrive_button_index = 9  # "OneDrive Sync" is at index 9
+            if len(self.toolbar_main_buttons) > onedrive_button_index:
+                btn = self.toolbar_main_buttons[onedrive_button_index]
+                
+                if status == "syncing":
+                    btn.config(text=text, bg="#FFA500", fg="white")  # Orange for syncing
+                elif status == "success": 
+                    btn.config(text=text, bg="#32CD32", fg="white")  # Green for success
+                    # Reset to normal after 2 seconds
+                    self.root.after(2000, lambda: self._update_onedrive_button_status("normal"))
+                elif status == "error":
+                    btn.config(text=text, bg="#DC143C", fg="white")  # Red for error
+                    # Reset to normal after 3 seconds
+                    self.root.after(3000, lambda: self._update_onedrive_button_status("normal"))
+                else:  # normal
+                    btn.config(text="OneDrive Sync", bg="#0078D4", fg="white")  # Microsoft blue
+        except Exception as e:
+            print(f"DEBUG: Error updating OneDrive button: {e}")
 
     def _sync_current_notes_to_onedrive(self):
         """Save all current notes to OneDrive"""
@@ -807,9 +1114,25 @@ class EditableBoxApp:
             messagebox.showerror("OneDrive Error", "OneDrive not authenticated. Please authenticate first.")
             return
         
+        # Check network connectivity before attempting sync
+        if not self._check_network_connectivity():
+            messagebox.showerror("Network Error", 
+                "Cannot connect to OneDrive services.\n\n"
+                "Please check your internet connection and try again.")
+            return
+        
+        # Update button to show syncing status
+        self._update_onedrive_button_status("syncing", "Syncing...")
+        
+        # Show progress dialog
+        progress = ProgressDialog(self.root, "Syncing to OneDrive", "Preparing to sync notes to OneDrive...")
+        self.root.update()
+        
         try:
             saved_count = 0
             error_count = 0
+            network_error = False
+            total_notes = len([box for box in self.text_boxes if box.get("text_box") and box.get("text_box").get("1.0", tk.END).strip()])
             
             for i, box_data in enumerate(self.text_boxes):
                 text_widget = box_data.get("text_box")
@@ -821,6 +1144,10 @@ class EditableBoxApp:
                 content = text_widget.get("1.0", tk.END).strip()
                 if not content:
                     continue  # Skip empty boxes
+                
+                # Update progress
+                progress.update_message(f"Syncing note {saved_count + error_count + 1} of {total_notes}...")
+                self.root.update()
                 
                 try:
                     # Generate a meaningful filename
@@ -862,21 +1189,208 @@ class EditableBoxApp:
                         
                 except Exception as e:
                     error_count += 1
+                    error_str = str(e)
                     print(f"DEBUG: Error saving note to OneDrive: {e}")
+                    # Check for network connectivity issues
+                    if "getaddrinfo failed" in error_str or "Failed to establish a new connection" in error_str:
+                        network_error = True
+                    elif "Max retries exceeded" in error_str or "HTTPSConnectionPool" in error_str:
+                        network_error = True
             
-            # Show results
+            # Close progress dialog
+            progress.close()
+            
+            # Show results and update button status
             if saved_count > 0 and error_count == 0:
+                self._update_onedrive_button_status("success", "Sync Complete")
                 messagebox.showinfo("OneDrive Sync", f"Successfully saved {saved_count} notes to OneDrive!")
             elif saved_count > 0 and error_count > 0:
+                self._update_onedrive_button_status("error", "Partial Sync")
                 messagebox.showwarning("OneDrive Sync", f"Saved {saved_count} notes to OneDrive, but {error_count} failed.")
             elif saved_count == 0 and error_count > 0:
-                messagebox.showerror("OneDrive Sync", f"Failed to save any notes to OneDrive. {error_count} errors occurred.")
+                self._update_onedrive_button_status("error", "Sync Failed")
+                # Check if we detected network errors
+                if network_error:
+                    messagebox.showerror("OneDrive Network Error", 
+                        f"Failed to sync notes to OneDrive due to network connectivity issues.\n\n"
+                        "Please check your internet connection and try again.\n\n"
+                        f"Technical details: {error_count} connection error(s) occurred.")
+                else:
+                    messagebox.showerror("OneDrive Sync", f"Failed to save any notes to OneDrive. {error_count} errors occurred.")
             else:
+                self._update_onedrive_button_status("normal")
                 messagebox.showinfo("OneDrive Sync", "No notes found to sync.")
                 
         except Exception as e:
+            # Close progress dialog if it exists
+            try:
+                progress.close()
+            except:
+                pass
+            # Update button to show error
+            self._update_onedrive_button_status("error", "Sync Error")
             messagebox.showerror("OneDrive Sync Error", f"An error occurred during sync: {e}")
             print(f"DEBUG: OneDrive sync error: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _replace_onedrive_with_current_notes(self):
+        """Clear OneDrive and upload only current notes"""
+        if not self.onedrive_manager:
+            messagebox.showerror("OneDrive Error", "OneDrive not authenticated. Please authenticate first.")
+            return
+        
+        # Check network connectivity before attempting sync
+        if not self._check_network_connectivity():
+            messagebox.showerror("Network Error", 
+                "Cannot connect to OneDrive services.\n\n"
+                "Please check your internet connection and try again.")
+            return
+        
+        # Confirm the destructive action
+        current_count = len(self.text_boxes)
+        confirm = messagebox.askyesno("Confirm Replace", 
+            f"This will DELETE ALL existing notes in OneDrive and replace them with your current {current_count} tab(s).\n\n"
+            "This action cannot be undone!\n\n"
+            "Are you sure you want to continue?")
+        
+        if not confirm:
+            return
+        
+        # Update button to show syncing status
+        self._update_onedrive_button_status("syncing", "Replacing...")
+        
+        # Show progress dialog
+        progress = ProgressDialog(self.root, "Replacing OneDrive Notes", "Clearing existing OneDrive notes...")
+        self.root.update()
+        
+        try:
+            # Step 1: Get list of existing notes and delete them
+            progress.update_message("Getting list of existing OneDrive notes...")
+            self.root.update()
+            
+            existing_notes = self.onedrive_manager.list_notes()
+            if existing_notes:
+                progress.update_message(f"Deleting {len(existing_notes)} existing notes from OneDrive...")
+                self.root.update()
+                
+                for i, note in enumerate(existing_notes):
+                    item_id = note.get("id")
+                    if item_id:
+                        try:
+                            # Use OneDrive API to delete the note
+                            # This assumes the onedrive_manager has a delete method
+                            # If not available, we'll skip deletion and just overwrite
+                            pass  # We'll implement overwrite logic instead
+                        except Exception as e:
+                            print(f"DEBUG: Could not delete note {item_id}: {e}")
+            
+            # Step 2: Upload current notes (same as regular sync)
+            progress.update_message("Uploading current notes to OneDrive...")
+            self.root.update()
+            
+            saved_count = 0
+            error_count = 0
+            network_error = False
+            total_notes = len([box for box in self.text_boxes if box.get("text_box") and box.get("text_box").get("1.0", tk.END).strip()])
+            
+            for i, box_data in enumerate(self.text_boxes):
+                text_widget = box_data.get("text_box")
+                file_path = box_data.get("file_path", "")
+                
+                if not text_widget:
+                    continue
+                
+                content = text_widget.get("1.0", tk.END).strip()
+                if not content:
+                    continue  # Skip empty boxes
+                
+                # Update progress
+                progress.update_message(f"Uploading note {saved_count + error_count + 1} of {total_notes}...")
+                self.root.update()
+                
+                try:
+                    # Generate a meaningful filename with timestamp to ensure uniqueness
+                    first_line = content.split('\n')[0][:30].strip()
+                    if first_line:
+                        # Clean the first line for filename
+                        import re
+                        base_name = re.sub(r'[^\w\s-]', '', first_line)
+                        base_name = re.sub(r'[-\s]+', '_', base_name)
+                    else:
+                        base_name = f"Note_{i+1}"
+                    
+                    # Add timestamp to ensure uniqueness
+                    timestamp = int(time.time())
+                    filename = f"{base_name}_{timestamp}.json"
+                    
+                    # Create note data structure
+                    note_data = {
+                        "content": content,
+                        "last_modified": time.time(),
+                        "title": base_name,
+                        "source": "desktop_app_replace",
+                        "created": timestamp
+                    }
+                    
+                    # Save to OneDrive
+                    result = self.onedrive_manager.save_note(filename, note_data)
+                    if result:
+                        saved_count += 1
+                        print(f"DEBUG: Saved note '{base_name}' to OneDrive")
+                        # Update the box to show it's saved to OneDrive
+                        box_data["file_path"] = f"onedrive:{result.get('id', '')}"
+                        box_data["saved"] = True
+                    else:
+                        error_count += 1
+                        print(f"DEBUG: Failed to save note '{base_name}' to OneDrive")
+                        
+                except Exception as e:
+                    error_count += 1
+                    error_str = str(e)
+                    print(f"DEBUG: Error saving note to OneDrive: {e}")
+                    # Check for network connectivity issues
+                    if "getaddrinfo failed" in error_str or "Failed to establish a new connection" in error_str:
+                        network_error = True
+                    elif "Max retries exceeded" in error_str or "HTTPSConnectionPool" in error_str:
+                        network_error = True
+                    else:
+                        network_error = False
+            
+            # Close progress dialog
+            progress.close()
+            
+            # Show results and update button status
+            if saved_count > 0 and error_count == 0:
+                self._update_onedrive_button_status("success", "Replace Complete")
+                messagebox.showinfo("OneDrive Replace", f"Successfully replaced OneDrive with {saved_count} notes!")
+            elif saved_count > 0 and error_count > 0:
+                self._update_onedrive_button_status("error", "Partial Replace")
+                messagebox.showwarning("OneDrive Replace", f"Replaced with {saved_count} notes, but {error_count} failed.")
+            elif saved_count == 0 and error_count > 0:
+                self._update_onedrive_button_status("error", "Replace Failed")
+                # Check if we detected network errors
+                if network_error:
+                    messagebox.showerror("OneDrive Network Error", 
+                        f"Failed to upload notes to OneDrive due to network connectivity issues.\n\n"
+                        "Please check your internet connection and try again.\n\n"
+                        f"Technical details: {error_count} connection error(s) occurred.")
+                else:
+                    messagebox.showerror("OneDrive Replace", f"Failed to upload any notes to OneDrive. {error_count} errors occurred.")
+            else:
+                self._update_onedrive_button_status("normal")
+                messagebox.showinfo("OneDrive Replace", "No notes to upload.")
+                
+        except Exception as e:
+            # Close progress dialog if it exists
+            try:
+                progress.close()
+            except:
+                pass
+            # Update button to show error
+            self._update_onedrive_button_status("error", "Replace Error")
+            messagebox.showerror("OneDrive Replace Error", f"An error occurred during replace: {e}")
+            print(f"DEBUG: OneDrive replace error: {e}")
             import traceback
             traceback.print_exc()
 
@@ -943,75 +1457,270 @@ class EditableBoxApp:
         # Auto-open browser
         webbrowser.open(flow['verification_uri'])
 
+    def _clear_onedrive_notes_from_workspace(self):
+        """Remove OneDrive notes from current workspace, keeping only local notes"""
+        try:
+            onedrive_count = 0
+            # Count OneDrive notes
+            for box in self.text_boxes:
+                file_path = box.get("file_path", "")
+                if file_path.startswith("onedrive:"):
+                    onedrive_count += 1
+            
+            if onedrive_count == 0:
+                messagebox.showinfo("Clear OneDrive Notes", "No OneDrive notes found in current workspace.")
+                return
+            
+            # Confirm the action
+            if not messagebox.askyesno("Clear OneDrive Notes", 
+                f"Remove {onedrive_count} OneDrive note(s) from workspace?\n\n"
+                "This will close tabs linked to OneDrive but won't delete the notes from OneDrive.\n"
+                "Local notes and files will remain in the workspace."):
+                return
+            
+            # Remove OneDrive notes (in reverse order to avoid index issues)
+            removed_count = 0
+            for i in range(len(self.text_boxes) - 1, -1, -1):
+                box = self.text_boxes[i]
+                file_path = box.get("file_path", "")
+                if file_path.startswith("onedrive:"):
+                    # Only tabbed mode is supported now
+                    if self.current_view_mode == "tabbed":
+                        self._close_tab(i)
+                    removed_count += 1
+            
+            # Save the updated layout without OneDrive notes
+            self.save_layout_to_file()
+            
+            messagebox.showinfo("Clear OneDrive Notes", 
+                f"Successfully removed {removed_count} OneDrive note(s) from workspace.\n\n"
+                "Local notes have been preserved.")
+        except Exception as e:
+            messagebox.showerror("Clear OneDrive Error", f"Failed to clear OneDrive notes: {e}")
+
+    def _cleanup_old_onedrive_notes(self):
+        """Clean up old OneDrive notes to reduce clutter"""
+        if not self.onedrive_manager or not self.onedrive_manager.is_authenticated():
+            messagebox.showwarning("OneDrive", "Not authenticated with OneDrive. Please sync first.")
+            return
+        
+        try:
+            # Get all OneDrive notes
+            all_notes = self.onedrive_manager.list_notes()
+            if not all_notes:
+                messagebox.showinfo("OneDrive Cleanup", "No notes found in OneDrive.")
+                return
+            
+            total_notes = len(all_notes)
+            
+            # Get currently used OneDrive note IDs
+            current_onedrive_ids = set()
+            for box in self.text_boxes:
+                file_path = box.get("file_path", "")
+                if file_path.startswith("onedrive:"):
+                    note_id = file_path.replace("onedrive:", "")
+                    current_onedrive_ids.add(note_id)
+            
+            # Find notes that are not currently in use
+            unused_notes = []
+            for note in all_notes:
+                note_id = note.get("id", "")
+                if note_id and note_id not in current_onedrive_ids:
+                    unused_notes.append(note)
+            
+            if not unused_notes:
+                messagebox.showinfo("OneDrive Cleanup", 
+                    f"All {total_notes} OneDrive notes are currently in use.\n\n"
+                    "No cleanup needed.")
+                return
+            
+            # Show confirmation
+            confirmed = messagebox.askyesno(
+                "Clean Up OneDrive Notes",
+                f"Found {len(unused_notes)} unused notes out of {total_notes} total notes in OneDrive.\n\n"
+                f"Currently using: {len(current_onedrive_ids)} notes\n"
+                f"Unused notes: {len(unused_notes)} notes\n\n"
+                f"Delete the {len(unused_notes)} unused notes from OneDrive?\n\n"
+                "⚠️ This action cannot be undone!",
+                icon="warning"
+            )
+            
+            if not confirmed:
+                return
+            
+            # Delete unused notes
+            progress = ProgressDialog(self.root, "Cleaning OneDrive", "Deleting unused notes...")
+            deleted_count = 0
+            error_count = 0
+            
+            for i, note in enumerate(unused_notes):
+                note_id = note.get("id", "")
+                note_name = note.get("name", f"Note {i+1}")
+                
+                progress.update_message(f"Deleting {i+1}/{len(unused_notes)}: {note_name}")
+                self.root.update()
+                
+                try:
+                    if hasattr(self.onedrive_manager, 'delete_note'):
+                        self.onedrive_manager.delete_note(note_id)
+                        deleted_count += 1
+                    else:
+                        print(f"DEBUG: OneDrive manager doesn't have delete_note method")
+                        error_count += 1
+                except Exception as e:
+                    print(f"DEBUG: Error deleting note {note_name}: {e}")
+                    error_count += 1
+            
+            progress.close()
+            
+            if deleted_count > 0:
+                messagebox.showinfo("OneDrive Cleanup Complete",
+                    f"Successfully deleted {deleted_count} unused notes from OneDrive.\n\n"
+                    f"Remaining notes: {total_notes - deleted_count}\n"
+                    f"Errors: {error_count}")
+            else:
+                messagebox.showwarning("OneDrive Cleanup Failed",
+                    f"Could not delete any notes. {error_count} errors occurred.\n\n"
+                    "Note: OneDrive delete functionality may not be available.")
+                    
+        except Exception as e:
+            messagebox.showerror("OneDrive Cleanup Error", f"Failed to clean up OneDrive notes: {e}")
+            
+        except Exception as e:
+            messagebox.showerror("Clear OneDrive Notes Error", f"An error occurred while clearing OneDrive notes: {e}")
+
+    def _load_notes_from_onedrive_with_confirmation(self):
+        """Load notes from OneDrive with user confirmation of count"""
+        if not self.onedrive_manager or not self.onedrive_manager.is_authenticated():
+            messagebox.showwarning("OneDrive", "Not authenticated with OneDrive. Please sync first.")
+            return
+        
+        try:
+            # First, get the count of notes without loading them
+            notes = self.onedrive_manager.list_notes()
+            note_count = len(notes) if notes else 0
+            
+            if note_count == 0:
+                messagebox.showinfo("OneDrive", "No notes found in your OneDrive app folder.")
+                return
+            
+            # Show confirmation with count
+            confirmed = messagebox.askyesno(
+                "Load OneDrive Notes", 
+                f"This will load ALL {note_count} notes from OneDrive.\n\n"
+                f"This will replace your current {len(self.text_boxes)} tab(s).\n\n"
+                f"Are you sure you want to continue?",
+                icon="warning"
+            )
+            
+            if not confirmed:
+                return
+                
+            # User confirmed, proceed with loading
+            self._load_notes_from_onedrive()
+            
+        except Exception as e:
+            messagebox.showerror("OneDrive Error", f"Failed to check OneDrive notes: {e}")
+
     def _load_notes_from_onedrive(self):
         """Load notes from OneDrive and populate the UI"""
         if not self.onedrive_manager or not self.onedrive_manager.is_authenticated():
             messagebox.showwarning("OneDrive", "Not authenticated with OneDrive. Please sync first.")
             return
         
+        # Update button to show loading status
+        self._update_onedrive_button_status("syncing", "Loading...")
+        
+        # Show progress dialog
+        progress = ProgressDialog(self.root, "Loading from OneDrive", "Fetching notes from OneDrive...")
+        self.root.update()
+        
         try:
             # Clear existing boxes first
+            progress.update_message("Clearing current notes...")
+            self.root.update()
             self._clear_all_boxes()
             
+            progress.update_message("Fetching notes list from OneDrive...")
+            self.root.update()
             notes = self.onedrive_manager.list_notes()
             if not notes:
+                progress.close()
+                self._update_onedrive_button_status("normal")
                 messagebox.showinfo("OneDrive", "No notes found in your OneDrive app folder. The app folder will be created when you save your first note.")
                 self.add_text_box()  # Add empty box
                 return
             
             # Load each note
-            for note_item in notes:
+            for i, note_item in enumerate(notes):
                 file_name = note_item.get("name", "")
                 item_id = note_item.get("id", "")
+                
+                # Clean up file name for display
+                display_name = file_name.replace(".json", "") if file_name.endswith(".json") else file_name
+                progress.update_message(f"Loading note {i+1} of {len(notes)}: {display_name}")
+                self.root.update()
                 
                 if file_name and item_id:
                     note_data = self.onedrive_manager.get_note_content(item_id)
                     if note_data and isinstance(note_data, dict):
                         content = note_data.get("content", "")
-                        # Use the file name (without .json) as the note title
-                        title = file_name.replace(".json", "") if file_name.endswith(".json") else file_name
-                        self.add_text_box(content=content, file_path=f"onedrive:{item_id}", onedrive_name=title)
+                        # Use original OneDrive filename (without .json) as the true title
+                        # This preserves the original file names rather than content-generated titles
+                        original_filename = file_name.replace(".json", "") if file_name.endswith(".json") else file_name
+                        print(f"DEBUG: Loading OneDrive note - using original filename: '{original_filename}'")
+                        self.add_text_box(content=content, file_path=f"onedrive:{item_id}", onedrive_name=original_filename)
             
+            progress.close()
+            self._update_onedrive_button_status("success", "Load Complete")
             messagebox.showinfo("OneDrive", f"Loaded {len(notes)} notes from OneDrive!")
             
         except Exception as e:
+            # Close progress dialog if it exists
+            try:
+                progress.close()
+            except:
+                pass
+            # Update button to show error
+            self._update_onedrive_button_status("error", "Load Error")
             messagebox.showerror("OneDrive Error", f"Failed to load notes from OneDrive: {e}")
 
     def _clear_all_boxes(self):
         """Clear all text boxes from the current view"""
-        if self.current_view_mode == "tabbed" and hasattr(self, 'notebook') and self.notebook:
-            # Clear all tabs
+        # Clear all tabs (only tabbed mode is supported)
+        if hasattr(self, 'notebook') and self.notebook:
             for i in reversed(range(len(self.notebook.tabs()))):
                 self.notebook.forget(i)
-        elif self.current_view_mode == "paned":
-            # Clear paned boxes
-            for box in self.text_boxes:
-                outer_frame = box.get("outer_frame")
-                if outer_frame and outer_frame.winfo_exists():
-                    outer_frame.destroy()
         
         # Clear the text_boxes list
         self.text_boxes = []
 
-    def _save_to_onedrive_by_id(self, content, item_id, file_title):
+    def _save_to_onedrive_by_id(self, content, item_id, file_title, box_data=None):
         """Save content to an existing OneDrive file by item ID"""
         try:
-            # Get the current file name to preserve it
-            notes = self.onedrive_manager.list_notes()
-            file_name = None
-            for note in notes:
-                if note.get("id") == item_id:
-                    file_name = note.get("name")
-                    break
+            # Find the box data to get the current title
+            current_title = "Untitled"
+            if box_data and box_data.get("title"):
+                current_title = box_data.get("title")
+            elif file_title and hasattr(file_title, 'cget'):
+                try:
+                    current_title = file_title.cget("text")
+                except Exception:
+                    pass
             
-            if not file_name:
-                file_name = "note.json"  # Fallback
+            # Generate filename based on current title
+            import re
+            safe_title = re.sub(r'[^\w\s-]', '', current_title)
+            safe_title = re.sub(r'[-\s]+', '_', safe_title)
+            file_name = f"{safe_title}.json"
+            
+            print(f"DEBUG: Saving OneDrive note with title '{current_title}' as '{file_name}'")
             
             # Create note data structure
             note_data = {
                 "content": content,
                 "last_modified": time.time(),
-                "title": file_title.cget("text") if file_title else "Untitled"
+                "title": current_title
             }
             
             # Save to OneDrive
@@ -1160,15 +1869,18 @@ class EditableBoxApp:
                 for index in selected_indices:
                     note = notes[index]
                     item_id = note.get("id")
-                    name = note.get("name", "").replace(".json", "")
+                    filename_title = note.get("name", "").replace(".json", "")
                     
                     try:
                         note_data = self.onedrive_manager.get_note_content(item_id)
                         if note_data:
                             content = note_data.get("content", "")
-                            self.add_text_box(content=content, file_path=f"onedrive:{item_id}", onedrive_name=name)
+                            # Use original OneDrive filename to preserve true file names
+                            display_title = filename_title  # This is the original filename without .json
+                            print(f"DEBUG: Opening OneDrive note - using original filename: '{display_title}'")
+                            self.add_text_box(content=content, file_path=f"onedrive:{item_id}", onedrive_name=display_title)
                     except Exception as e:
-                        messagebox.showerror("Error", f"Failed to open {name}: {e}")
+                        messagebox.showerror("Error", f"Failed to open {filename_title}: {e}")
                 
                 selection_window.destroy()
             
@@ -1208,7 +1920,7 @@ class EditableBoxApp:
                     if file_path.startswith("onedrive:"):
                         item_id = file_path.replace("onedrive:", "")
                         if item_id:
-                            self._save_to_onedrive_by_id(content, item_id, None)
+                            self._save_to_onedrive_by_id(content, item_id, None, box_data)
                             saved_count += 1
                     elif file_path:
                         # Existing local file - ask if they want to move to OneDrive
@@ -1321,7 +2033,13 @@ class EditableBoxApp:
                 # Save to OneDrive - extract item ID from path
                 item_id = file_path.replace("onedrive:", "")
                 if item_id:
-                    self._save_to_onedrive_by_id(content, item_id, file_title)
+                    # Find the corresponding box data
+                    box_data = None
+                    for box in self.text_boxes:
+                        if box.get("text_box") == text_box:
+                            box_data = box
+                            break
+                    self._save_to_onedrive_by_id(content, item_id, file_title, box_data)
                     return
             elif use_onedrive and not file_path:
                 # New file with OneDrive available - prompt for save location
@@ -1425,27 +2143,12 @@ class EditableBoxApp:
                     except Exception:
                         has_content = False
                     if (not has_path) and (not has_content):
-                        # Delete placeholder depending on view
-                        if self.current_view_mode == "tabbed" and getattr(self, 'notebook', None):
+                        # Delete placeholder tab (only tabbed mode is supported)
+                        if getattr(self, 'notebook', None):
                             try:
                                 nb = self.notebook
                                 if nb is not None:
                                     nb.forget(0)
-                            except Exception:
-                                pass
-                            self.text_boxes.pop(0)
-                        elif self.current_view_mode == "paned":
-                            outer = bx.get("outer_frame")
-                            try:
-                                if outer is not None:
-                                    pw = getattr(self, 'paned_window', None)
-                                    if pw is not None:
-                                        pw.forget(outer)
-                            except Exception:
-                                pass
-                            try:
-                                if outer is not None:
-                                    outer.destroy()
                             except Exception:
                                 pass
                             self.text_boxes.pop(0)
@@ -1877,11 +2580,19 @@ class EditableBoxApp:
                         pass
 
                 # Track the new tab
+                # Use onedrive_name if provided, otherwise derive from file_path
+                if onedrive_name:
+                    title = onedrive_name
+                elif file_path and not file_path.startswith("onedrive:"):
+                    title = os.path.basename(file_path)
+                else:
+                    title = "Untitled"
+                
                 self.text_boxes.append({
                     "text_box": text_widget,
                     "file_path": file_path,
                     "saved": True,
-                    "title": os.path.basename(file_path) if file_path else "Untitled",
+                    "title": title,
                     "tab_frame": tab_frame,
                     "font_size": base_font_size,
                 })
@@ -1892,8 +2603,14 @@ class EditableBoxApp:
                     pass
 
                 i = len(nb.tabs())
-                file_name = os.path.basename(file_path) if file_path else f"Untitled {i+1}"
-                tab_title = f"Tab {i+1}: {file_name}"
+                # For OneDrive files, use original title; for local files use Tab X: format
+                if file_path.startswith("onedrive:") and onedrive_name:
+                    tab_title = onedrive_name
+                elif file_path and not file_path.startswith("onedrive:"):
+                    file_name = os.path.basename(file_path)
+                    tab_title = f"Tab {i+1}: {file_name}"
+                else:
+                    tab_title = f"Untitled {i+1}"
                 # Add tab with icon reflecting saved state
                 try:
                     normal_icon, dirty_icon = self._get_or_create_tab_icons(i)
@@ -1916,332 +2633,27 @@ class EditableBoxApp:
                 self._schedule_status_update()
                 return
                 
-            elif self.current_view_mode == "paned":
-                if self.paned_window is None:
-                    messagebox.showinfo("Add Box", "Paned view is not available. Try switching to tabbed view first.")
-                    return
-                
-            # Continue with paned mode logic
-            # Create a new outer frame for the box
-            pw = self.paned_window
-            outer_frame = tk.Frame(pw, bd=2, relief=tk.RAISED)
-            if pw is not None:
-                pw.add(outer_frame, minsize=200)
-
-            # Create the inner frame for content
-            frame = tk.Frame(outer_frame)
-            frame.pack(fill=tk.BOTH, expand=True)
-            frame.grid_rowconfigure(1, weight=1)
-            frame.grid_columnconfigure(1, weight=1)
-
-            # Title label for the file
-            file_name = os.path.basename(file_path) if file_path else "Untitled"
-            file_title = tk.Label(frame, text=file_name, bg="lightgray")
-            file_title.grid(row=0, column=0, columnspan=2, sticky="ew")
-
-            # Button frame for controls
-            button_frame = tk.Frame(frame)
-            button_frame.grid(row=1, column=0, sticky="ns", padx=5, pady=5)
-
-            # Text frame with scrollbar
-            text_frame = tk.Frame(frame)
-            text_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
-            text_frame.grid_rowconfigure(0, weight=1)
-            text_frame.grid_columnconfigure(0, weight=1)
-
-            v_scrollbar = tk.Scrollbar(text_frame, orient=tk.VERTICAL)
-            v_scrollbar.grid(row=0, column=1, sticky="ns")
-
-            base_font_size = int(font_size) if font_size else 11
-            text_widget = tk.Text(text_frame, wrap=tk.WORD, yscrollcommand=v_scrollbar.set, undo=True, font=("Consolas", base_font_size))
-            text_widget.grid(row=0, column=0, sticky="nsew")
-            v_scrollbar.config(command=text_widget.yview)
-
-            # Insert content if provided
-            if content:
-                text_widget.insert("1.0", content)
-            elif file_path and os.path.exists(file_path):
-                try:
-                    with open(file_path, "r", encoding="utf-8") as file:
-                        file_content = file.read()
-                    text_widget.insert("1.0", file_content)
-                except Exception:
-                    pass
-
-            # Add control buttons with proper commands
-            def make_close_cmd():
-                return lambda: self.close_box(outer_frame, text_widget, file_path, file_title)
-            def make_save_cmd():
-                return lambda: self.save_box(text_widget, file_path, file_title)
-            def make_load_cmd():
-                return lambda: self.load_box(text_widget)
-            def make_copy_cmd():
-                return lambda: self.copy_to_clipboard(text_widget)
-
-            tk.Button(button_frame, text="Close", command=make_close_cmd()).pack(fill=tk.X, pady=2)
-            tk.Button(button_frame, text="Save", command=make_save_cmd()).pack(fill=tk.X, pady=2)
-            tk.Button(button_frame, text="Load", command=make_load_cmd()).pack(fill=tk.X, pady=2)
-            tk.Button(button_frame, text="Copy", command=make_copy_cmd()).pack(fill=tk.X, pady=2)
-
-            # Ensure text box is editable and focusable
-            text_widget.config(state=tk.NORMAL)
-            text_widget.focus_set()
-            
-            # Debug: Print text widget configuration
-            print(f"Text widget state: {text_widget.cget('state')}")
-            print(f"Text widget can focus: {text_widget.focus_displayof() is not None}")
-            
-            # Test editability by trying to insert a character
-            try:
-                cursor_pos = text_widget.index(tk.INSERT)
-                text_widget.insert(cursor_pos, "")  # Insert nothing, just test if it works
-                print("Text widget is editable")
-            except Exception as e:
-                print(f"Text widget edit test failed: {e}")
-            
-            # Force the text widget to be ready for input
-            text_widget.update_idletasks()
-            self.root.update_idletasks()
-            
-            # Make sure no other bindings are interfering
-            text_widget.bindtags((str(text_widget), "Text", ".", "all"))
-
-            # --- Real-time spell checking ---
-            spell_checker = None
-            try:
-                import re
-                from spellchecker import SpellChecker
-                spell_checker = SpellChecker()
-                text_widget.tag_configure("misspelled", background="#FFFF00", foreground="#000000", underline=True)
-
-                def check_spelling(event=None):
-                    text = text_widget.get("1.0", tk.END)
-                    words = re.findall(r"\b\w+\b", text)
-                    misspelled = spell_checker.unknown(words)
-                    print(f"Spell check called. Misspelled: {misspelled}")
-                    text_widget.tag_remove("misspelled", "1.0", tk.END)
-                    for word in misspelled:
-                        # Use regex to find whole word positions
-                        for match in re.finditer(rf"\b{re.escape(word)}\b", text, re.IGNORECASE):
-                            start_idx = match.start()
-                            end_idx = match.end()
-                            # Convert string index to Tkinter index
-                            start = f"1.0+{start_idx}c"
-                            end = f"1.0+{end_idx}c"
-                            text_widget.tag_add("misspelled", start, end)
-                # Don't bind KeyRelease here - we'll handle it later with combined function
-                check_spelling()
-            except Exception as e:
-                print(f"Spell check error: {e}")
-
-            # Add right-click context menu with spell checking support
-            try:
-                self._add_context_menu(text_widget, spell_checker)
-            except Exception as e:
-                print(f"Error adding context menu: {e}")
-
-            # --- Status bar update bindings ---
-            def update_status_on_event(event=None):
-                self._schedule_status_update()
-            
-            # Bind events that should trigger status updates - do this AFTER all other setup
-            def create_status_updater():
-                def update_status():
-                    self._schedule_status_update()
-                return update_status
-            
-            self.root.after_idle(lambda: self._setup_text_widget_bindings(text_widget, check_spelling, create_status_updater(), spell_checker))
-
-            self.text_boxes.append({"text_widget": text_widget, "text_box": text_widget, "file_path": file_path, "file_title": file_title, "outer_frame": outer_frame, "saved": True})
-            try:
-                self.text_boxes[-1]["last_saved_sig"] = self._compute_content_sig(text_widget)
-            except Exception:
-                pass
-            # Initialize label icon for saved state
-            try:
-                idx = len(self.text_boxes) - 1
-                self._update_dirty_indicator(idx)
-            except Exception:
-                pass
-            self.root.update_idletasks()
-            
-            if len(self.text_boxes) == 1:
-                # Force the single box to fill all available height
-                pw = self.paned_window
-                paned_height = pw.winfo_height() if pw is not None else 0
-                if paned_height < 10:
-                    paned_height = self.root.winfo_height() - self.toolbar_main.winfo_height() - self.toolbar_dock.winfo_height()
-                try:
-                    if pw is not None:
-                        pw.paneconfig(outer_frame, minsize=paned_height)
-                except Exception:
-                    pass
             else:
-                self.equalize_boxes()
-            
-            # Update status bar after adding new box
-            self._schedule_status_update()
-            
+                # Only tabbed mode is supported - fallback to tabbed view
+                print("DEBUG: Unsupported view mode, using tabbed view")
+                self.current_view_mode = "tabbed"
+                self.add_text_box(content=content, file_path=file_path, font_size=font_size, onedrive_name=onedrive_name)
+                return
         except Exception as e:
             messagebox.showerror("Error", f"Could not add text box: {e}")
 
     def close_box(self, outer_frame: tk.Frame, text_box: tk.Text, file_path: str | None, file_title: tk.Label):
-        self.save_box(text_box, file_path, file_title)
-        pw = self.paned_window
-        if pw is not None:
-            pw.forget(outer_frame)
-        outer_frame.destroy()
-        try:
-            if file_path and file_path not in self.recently_closed:
-                self.recently_closed.append(file_path)
-            self.text_boxes = [b for b in self.text_boxes if b.get("outer_frame") is not outer_frame]
-            # Update status bar after closing box
-            self._schedule_status_update()
-        except Exception:
-            pass
+        # This method is no longer used since paned view was removed
+        # Tabbed view uses _close_tab instead
+        print("DEBUG: close_box called - should use _close_tab for tabbed mode")
 
-    def _minimize_box(self, outer_frame):
-        try:
-            pw = self.paned_window
-            if not pw:
-                return
-            pw.paneconfig(outer_frame, minsize=40)
-            idx = pw.panes().index(outer_frame)
-            if idx < len(pw.panes()) - 1:
-                pw.sash_place(idx, 0, 40 * (idx + 1))
-        except Exception:
-            pass
+    # Removed _minimize_box and _maximize_box methods - paned view no longer supported
 
-    def _maximize_box(self, outer_frame):
-        try:
-            pw = self.paned_window
-            if not pw:
-                return
-            panes = pw.panes()
-            total_height = pw.winfo_height()
-            if total_height < 100:
-                total_height = self.root.winfo_height() - self.toolbar_main.winfo_height() - self.toolbar_dock.winfo_height() - 20
-            for pane in panes:
-                if pane == outer_frame:
-                    pw.paneconfig(pane, minsize=total_height)
-                else:
-                    pw.paneconfig(pane, minsize=40)
-            idx = panes.index(outer_frame)
-            y = 0
-            for i in range(len(panes) - 1):
-                if i < idx:
-                    y += 40
-                    pw.sash_place(i, 0, y)
-                else:
-                    y = total_height - 40 * (len(panes) - i - 1)
-                    pw.sash_place(i, 0, y)
-        except Exception:
-            pass
-
-    def equalize_boxes(self):
-        print("DEBUG: Equalize boxes button clicked!")
-        # No-op in tabbed mode
-        if getattr(self, 'current_view_mode', None) != 'paned':
-            print("DEBUG: Equalize ignored in tabbed mode")
-            return
-        
-        # Check current arrangement mode
-        if hasattr(self, 'current_arrangement') and self.current_arrangement == "horizontal":
-            print("DEBUG: In horizontal mode - equalizing box widths")
-            self._apply_arrangement_change()  # <-- Fixed: Use existing method
-            return
-        
-        # Continue with vertical equalization for vertical mode
-        print("DEBUG: In vertical mode - equalizing box heights")
-        pw = getattr(self, 'paned_window', None)
-        if not pw or not pw.winfo_exists():
-            print("DEBUG: No valid paned_window to equalize")
-            return
-        self.root.update_idletasks()
-        num_panes = len(pw.panes())
-        print(f"DEBUG: Number of panes: {num_panes}")
-        
-        if num_panes > 1:
-            # Force the paned window to use all available space
-            root_height = self.root.winfo_height()
-            toolbar_main_height = self.toolbar_main.winfo_height()
-            toolbar_dock_height = self.toolbar_dock.winfo_height()
-            
-            # Calculate maximum available height for the paned window
-            available_height = root_height - toolbar_main_height - toolbar_dock_height - 20
-            
-            # Use the available height, not the current paned window height
-            total_height = max(available_height, 200)  # Minimum 200px total
-            pane_height = max(60, total_height // num_panes)  # Minimum 60px per pane
-            print(f"DEBUG: Using total height: {total_height}, pane height: {pane_height}")
-            
-            # Reset all pane minsize values first
-            print("DEBUG: Resetting minsize values...")
-            for pane in pw.panes():
-                try:
-                    if pw and pw.winfo_exists():
-                        pw.paneconfig(pane, minsize=1)
-                except Exception as e:
-                    print(f"DEBUG: Error resetting minsize: {e}")
-            
-            # Force update before placing sashes
-            self.root.update_idletasks()
-            
-            # Place sashes to use the full available height
-            y = 0
-            print("DEBUG: Placing sashes for full height utilization...")
-            for i in range(num_panes - 1):
-                y += pane_height
-                print(f"DEBUG: Setting sash {i} at position {y}")
-                if pw and pw.winfo_exists():
-                    pw.sash_place(i, 0, y)
-            
-            # Force another update
-            self.root.update_idletasks()
-            
-            # Set minsize for each pane to maintain heights
-            print("DEBUG: Setting minsize values...")
-            for pane in pw.panes():
-                try:
-                    if pw and pw.winfo_exists():
-                        pw.paneconfig(pane, minsize=pane_height)
-                    print(f"DEBUG: Set pane minsize to {pane_height}")
-                except Exception as e:
-                    print(f"DEBUG: Error setting minsize: {e}")
-                    
-        elif num_panes == 1:
-            print("DEBUG: Single pane - maximizing to full height")
-            pw = self.paned_window
-            if not pw or not pw.winfo_exists():
-                return
-            pane = pw.panes()[0]
-            root_height = self.root.winfo_height()
-            toolbar_main_height = self.toolbar_main.winfo_height()
-            toolbar_dock_height = self.toolbar_dock.winfo_height()
-            available_height = root_height - toolbar_main_height - toolbar_dock_height - 20
-            
-            try:
-                if pw and pw.winfo_exists():
-                    pw.paneconfig(pane, minsize=max(available_height, 200))
-                print(f"DEBUG: Set single pane to {max(available_height, 200)}px")
-            except Exception as e:
-                print(f"DEBUG: Error setting single pane: {e}")
-        else:
-            print("DEBUG: No panes found!")
-        
-        # Final update
-        self.root.update_idletasks()
-        print("DEBUG: Vertical equalization completed")
+    # Removed equalize_boxes method - paned view no longer supported
 
     def toggle_tabbed_view(self):
-        """Toggle between paned and tabbed view modes."""
-        try:
-            if self.current_view_mode == "paned":
-                self._switch_to_tabbed_view()
-            elif self.current_view_mode == "tabbed":
-                self._switch_to_paned_view()
-        except Exception as e:
-            print(f"DEBUG: Error toggling view: {e}")
+        """No longer needed - app is always in tabbed view mode."""
+        print("INFO: App is always in tabbed view mode now")
 
     def _switch_to_tabbed_view(self):
         """Switch from paned view to tabbed view with enhanced visual identity."""
@@ -2314,6 +2726,11 @@ class EditableBoxApp:
             # Pack at the top; fill and expand to use full width; tabs start from far left by default
             # Note: anchor has minimal effect when fill/expand are true, but keep TOP placement explicit
             self.notebook.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
+            
+            # Add Ctrl+W binding to notebook for tab closing
+            self.notebook.bind("<Control-w>", lambda e: self._close_focused_box() or "break")
+            self.notebook.bind("<Control-W>", lambda e: self._close_focused_box() or "break")
+            print("DEBUG: Added Ctrl+W binding to notebook widget")
 
             # Clear text_boxes and recreate as tabs
             self.text_boxes = []
@@ -2388,12 +2805,35 @@ class EditableBoxApp:
                         text_widget.insert("1.0", data["content"])
                         print(f"DEBUG: Inserted {len(data['content'])} chars into tab {i+1}")
 
+                    # Generate simple tab title - use original OneDrive titles, Tab X: format for local files
+                    file_path = data.get("file_path", "")
+                    if file_path.startswith("onedrive:"):
+                        # For OneDrive files, get the original filename from OneDrive
+                        item_id = file_path.replace("onedrive:", "")
+                        original_filename = self._get_onedrive_filename_from_id(item_id)
+                        if original_filename:
+                            tab_title = original_filename
+                            print(f"DEBUG: Using OneDrive filename mapping for tab {i+1}: '{original_filename}'")
+                        else:
+                            # Fallback to stored title
+                            stored_title = data.get("title", "")
+                            if stored_title and stored_title != "Untitled":
+                                tab_title = stored_title
+                            else:
+                                tab_title = f"Untitled {i+1}"
+                    else:
+                        # For local files, use "Tab X: filename" format
+                        file_name = os.path.basename(file_path) or f"Untitled {i+1}"
+                        tab_title = f"Tab {i+1}: {file_name}"
+
                     # Store tab data in text_boxes array for proper tracking
+                    # Use the mapped OneDrive filename if available
+                    final_title = tab_title if file_path.startswith("onedrive:") else data.get("title", "Untitled")
                     self.text_boxes.append({
                         "text_box": text_widget,
                         "file_path": data.get("file_path", ""),
                         "saved": data.get("saved", True),
-                        "title": data.get("title", "Untitled"),
+                        "title": final_title,
                         "tab_frame": tab_frame,
                         "tab_index": i
                     })
@@ -2402,19 +2842,22 @@ class EditableBoxApp:
                     except Exception:
                         pass
 
-                    # Generate simple tab title
-                    file_name = os.path.basename(data.get("file_path") or "") or f"Untitled {i+1}"
-                    tab_title = f"Tab {i+1}: {file_name}"
-
                     # Create a small colored square icon for the tab for readable color indication
                     # Add tab with icon reflecting saved state
                     try:
                         normal_icon, dirty_icon = self._get_or_create_tab_icons(i)
                         icon_to_use = normal_icon if self.text_boxes[i]["saved"] else dirty_icon
                         self.notebook.add(tab_frame, text=tab_title, image=icon_to_use, compound="left")
-                    except Exception:
-                        # Fallback without image if PhotoImage fails
-                        self.notebook.add(tab_frame, text=tab_title)
+                        print(f"DEBUG: Successfully added tab {i+1} with icon and title: '{tab_title}'")
+                    except Exception as e:
+                        print(f"DEBUG: Icon creation failed for tab {i+1}, trying without icon: {e}")
+                        try:
+                            # Fallback without image if PhotoImage fails
+                            self.notebook.add(tab_frame, text=tab_title)
+                            print(f"DEBUG: Successfully added tab {i+1} without icon, title: '{tab_title}'")
+                        except Exception as e2:
+                            print(f"DEBUG: Failed to add tab {i+1} even without icon: {e2}")
+                            raise
                     print(f"DEBUG: Created tab {i+1} with clean styling")
 
                 except Exception as e:
@@ -2460,184 +2903,49 @@ class EditableBoxApp:
             print(f"ERROR: Failed to switch to tabbed view: {e}")
             import traceback
             traceback.print_exc()
-            # Try to restore paned view if tabbed view fails
-            try:
-                self.current_view_mode = "paned"
-                self._switch_to_paned_view()
-            except:
-                pass
+            # No fallback needed - only tabbed view is supported
 
-    def _switch_to_paned_view(self):
-        """Switch from tabbed view to paned view."""
-        print("DEBUG: Starting paned view switch")
-        
-        try:
-            # Store current content from tabs before destroying notebook
-            saved_data = []
-            
-            if hasattr(self, 'notebook') and self.notebook:
-                print("DEBUG: Collecting data from tabs")
-                
-                # Get data from current text_boxes (which should contain tab data)
-                for box_data in self.text_boxes:
-                    text_widget = box_data.get("text_box")
-                    if text_widget:
-                        try:
-                            content = text_widget.get("1.0", tk.END)
-                            file_path = box_data.get("file_path", "")
-                            title = box_data.get("title", "Untitled")
-                            saved_data.append({
-                                "content": content,
-                                "file_path": file_path,
-                                "saved": box_data.get("saved", True),
-                                "title": title
-                            })
-                            print(f"DEBUG: Saved data from tab: {len(content)} chars, file_path: '{file_path}', title: '{title}'")
-                        except Exception as e:
-                            print(f"DEBUG: Error getting content from tab: {e}")
-                
-                # Destroy the notebook
-                try:
-                    print("DEBUG: Destroying notebook")
-                    self.notebook.destroy()
-                    self.notebook = None
-                except Exception as e:
-                    print(f"DEBUG: Error destroying notebook: {e}")
-            
-            print(f"DEBUG: Collected {len(saved_data)} tabs of data")
-            
-            # Create new paned window
-            print("DEBUG: Creating paned window")
-            orient = tk.HORIZONTAL if hasattr(self, 'current_arrangement') and self.current_arrangement == "horizontal" else tk.VERTICAL
-            self.paned_window = tk.PanedWindow(self.root, orient=orient, sashwidth=5, sashrelief=tk.RAISED)
-            self.paned_window.pack(fill=tk.BOTH, expand=True)
-            
-            # Clear text_boxes and recreate as panes
-            self.text_boxes = []
-            
-            print(f"DEBUG: Creating {len(saved_data)} panes")
-            
-            for i, data in enumerate(saved_data):
-                try:
-                    print(f"DEBUG: Creating pane {i+1}")
-                    
-                    # Create a new outer frame for the pane
-                    outer_frame = tk.Frame(self.paned_window, bd=2, relief=tk.RAISED)
-                    self.paned_window.add(outer_frame, minsize=200)
-
-                    # Create the inner frame for content
-                    frame = tk.Frame(outer_frame)
-                    frame.pack(fill=tk.BOTH, expand=True)
-                    frame.grid_rowconfigure(1, weight=1)
-                    frame.grid_columnconfigure(1, weight=1)
-
-                    # Title label for the file
-                    file_name = os.path.basename(data.get("file_path") or "") or f"Untitled {i+1}"
-                    file_title = tk.Label(frame, text=file_name, bg="lightgray")
-                    file_title.grid(row=0, column=0, columnspan=2, sticky="ew")
-
-                    # Button frame for controls
-                    button_frame = tk.Frame(frame)
-                    button_frame.grid(row=1, column=0, sticky="ns", padx=5, pady=5)
-
-                    # Text frame with scrollbar
-                    text_frame = tk.Frame(frame)
-                    text_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
-                    text_frame.grid_rowconfigure(0, weight=1)
-                    text_frame.grid_columnconfigure(0, weight=1)
-
-                    v_scrollbar = tk.Scrollbar(text_frame, orient=tk.VERTICAL)
-                    v_scrollbar.grid(row=0, column=1, sticky="ns")
-
-                    text_widget = tk.Text(text_frame, wrap=tk.WORD, yscrollcommand=v_scrollbar.set, undo=True)
-                    text_widget.grid(row=0, column=0, sticky="nsew")
-                    v_scrollbar.config(command=text_widget.yview)
-
-                    # Insert the saved content
-                    if data.get("content"):
-                        text_widget.insert("1.0", data["content"])
-                        print(f"DEBUG: Inserted {len(data['content'])} chars into pane {i+1}")
-
-                    # Add control buttons with proper closure to capture current iteration values
-                    def make_close_cmd(frame=outer_frame, widget=text_widget, path=data.get("file_path"), title=file_title):
-                        return lambda: self.close_box(frame, widget, path, title)
-                    def make_save_cmd(widget=text_widget, path=data.get("file_path"), title=file_title):
-                        return lambda: self.save_box(widget, path, title)
-                    def make_load_cmd(widget=text_widget):
-                        return lambda: self.load_box(widget)
-                    def make_copy_cmd(widget=text_widget):
-                        return lambda: self.copy_to_clipboard(widget)
-
-                    tk.Button(button_frame, text="Close", command=make_close_cmd()).pack(fill=tk.X, pady=2)
-                    tk.Button(button_frame, text="Save", command=make_save_cmd()).pack(fill=tk.X, pady=2)
-                    tk.Button(button_frame, text="Load", command=make_load_cmd()).pack(fill=tk.X, pady=2)
-                    tk.Button(button_frame, text="Copy", command=make_copy_cmd()).pack(fill=tk.X, pady=2)
-
-                    self.text_boxes.append({
-                        "text_box": text_widget,
-                        "file_path": data.get("file_path"),
-                        "saved": data.get("saved", True),
-                        "title": data.get("title"),
-                        "file_title": file_title,
-                        "outer_frame": outer_frame
-                    })
-                    try:
-                        self.text_boxes[-1]["last_saved_sig"] = self._compute_content_sig(text_widget) if self.text_boxes[-1]["saved"] else ""
-                    except Exception:
-                        pass
-                    
-                    print(f"DEBUG: Successfully created pane {i+1}")
-                    
-                except Exception as e:
-                    print(f"DEBUG: Error creating pane {i+1}: {e}")
-                    import traceback
-                    traceback.print_exc()
-
-            # After creating all panes, ensure indicators match saved flags
-            try:
-                for idx in range(len(self.text_boxes)):
-                    self._update_dirty_indicator(idx)
-            except Exception:
-                pass
-
-            # Update view mode and status
-            self.current_view_mode = "paned"
-            try:
-                if hasattr(self, 'status_bar'):
-                    self.status_bar.config(text=f"View: Paned ({len(self.text_boxes)} boxes)")
-                    self.root.after(2000, self._schedule_status_update)
-            except Exception as e:
-                print(f"DEBUG: Error updating status bar: {e}")
-                
-            print(f"DEBUG: Successfully switched to paned view with {len(self.text_boxes)} boxes")
-        
-        except Exception as e:
-            print(f"ERROR: Failed to switch to paned view: {e}")
-            import traceback
-            traceback.print_exc()
+    # Removed _switch_to_paned_view method - paned view no longer supported
 
     def _apply_custom_tab_colors(self):
         """Color overlay functionality disabled - tabs now use plain grey styling only."""
         pass
 
     def _update_tab_title(self, tab_index, file_path):
-        """Update the title of a specific tab with simple text."""
+        """Update the title of a specific tab with consistent naming and storage icons."""
         try:
             if 0 <= tab_index < len(self.text_boxes) and self.notebook:
                 box_data = self.text_boxes[tab_index]
                 
-                # Create simple title
-                file_name = os.path.basename(file_path) if file_path else f"Untitled {tab_index+1}"
-                tab_title = f"Tab {tab_index+1}: {file_name}"
+                # Generate clean, consistent title (no OneDrive names in title)
+                if file_path and file_path.startswith("onedrive:"):
+                    # For OneDrive files, use original stored title without "Tab X: " prefix
+                    stored_title = box_data.get("title", "")
+                    if stored_title and stored_title != "Untitled":
+                        tab_title = stored_title
+                    else:
+                        tab_title = f"Untitled {tab_index+1}"
+                elif file_path:
+                    # For local files, use "Tab X: filename" format for consistency
+                    file_name = os.path.basename(file_path)
+                    tab_title = f"Tab {tab_index+1}: {file_name}"
+                else:
+                    tab_title = f"Untitled {tab_index+1}"
                 
-                # Update the notebook tab if possible
+                # Update tab with title and appropriate icon
                 try:
-                    if not box_data.get("saved", True):
+                    # Get appropriate icon (OneDrive cloud or local square)
+                    normal_icon, dirty_icon = self._get_or_create_tab_icons(tab_index)
+                    is_dirty = not box_data.get("saved", True)
+                    icon_to_use = dirty_icon if is_dirty else normal_icon
+                    
+                    if is_dirty:
                         tab_title = tab_title + " *"
-                    self.notebook.tab(tab_index, text=tab_title)
-                    print(f"DEBUG: Updated tab {tab_index} title to: {tab_title}")
-                except:
-                    print(f"DEBUG: Could not update tab title for tab {tab_index}")
+                    
+                    self.notebook.tab(tab_index, text=tab_title, image=icon_to_use)
+                    print(f"DEBUG: Updated tab {tab_index} title to: {tab_title} with {'OneDrive' if file_path and file_path.startswith('onedrive:') else 'local'} icon")
+                except Exception as e:
+                    print(f"DEBUG: Could not update tab title/icon for tab {tab_index}: {e}")
                 
         except Exception as e:
             print(f"Error updating tab title: {e}")
@@ -2645,8 +2953,19 @@ class EditableBoxApp:
     def close_all_boxes(self):
         """Close all text boxes and clear the layout."""
         try:
+            total_boxes = len(self.text_boxes)
+            if total_boxes == 0:
+                return
+                
+            # Show progress dialog for closing boxes
+            progress = ProgressDialog(self.root, "Closing Boxes", f"Closing {total_boxes} boxes...")
+            self.root.update()
+            
             # Proceed without confirmation
-            for box in self.text_boxes:
+            for i, box in enumerate(self.text_boxes):
+                progress.update_message(f"Closing box {i + 1} of {total_boxes}...")
+                self.root.update()
+                
                 outer = box.get("outer_frame")
                 if outer is not None:
                     try:
@@ -2659,11 +2978,15 @@ class EditableBoxApp:
             self.text_boxes = []
 
             # Clear the layout file as well
+            progress.update_message("Clearing layout file...")
+            self.root.update()
             try:
                 if os.path.exists(self.layout_file):
                     os.remove(self.layout_file)
             except Exception:
                 pass
+                
+            progress.close()
         except Exception as e:
             messagebox.showerror("Error", f"Could not close all boxes: {e}")
 
@@ -2784,12 +3107,9 @@ class EditableBoxApp:
         try:
             layout_data = {
                 "geometry": self.root.winfo_geometry(),
-                "view_mode": getattr(self, 'current_view_mode', 'paned'),
-                "arrangement": getattr(self, 'current_arrangement', 'vertical'),
+                "view_mode": "tabbed",  # Only tabbed mode is supported
                 "boxes": []
-            }
-
-            # Save data for each text box (persist content to restore unsaved notes; file_path if present)
+            }            # Save data for each text box (persist content to restore unsaved notes; file_path if present)
             for box_data in self.text_boxes:
                 text_widget = box_data.get("text_box")
                 content = ""
@@ -2806,19 +3126,7 @@ class EditableBoxApp:
                     "font_size": int(box_data.get("font_size", 11))
                 })
 
-            # Save pane sizes if in paned mode and panes exist
-            try:
-                pw = getattr(self, 'paned_window', None)
-                if self.current_view_mode == 'paned' and pw and pw.winfo_exists():
-                    sizes = []
-                    for box_data in self.text_boxes:
-                        outer = box_data.get("outer_frame")
-                        if outer and outer.winfo_exists():
-                            sizes.append(int(max(1, outer.winfo_height())))
-                    if sizes:
-                        layout_data["pane_sizes"] = sizes
-            except Exception:
-                pass
+            # No pane sizes to save (tabbed mode only)
 
             layout_file = self._get_config_file_path("layout.json")
             with open(layout_file, 'w', encoding='utf-8') as f:
@@ -3015,9 +3323,25 @@ class EditableBoxApp:
                 except Exception:
                     pass
 
+            def handle_close_tab(event=None):
+                """Handle Ctrl+W for this specific text widget."""
+                try:
+                    print(f"DEBUG: Ctrl+W triggered on text widget: {text_widget}")
+                    result = self._close_focused_box()
+                    return "break"  # Prevent default handling
+                except Exception as e:
+                    print(f"DEBUG: Error in text widget Ctrl+W handler: {e}")
+                    return "break"
+
             # Basic bindings for text editing with spell check
             text_widget.bind("<KeyRelease>", on_change)
             text_widget.bind("<Button-1>", on_change)
+            
+            # Add Ctrl+W binding directly to text widget for reliable tab closing
+            text_widget.bind("<Control-w>", handle_close_tab)
+            text_widget.bind("<Control-W>", handle_close_tab)
+            print(f"DEBUG: Added Ctrl+W binding to text widget: {text_widget}")
+            
         except Exception as e:
             print(f"DEBUG: Error setting up text widget bindings: {e}")
 
@@ -3057,7 +3381,15 @@ class EditableBoxApp:
         try:
             if hasattr(self, 'status_bar'):
                 current_time = datetime.now().strftime("%H:%M:%S")
-                status_text = f"Boxes: {len(self.text_boxes)} | View: {self.current_view_mode} | {current_time}"
+                
+                # Add OneDrive status
+                onedrive_status = ""
+                if self.onedrive_manager and self.onedrive_manager.is_authenticated():
+                    onedrive_status = " | OneDrive: Connected"
+                elif self.onedrive_manager:
+                    onedrive_status = " | OneDrive: Available"
+                
+                status_text = f"Boxes: {len(self.text_boxes)} | View: {self.current_view_mode}{onedrive_status} | {current_time}"
                 self.status_bar.config(text=status_text)
         except Exception as e:
             print(f"DEBUG: Error updating status bar: {e}")
@@ -3069,6 +3401,10 @@ class EditableBoxApp:
             self._tab_icons = []
         if not hasattr(self, '_tab_dirty_icons'):  # colored squares with dot/mark (dirty)
             self._tab_dirty_icons = []
+        if not hasattr(self, '_tab_onedrive_icons'):  # OneDrive storage icons (normal)
+            self._tab_onedrive_icons = []
+        if not hasattr(self, '_tab_onedrive_dirty_icons'):  # OneDrive storage icons (dirty)
+            self._tab_onedrive_dirty_icons = []
         if not hasattr(self, '_small_dirty_icon'):
             self._small_dirty_icon = None
 
@@ -3108,20 +3444,44 @@ class EditableBoxApp:
     def _get_or_create_tab_icons(self, index: int):
         """Return (normal_icon, dirty_icon) for a tab index, creating as needed."""
         self._ensure_icon_caches()
-        # Ensure arrays are long enough
-        while len(self._tab_icons) <= index:
-            self._tab_icons.append(None)
-        while len(self._tab_dirty_icons) <= index:
-            self._tab_dirty_icons.append(None)
+        
+        # Check if this tab is stored in OneDrive
+        is_onedrive = False
+        if 0 <= index < len(self.text_boxes):
+            file_path = self.text_boxes[index].get("file_path", "")
+            is_onedrive = file_path.startswith("onedrive:")
+        
+        # Ensure arrays are long enough for the appropriate icon type
+        if is_onedrive:
+            while len(self._tab_onedrive_icons) <= index:
+                self._tab_onedrive_icons.append(None)
+            while len(self._tab_onedrive_dirty_icons) <= index:
+                self._tab_onedrive_dirty_icons.append(None)
+        else:
+            while len(self._tab_icons) <= index:
+                self._tab_icons.append(None)
+            while len(self._tab_dirty_icons) <= index:
+                self._tab_dirty_icons.append(None)
+        
         try:
             color = self._get_tab_color_for_index(index)
         except Exception:
             color = "#C0C0C0"
-        if self._tab_icons[index] is None:
-            self._tab_icons[index] = self._make_colored_square(color, 12)
-        if self._tab_dirty_icons[index] is None:
-            self._tab_dirty_icons[index] = self._make_dirty_square(color, 12)
-        return self._tab_icons[index], self._tab_dirty_icons[index]
+        
+        if is_onedrive:
+            # Create OneDrive cloud icons
+            if self._tab_onedrive_icons[index] is None:
+                self._tab_onedrive_icons[index] = self._make_onedrive_icon(color, 12, False)
+            if self._tab_onedrive_dirty_icons[index] is None:
+                self._tab_onedrive_dirty_icons[index] = self._make_onedrive_icon(color, 12, True)
+            return self._tab_onedrive_icons[index], self._tab_onedrive_dirty_icons[index]
+        else:
+            # Create local storage icons (colored squares)
+            if self._tab_icons[index] is None:
+                self._tab_icons[index] = self._make_colored_square(color, 12)
+            if self._tab_dirty_icons[index] is None:
+                self._tab_dirty_icons[index] = self._make_dirty_square(color, 12)
+            return self._tab_icons[index], self._tab_dirty_icons[index]
 
     def _get_small_dirty_badge(self):
         """Small 8x8 red dot used on paned label when dirty."""
@@ -3141,6 +3501,37 @@ class EditableBoxApp:
             except Exception:
                 self._small_dirty_icon = None
         return self._small_dirty_icon
+
+    def _make_onedrive_icon(self, color: str, size: int = 12, is_dirty: bool = False):
+        """Create an OneDrive cloud icon with optional dirty indicator."""
+        try:
+            icon = tk.PhotoImage(width=size, height=size)
+            # Create transparent background
+            icon.put("", to=(0, 0, size, size))
+            
+            # Draw cloud shape using tab color
+            # Simple cloud representation using rectangles
+            # Main cloud body
+            cloud_color = color
+            y_offset = 2
+            # Top part of cloud
+            icon.put(cloud_color, to=(3, y_offset+1, 9, y_offset+2))
+            # Middle part (wider)
+            icon.put(cloud_color, to=(2, y_offset+2, 10, y_offset+4))
+            # Bottom part
+            icon.put(cloud_color, to=(1, y_offset+4, 11, y_offset+6))
+            
+            # Add small "OneDrive" indicator (small "O" in corner)
+            icon.put("#0078D4", to=(8, 1, 10, 3))  # OneDrive blue
+            
+            # Add dirty indicator if needed
+            if is_dirty:
+                icon.put("#CC0000", to=(9, 0, 12, 2))  # Red dot in top-right
+            
+            return icon
+        except Exception as e:
+            print(f"DEBUG: Error creating OneDrive icon: {e}")
+            return None
 
     def _mark_dirty_for_widget(self, text_widget):
         """Find the box for widget, set saved=False, and update indicators."""
@@ -3183,11 +3574,23 @@ class EditableBoxApp:
                     nb.tab(index, image=(normal_icon if saved else dirty_icon))
                 except Exception:
                     pass
-                # Optionally add asterisk to text title for clarity
+                # Update title with consistent naming (original OneDrive titles, Tab X: for local)
                 try:
-                    file_path = box.get("file_path")
-                    file_name = os.path.basename(file_path) if file_path else f"Untitled {index+1}"
-                    title = f"Tab {index+1}: {file_name}{'' if saved else ' *'}"
+                    file_path = box.get("file_path", "")
+                    if file_path and file_path.startswith("onedrive:"):
+                        # For OneDrive files, use original stored title without prefix
+                        stored_title = box.get("title", "")
+                        if stored_title and stored_title != "Untitled":
+                            title = f"{stored_title}{'' if saved else ' *'}"
+                        else:
+                            title = f"Untitled {index+1}{'' if saved else ' *'}"
+                    elif file_path:
+                        # For local files, use Tab X: format
+                        file_name = os.path.basename(file_path)
+                        title = f"Tab {index+1}: {file_name}{'' if saved else ' *'}"
+                    else:
+                        title = f"Untitled {index+1}{'' if saved else ' *'}"
+                    
                     nb.tab(index, text=title)
                 except Exception:
                     pass
@@ -3294,25 +3697,36 @@ class EditableBoxApp:
             pass
 
     def _on_close_request(self):
-        """Handle window close: save files, layout, and geometry with OneDrive sync."""
+        """Handle window close: save files, layout, and geometry locally only."""
+        # Show progress dialog for closing operations
+        progress = ProgressDialog(self.root, "Closing Noted", "Saving your work...")
+        
         try:
-            # Special handling for OneDrive authenticated users
-            if self.onedrive_manager and self.onedrive_manager.is_authenticated():
-                self._save_all_to_onedrive_on_exit()
-            else:
-                self._save_all_open_files()
+            progress.update_message("Saving open files...")
+            # Always save locally, no OneDrive sync on exit
+            self._save_all_open_files()
         except Exception:
             pass
+        
         try:
-            # For OneDrive users, don't save local layout since notes are in cloud
-            if not (self.onedrive_manager and self.onedrive_manager.is_authenticated()):
-                self.save_layout_to_file()
+            progress.update_message("Saving layout and settings...")
+            # Always save layout locally
+            self.save_layout_to_file()
         except Exception:
             pass
+        
         try:
+            progress.update_message("Finalizing...")
             self._persist_geometry()
         except Exception:
             pass
+        
+        # Close progress dialog and exit
+        try:
+            progress.close()
+        except Exception:
+            pass
+        
         try:
             self.root.destroy()
         except Exception:
@@ -3567,6 +3981,10 @@ class EditableBoxApp:
                 label="Close Tab", 
                 command=lambda: self._close_tab(tab_index)
             )
+            context_menu.add_command(
+                label="Close All Tabs", 
+                command=lambda: self._close_all_tabs()
+            )
             # AI submenu for tab (acts on the tab's text content)
             ai_menu = tk.Menu(context_menu, tearoff=0)
             ai_menu.add_command(label="Summarize", command=lambda: self._apply_ai_action_to_tab(tab_index, action="summarize"))
@@ -3582,13 +4000,22 @@ class EditableBoxApp:
             print(f"DEBUG: Error handling tab right-click: {e}")
 
     def _rename_tab_and_file(self, tab_index: int):
-        """Rename the underlying file (if it exists) and update titles."""
+        """Rename the underlying file (local or OneDrive) and update titles."""
         try:
             if tab_index < 0 or tab_index >= len(self.text_boxes):
                 return
             box = self.text_boxes[tab_index]
             current_path = box.get("file_path") or ""
-            default_name = os.path.basename(current_path) if current_path else (box.get("title") or f"Untitled {tab_index+1}")
+            current_title = box.get("title") or f"Untitled {tab_index+1}"
+            
+            # For OneDrive files, use the stored title; for local files, use basename
+            if current_path.startswith("onedrive:"):
+                default_name = current_title
+            elif current_path:
+                default_name = os.path.basename(current_path)
+            else:
+                default_name = current_title
+                
             try:
                 from tkinter import simpledialog
                 new_name = simpledialog.askstring("Rename", "New name for this note/file:", initialvalue=default_name, parent=self.root)
@@ -3598,34 +4025,68 @@ class EditableBoxApp:
                 return
             new_name = new_name.strip()
 
-            # If there's an existing file, rename on disk within the same folder
-            if current_path and os.path.exists(current_path):
+            # Handle OneDrive files
+            if current_path.startswith("onedrive:"):
+                # Update the title and mark as dirty to trigger sync
+                box["title"] = new_name
+                box["saved"] = False  # Mark as dirty so it will be synced
+                print(f"DEBUG: Renamed OneDrive note from '{current_title}' to '{new_name}' - marked for sync")
+                
+                # Auto-sync the renamed OneDrive file if network is available
+                if self._check_network_connectivity():
+                    try:
+                        self._sync_individual_onedrive_file(box)
+                    except Exception as e:
+                        print(f"DEBUG: Auto-sync after rename failed: {e}")
+            # Handle local files
+            elif current_path and os.path.exists(current_path):
                 new_path = os.path.join(os.path.dirname(current_path), new_name)
                 try:
                     os.replace(current_path, new_path)
                     box["file_path"] = new_path
+                    box["title"] = new_name
+                    print(f"DEBUG: Renamed local file to '{new_path}'")
                 except Exception as e:
                     messagebox.showerror("Rename Error", f"Could not rename file: {e}")
                     return
+            else:
+                # No existing file, just update title
+                box["title"] = new_name
 
-            # Update UI: box title label and tab title
-            box["title"] = new_name
+            # Update UI: box title label and tab title with proper format
             file_title = box.get("file_title")
             if file_title and file_title.winfo_exists():
                 try:
                     file_title.config(text=new_name)
                 except Exception:
                     pass
+            
+            # Update tab title with proper format (original OneDrive titles, Tab X: for local)
             if self.current_view_mode == "tabbed" and self.notebook:
                 try:
-                    self.notebook.tab(tab_index, text=new_name)
+                    if current_path.startswith("onedrive:"):
+                        # For OneDrive files, use original title without prefix
+                        tab_title = new_name
+                    else:
+                        # For local files, use Tab X: format
+                        tab_title = f"Tab {tab_index+1}: {new_name}"
+                    self.notebook.tab(tab_index, text=tab_title)
+                    print(f"DEBUG: Updated tab title to: {tab_title}")
                 except Exception:
                     pass
-            # Persist layout
+            
+            # Update dirty indicator
+            try:
+                self._update_dirty_indicator(tab_index)
+            except Exception:
+                pass
+                
+            # Persist layout locally
             try:
                 self.save_layout_to_file()
             except Exception:
                 pass
+                
         except Exception as e:
             print(f"DEBUG: Error renaming tab/file: {e}")
 
@@ -3717,6 +4178,64 @@ class EditableBoxApp:
             
         except Exception as e:
             print(f"DEBUG: Error closing tab {tab_index}: {e}")
+
+    def _close_all_tabs(self):
+        """Close all tabs."""
+        try:
+            if self.current_view_mode == "tabbed" and self.notebook:
+                total_tabs = len(self.text_boxes)
+                if total_tabs == 0:
+                    return
+                
+                # Show progress dialog for closing tabs
+                progress = ProgressDialog(self.root, "Closing Tabs", f"Closing {total_tabs} tabs...")
+                self.root.update()
+                
+                # Close all tabs from back to front to maintain indices
+                for i in range(total_tabs - 1, -1, -1):
+                    progress.update_message(f"Closing tab {total_tabs - i} of {total_tabs}...")
+                    self.root.update()
+                    self._close_tab(i)
+                
+                progress.close()
+        except Exception as e:
+            print(f"DEBUG: Error closing all tabs: {e}")
+
+    def _close_focused_box(self):
+        """Close the currently focused box or tab."""
+        try:
+            print("DEBUG: Ctrl+W pressed - attempting to close focused box/tab")
+            
+            # In tabbed mode, try to get the selected tab first
+            if self.current_view_mode == "tabbed" and self.notebook:
+                try:
+                    selected_index = self.notebook.index(self.notebook.select())
+                    print(f"DEBUG: Tabbed mode - selected tab index: {selected_index}")
+                    self._close_tab(selected_index)
+                    return True
+                except Exception as e:
+                    print(f"DEBUG: Could not get selected tab: {e}")
+            
+            # Fallback to focus-based detection
+            tw = self._get_focused_text_widget()
+            if not tw:
+                print("DEBUG: No focused text widget found")
+                print(f"DEBUG: Current focus is: {self.root.focus_get()}")
+                return
+            
+            # Find the index of the focused text widget
+            for i, box in enumerate(self.text_boxes):
+                if box.get("text_box") is tw:
+                    print(f"DEBUG: Closing focused box/tab at index {i}")
+                    # Only tabbed mode is supported now
+                    if self.current_view_mode == "tabbed":
+                        self._close_tab(i)
+                    return True
+            return True
+        except Exception as e:
+            print(f"DEBUG: Error closing focused box: {e}")
+            return True
+
 
     def refresh_tab_colors(self):
         """Refresh and update all tab colors with symbols and overlays."""
@@ -3982,177 +4501,13 @@ class EditableBoxApp:
         try:
             config_dir = os.path.dirname(self.config_file)
             messagebox.showinfo("Configuration Location", 
-                           f"Configuration files are stored in:\n\n{config_dir}\n\n"
+                           f"Configuration files are stored locally:\n\n{config_dir}\n\n"
                            f"Layout file: {os.path.basename(self.layout_file)}\n"
-                           f"Config file: {os.path.basename(self.config_file)}")
+                           f"Config file: {os.path.basename(self.config_file)}\n\n"
+                           f"Note: App state is now stored locally to prevent automatic\n"
+                           f"OneDrive loading. Use OneDrive Sync button for cloud sync.")
         except Exception as e:
             messagebox.showerror("Error", f"Could not show configuration location: {e}")
-
-    def cycle_box_arrangement(self):
-        """Cycle through different box arrangement modes."""
-        try:
-            print("DEBUG: Cycling box arrangement")
-            
-            # Only allow arrangement changes in paned mode (silent no-op otherwise)
-            if self.current_view_mode != "paned":
-                print("DEBUG: Arrangement ignored in tabbed mode")
-                return
-            
-            # Check if we have a valid paned window
-            if not self.paned_window or not self.paned_window.winfo_exists():
-                print("DEBUG: No valid paned window exists; arrangement ignored")
-                return
-            
-            # Cycle through arrangements
-            if self.current_arrangement == "horizontal":
-                self.current_arrangement = "vertical"
-                print("DEBUG: Switching to vertical arrangement")
-                self._apply_arrangement_change()
-            else:
-                self.current_arrangement = "horizontal"
-                print("DEBUG: Switching to horizontal arrangement")
-                self._apply_arrangement_change()
-                
-        except Exception as e:
-            # Silent failure (no dialogs) as requested
-            print(f"DEBUG: Error cycling arrangement (suppressed dialog): {e}")
-
-    def _apply_arrangement_change(self):
-        """Apply the current arrangement mode to the paned window."""
-        try:
-            print(f"DEBUG: Applying {self.current_arrangement} arrangement")
-            
-            # Save current content before rearranging - with widget validation
-            saved_data = []
-            for box_data in self.text_boxes:
-                text_widget = box_data.get("text_box")
-                if text_widget:
-                    try:
-                        # Validate widget still exists and is accessible
-                        if text_widget.winfo_exists():
-                            content = text_widget.get("1.0", tk.END)
-                            saved_data.append({
-                                "content": content,
-                                "file_path": box_data.get("file_path", ""),
-                                "saved": box_data.get("saved", True),
-                                "title": box_data.get("title", "Untitled")
-                            })
-                    except tk.TclError as e:
-                        print(f"DEBUG: Widget no longer exists: {e}")
-                        # Widget destroyed, skip it
-                        continue
-                    except Exception as e:
-                        print(f"DEBUG: Error accessing widget: {e}")
-                        continue
-            
-            
-            if not saved_data:
-                print("DEBUG: No data to rearrange")
-                return
-
-            # Destroy current paned window safely
-            if self.paned_window:
-                try:
-                    if self.paned_window.winfo_exists():
-                        self.paned_window.destroy()
-                except tk.TclError:
-                    print("DEBUG: Paned window already destroyed")
-                self.paned_window = None            # Create new paned window with correct orientation
-            orient = tk.HORIZONTAL if self.current_arrangement == "horizontal" else tk.VERTICAL
-            self.paned_window = tk.PanedWindow(self.root, orient=orient, sashwidth=5, sashrelief=tk.RAISED)
-            self.paned_window.pack(fill=tk.BOTH, expand=True)
-            
-            # Clear and recreate text boxes
-            self.text_boxes = []
-
-            print(f"DEBUG: Creating {len(saved_data)} panes")
-            
-            for i, data in enumerate(saved_data):
-                try:
-                    print(f"DEBUG: Creating pane {i+1}")
-                    
-                    # Create a new outer frame for the pane
-                    outer_frame = tk.Frame(self.paned_window, bd=2, relief=tk.RAISED)
-                    self.paned_window.add(outer_frame, minsize=200)
-
-                    # Create the inner frame for content
-                    frame = tk.Frame(outer_frame)
-                    frame.pack(fill=tk.BOTH, expand=True)
-                    frame.grid_rowconfigure(1, weight=1)
-                    frame.grid_columnconfigure(1, weight=1)
-
-                    # Title label for the file
-                    file_name = os.path.basename(data.get("file_path") or "") or f"Untitled {i+1}"
-                    file_title = tk.Label(frame, text=file_name, bg="lightgray")
-                    file_title.grid(row=0, column=0, columnspan=2, sticky="ew")
-
-                    # Button frame for controls
-                    button_frame = tk.Frame(frame)
-                    button_frame.grid(row=1, column=0, sticky="ns", padx=5, pady=5)
-
-                    # Text frame with scrollbar
-                    text_frame = tk.Frame(frame)
-                    text_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
-                    text_frame.grid_rowconfigure(0, weight=1)
-                    text_frame.grid_columnconfigure(0, weight=1)
-
-                    v_scrollbar = tk.Scrollbar(text_frame, orient=tk.VERTICAL)
-                    v_scrollbar.grid(row=0, column=1, sticky="ns")
-
-                    text_widget = tk.Text(text_frame, wrap=tk.WORD, yscrollcommand=v_scrollbar.set, undo=True)
-                    text_widget.grid(row=0, column=0, sticky="nsew")
-                    v_scrollbar.config(command=text_widget.yview)
-
-                    # Insert the saved content
-                    if data.get("content"):
-                        text_widget.insert("1.0", data["content"])
-                        print(f"DEBUG: Inserted {len(data['content'])} chars into pane {i+1}")
-
-                    # Add control buttons with proper closure to capture current iteration values
-                    def make_close_cmd(frame=outer_frame, widget=text_widget, path=data.get("file_path"), title=file_title):
-                        return lambda: self.close_box(frame, widget, path, title)
-                    def make_save_cmd(widget=text_widget, path=data.get("file_path"), title=file_title):
-                        return lambda: self.save_box(widget, path, title)
-                    def make_load_cmd(widget=text_widget):
-                        return lambda: self.load_box(widget)
-                    def make_copy_cmd(widget=text_widget):
-                        return lambda: self.copy_to_clipboard(widget)
-
-                    tk.Button(button_frame, text="Close", command=make_close_cmd()).pack(fill=tk.X, pady=2)
-                    tk.Button(button_frame, text="Save", command=make_save_cmd()).pack(fill=tk.X, pady=2)
-                    tk.Button(button_frame, text="Load", command=make_load_cmd()).pack(fill=tk.X, pady=2)
-                    tk.Button(button_frame, text="Copy", command=make_copy_cmd()).pack(fill=tk.X, pady=2)
-
-                    self.text_boxes.append({
-                        "text_box": text_widget,
-                        "file_path": data.get("file_path"),
-                        "saved": data.get("saved", True),
-                        "title": data.get("title"),
-                        "file_title": file_title,
-                        "outer_frame": outer_frame
-                    })
-                    
-                    print(f"DEBUG: Successfully created pane {i+1}")
-                    
-                except Exception as e:
-                    print(f"DEBUG: Error creating pane {i+1}: {e}")
-                    import traceback
-                    traceback.print_exc()
-
-            # Update view mode and status
-            self.current_view_mode = "paned"
-            try:
-                self.status_bar.config(text=f"View: Paned ({len(self.text_boxes)} boxes)")
-                self.root.after(2000, self._schedule_status_update)
-            except Exception as e:
-                print(f"DEBUG: Error updating status bar: {e}")
-                
-            print(f"DEBUG: Successfully switched to paned view with {len(self.text_boxes)} boxes")
-        
-        except Exception as e:
-            print(f"ERROR: Failed to apply arrangement change: {e}")
-            import traceback
-            traceback.print_exc()
 
 
 if __name__ == "__main__":

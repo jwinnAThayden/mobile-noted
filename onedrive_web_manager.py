@@ -17,8 +17,8 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 # --- Configuration ---
-CLIENT_ID = os.environ.get("NOTED_CLIENT_ID") 
-AUTHORITY = "https://login.microsoftonline.com/common"
+CLIENT_ID = os.environ.get("NOTED_CLIENT_ID", "cf7bb4c5-7271-4caf-adb3-f8f1f1bef9d5") 
+AUTHORITY = "https://login.microsoftonline.com/5834cf33-1f0f-463a-9150-b123cae25d8d"
 SCOPES = ["Files.ReadWrite.AppFolder", "User.Read"]
 
 # API Endpoint for the app's special folder in the user's OneDrive
@@ -487,11 +487,16 @@ class WebOneDriveManager:
                     safe_timestamp = timestamp.replace(":", "-").replace(".", "-")
                     filename = f"note_{safe_timestamp}_{note_id}.json"
                     
-                    # Prepare note data for OneDrive
+                    # Prepare note data for OneDrive with cross-platform compatibility
+                    # Include both 'text' (web format) and 'content' (desktop format) fields
+                    note_text = note_data.get("text", "")
                     cloud_note_data = {
                         **note_data,
+                        "text": note_text,          # Web format
+                        "content": note_text,       # Desktop format
                         "web_note_id": note_id,
-                        "synced_at": datetime.now().isoformat()
+                        "synced_at": datetime.now().isoformat(),
+                        "source": "web_app"        # Mark as coming from web app
                     }
                     
                     if filename in onedrive_map:
@@ -538,6 +543,7 @@ class WebOneDriveManager:
         """
         Load all notes from OneDrive.
         Returns dict with notes formatted for web application.
+        Handles both desktop format ('content') and web format ('text') fields.
         """
         if not self.is_authenticated():
             return {
@@ -558,17 +564,38 @@ class WebOneDriveManager:
                         # Use web_note_id if available, otherwise generate one
                         note_id = note_data.get("web_note_id", str(int(time.time() * 1000)))
                         
+                        # Handle cross-platform content fields
+                        # Desktop saves as 'content', web saves as 'text'
+                        note_text = ""
+                        if "content" in note_data and note_data["content"]:
+                            # Desktop format
+                            note_text = note_data["content"]
+                        elif "text" in note_data and note_data["text"]:
+                            # Web format
+                            note_text = note_data["text"]
+                        
+                        # Skip empty notes
+                        if not note_text or note_text.strip() == "":
+                            logger.info(f"OneDrive: Skipping empty note {note_info['id']}")
+                            continue
+                        
                         # Clean up OneDrive-specific fields for web use
                         web_note_data = {
-                            "text": note_data.get("text", ""),
+                            "text": note_text,
                             "created": note_data.get("created", note_info["modified"]),
-                            "modified": note_data.get("modified", note_info["modified"]),
-                            "owner": note_data.get("owner", "onedrive"),
+                            "modified": note_data.get("modified", note_data.get("last_modified", note_info["modified"])),
+                            "owner": note_data.get("owner", note_data.get("source", "onedrive")),
                             "onedrive_id": note_info["id"]
                         }
                         
+                        # Handle timestamp format conversion if needed
+                        if isinstance(web_note_data["modified"], (int, float)):
+                            # Convert Unix timestamp to ISO format
+                            web_note_data["modified"] = datetime.fromtimestamp(web_note_data["modified"]).isoformat()
+                        
                         loaded_notes[note_id] = web_note_data
                         load_stats["loaded"] += 1
+                        logger.info(f"OneDrive: Loaded note {note_id} with content length: {len(note_text)}")
                         
                 except Exception as e:
                     logger.error(f"OneDrive: Failed to load note {note_info['id']}: {e}")

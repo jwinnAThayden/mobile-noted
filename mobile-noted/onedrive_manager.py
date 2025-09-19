@@ -16,9 +16,9 @@ from kivy.utils import platform
 # --- Configuration ---
 # This Client ID is for the user's own Azure AD App Registration
 # The user must create this themselves.
-CLIENT_ID = os.environ.get("NOTED_CLIENT_ID") 
-AUTHORITY = "https://login.microsoftonline.com/common"
-SCOPES = ["Files.ReadWrite.AppFolder", "User.Read", "offline_access"]
+CLIENT_ID = os.environ.get("NOTED_CLIENT_ID", "cf7bb4c5-7271-4caf-adb3-f8f1f1bef9d5") 
+AUTHORITY = "https://login.microsoftonline.com/5834cf33-1f0f-463a-9150-b123cae25d8d"
+SCOPES = ["Files.ReadWrite.AppFolder", "User.Read"]
 
 # API Endpoint for the app's special folder in the user's OneDrive
 GRAPH_API_ENDPOINT = "https://graph.microsoft.com/v1.0/me/drive/special/approot"

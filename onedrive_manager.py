@@ -13,9 +13,9 @@ from threading import Thread
 # --- Configuration ---
 # This Client ID is for the user's own Azure AD App Registration
 # The user must create this themselves.
-CLIENT_ID = os.environ.get("NOTED_CLIENT_ID") 
-AUTHORITY = "https://login.microsoftonline.com/common"
-SCOPES = ["Files.ReadWrite.AppFolder", "User.Read", "offline_access"]
+CLIENT_ID = os.environ.get("NOTED_CLIENT_ID", "cf7bb4c5-7271-4caf-adb3-f8f1f1bef9d5").strip()
+AUTHORITY = "https://login.microsoftonline.com/5834cf33-1f0f-463a-9150-b123cae25d8d"
+SCOPES = ["Files.ReadWrite.AppFolder", "User.Read"]
 
 # API Endpoint for the app's special folder in the user's OneDrive
 GRAPH_API_ENDPOINT = "https://graph.microsoft.com/v1.0/me/drive/special/approot"
@@ -31,6 +31,9 @@ class OneDriveManager:
         if os.path.exists(TOKEN_CACHE_FILE):
             self._token_cache.deserialize(open(TOKEN_CACHE_FILE, "r").read())
 
+        print(f"DEBUG: CLIENT_ID = '{CLIENT_ID}' (length: {len(CLIENT_ID)})")
+        print(f"DEBUG: CLIENT_ID repr = {repr(CLIENT_ID)}")
+        
         self.app = msal.PublicClientApplication(
             CLIENT_ID,
             authority=AUTHORITY,
@@ -66,16 +69,30 @@ class OneDriveManager:
                 return True, "Authenticated silently."
         
         # Fallback to device flow
-        flow = self.app.initiate_device_flow(scopes=SCOPES)
-        if "user_code" not in flow:
-            return False, "Failed to initiate device flow."
+        try:
+            flow = self.app.initiate_device_flow(scopes=SCOPES)
+            print(f"DEBUG: Device flow response: {flow}")
+            if "user_code" not in flow:
+                error_msg = flow.get("error", "Unknown error")
+                error_desc = flow.get("error_description", "No description")
+                return False, f"Failed to initiate device flow: {error_msg} - {error_desc}"
+        except Exception as e:
+            return False, f"Exception during device flow initiation: {str(e)}"
 
         # Display message to user and poll for token
         print(f"Please go to {flow['verification_uri']} and enter the code: {flow['user_code']}")
         
         # This part is tricky in a GUI. We'll need to handle this with a thread.
         # For now, this is a blocking call for demonstration.
-        result = self.app.acquire_token_by_device_flow(flow)
+        try:
+            result = self.app.acquire_token_by_device_flow(flow)
+        except Exception as e:
+            # Handle MSAL ID token validation errors - often due to whitespace/casing issues
+            error_msg = str(e)
+            if "IdTokenAudienceError" in error_msg or "aud (audience) claim" in error_msg:
+                return False, f"ID Token validation error - this is often due to app registration configuration. Error: {error_msg[:200]}..."
+            else:
+                return False, f"Authentication exception: {error_msg[:200]}..."
 
         if result and "access_token" in result:
             self.access_token = result["access_token"]
