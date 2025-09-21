@@ -9,6 +9,7 @@ import requests
 import json
 import os
 import time
+import hashlib
 import logging
 from threading import Thread, Lock
 from datetime import datetime
@@ -473,23 +474,54 @@ class WebOneDriveManager:
             }
 
         try:
-            # Get existing OneDrive notes
+            # Get existing OneDrive notes and build comprehensive mapping
             onedrive_notes = self.list_notes()
             onedrive_map = {note["name"]: note for note in onedrive_notes}
             
+            # Build duplicate detection maps
+            web_note_id_map = {}  # Map web_note_id to OneDrive filename
+            content_hash_map = {}  # Map content hash to OneDrive filename for duplicate detection
+            
+            # Analyze existing OneDrive notes for duplicates
+            for note_info in onedrive_notes:
+                try:
+                    existing_note_data = self.get_note(note_info["id"])
+                    if existing_note_data:
+                        # Map by web_note_id for exact matching
+                        web_id = existing_note_data.get("web_note_id")
+                        if web_id:
+                            web_note_id_map[web_id] = note_info["name"]
+                        
+                        # Map by content hash for duplicate detection
+                        content = existing_note_data.get("text", "") or existing_note_data.get("content", "")
+                        if content.strip():
+                            content_hash = hashlib.md5(content.strip().encode()).hexdigest()
+                            if content_hash not in content_hash_map:
+                                content_hash_map[content_hash] = []
+                            content_hash_map[content_hash].append(note_info["name"])
+                except Exception as e:
+                    logger.warning(f"Error analyzing existing note {note_info['name']}: {e}")
+            
             synced_notes = {}
-            sync_stats = {"created": 0, "updated": 0, "errors": 0}
+            sync_stats = {"created": 0, "updated": 0, "errors": 0, "duplicates_avoided": 0}
             
             for note_id, note_data in local_notes.items():
                 try:
-                    # Generate consistent filename
-                    timestamp = note_data.get("created", "unknown")
-                    safe_timestamp = timestamp.replace(":", "-").replace(".", "-")
-                    filename = f"note_{safe_timestamp}_{note_id}.json"
+                    note_text = note_data.get("text", "")
+                    content_hash = hashlib.md5(note_text.strip().encode()).hexdigest() if note_text.strip() else None
+                    
+                    # Check for existing note by web_note_id first (exact match)
+                    existing_filename = web_note_id_map.get(note_id)
+                    
+                    # If not found by web_note_id, check for content duplicates
+                    if not existing_filename and content_hash and content_hash in content_hash_map:
+                        duplicate_files = content_hash_map[content_hash]
+                        if duplicate_files:
+                            existing_filename = duplicate_files[0]  # Use first duplicate
+                            logger.info(f"Found content duplicate for note {note_id}: {existing_filename}")
+                            sync_stats["duplicates_avoided"] += 1
                     
                     # Prepare note data for OneDrive with cross-platform compatibility
-                    # Include both 'text' (web format) and 'content' (desktop format) fields
-                    note_text = note_data.get("text", "")
                     cloud_note_data = {
                         **note_data,
                         "text": note_text,          # Web format
@@ -499,21 +531,36 @@ class WebOneDriveManager:
                         "source": "web_app"        # Mark as coming from web app
                     }
                     
-                    if filename in onedrive_map:
-                        # Update existing note
-                        saved_id = self.save_note(filename, cloud_note_data)
+                    if existing_filename:
+                        # Update existing note (either exact match or duplicate)
+                        saved_id = self.save_note(existing_filename, cloud_note_data)
                         if saved_id:
                             note_data["onedrive_id"] = saved_id
                             sync_stats["updated"] += 1
                         else:
                             sync_stats["errors"] += 1
                     else:
-                        # Create new note with timestamp-based filename
-                        new_filename = f"web_note_{note_id}_{int(time.time())}.json"
+                        # Create new note with descriptive filename based on title
+                        title = note_data.get("title", "").strip()
+                        if title and len(title) > 3:
+                            # Use title for filename, sanitized
+                            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).strip()
+                            safe_title = safe_title.replace(' ', '_')[:30]  # Limit length
+                            new_filename = f"web_{safe_title}_{note_id[:8]}.json"
+                        else:
+                            # Fallback to timestamp-based filename
+                            new_filename = f"web_note_{note_id}_{int(time.time())}.json"
+                        
                         saved_id = self.save_note(new_filename, cloud_note_data)
                         if saved_id:
                             note_data["onedrive_id"] = saved_id
                             sync_stats["created"] += 1
+                            # Update maps to prevent future duplicates
+                            web_note_id_map[note_id] = new_filename
+                            if content_hash:
+                                if content_hash not in content_hash_map:
+                                    content_hash_map[content_hash] = []
+                                content_hash_map[content_hash].append(new_filename)
                         else:
                             sync_stats["errors"] += 1
                     
@@ -537,6 +584,78 @@ class WebOneDriveManager:
                 "success": False,
                 "error": str(e),
                 "notes": local_notes
+            }
+
+    def cleanup_duplicate_notes(self):
+        """
+        Clean up duplicate notes on OneDrive based on content hash.
+        Keeps the most recently modified version of each duplicate.
+        """
+        if not self.is_authenticated():
+            return {
+                "success": False,
+                "error": "Not authenticated with OneDrive"
+            }
+        
+        try:
+            onedrive_notes = self.list_notes()
+            content_groups = {}  # Group notes by content hash
+            
+            # Analyze all notes and group by content
+            for note_info in onedrive_notes:
+                try:
+                    note_data = self.get_note(note_info["id"])
+                    if note_data:
+                        content = note_data.get("text", "") or note_data.get("content", "")
+                        if content.strip():
+                            content_hash = hashlib.md5(content.strip().encode()).hexdigest()
+                            if content_hash not in content_groups:
+                                content_groups[content_hash] = []
+                            content_groups[content_hash].append({
+                                "filename": note_info["name"],
+                                "note_id": note_info["id"],
+                                "modified": note_data.get("modified", ""),
+                                "created": note_data.get("created", "")
+                            })
+                except Exception as e:
+                    logger.warning(f"Error analyzing note {note_info['name']} for duplicates: {e}")
+            
+            # Find and remove duplicates
+            cleanup_stats = {"duplicates_removed": 0, "groups_processed": 0}
+            
+            for content_hash, note_group in content_groups.items():
+                if len(note_group) > 1:  # Has duplicates
+                    cleanup_stats["groups_processed"] += 1
+                    # Sort by modified date, keep the most recent
+                    note_group.sort(key=lambda x: x["modified"] or x["created"], reverse=True)
+                    keeper = note_group[0]
+                    duplicates = note_group[1:]
+                    
+                    logger.info(f"Found {len(duplicates)} duplicates for content hash {content_hash[:8]}...")
+                    logger.info(f"Keeping: {keeper['filename']}")
+                    
+                    # Remove duplicates
+                    for duplicate in duplicates:
+                        try:
+                            if self.delete_note(duplicate["note_id"]):
+                                cleanup_stats["duplicates_removed"] += 1
+                                logger.info(f"Removed duplicate: {duplicate['filename']}")
+                            else:
+                                logger.warning(f"Failed to remove duplicate: {duplicate['filename']}")
+                        except Exception as e:
+                            logger.error(f"Error removing duplicate {duplicate['filename']}: {e}")
+            
+            logger.info(f"Duplicate cleanup completed: {cleanup_stats}")
+            return {
+                "success": True,
+                "stats": cleanup_stats
+            }
+            
+        except Exception as e:
+            logger.error(f"Error during duplicate cleanup: {e}")
+            return {
+                "success": False,
+                "error": str(e)
             }
 
     def load_notes_from_cloud(self):

@@ -137,6 +137,14 @@
             align-items: center;
         }
 
+        .note-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
         .note-meta {
             font-size: 0.85em;
             color: #666;
@@ -630,6 +638,7 @@
                             <button class="btn onedrive-btn" onclick="syncToOneDrive()">⬆️ Push to Cloud</button>
                             <button class="btn onedrive-btn" onclick="syncFromOneDrive()">⬇️ Pull from Cloud</button>
                             <button class="btn" onclick="showOneDriveNotes()">📋 View Cloud Notes</button>
+                            <button class="btn" onclick="cleanupOneDriveDuplicates()" title="Remove duplicate files from OneDrive">🧹 Clean Duplicates</button>
                         </div>
                         <div class="sync-options">
                             <label>
@@ -828,9 +837,11 @@
             noteDiv.setAttribute('data-note-id', note.id);
 
             const modifiedDate = new Date(note.modified).toLocaleString();
+            const noteTitle = note.title || generateNoteTitle(note.text) || 'Untitled Note';
             
             noteDiv.innerHTML = `
                 <div class="note-header">
+                    <div class="note-title">${escapeHtml(noteTitle)}</div>
                     <div class="note-meta">Modified: ${modifiedDate}</div>
                     <div class="note-actions">
                         <button class="note-btn" onclick="saveNote('${note.id}')" title="Save">💾</button>
@@ -843,6 +854,32 @@
             `;
 
             return noteDiv;
+        }
+
+        function generateNoteTitle(textContent) {
+            if (!textContent || !textContent.trim()) {
+                return 'Untitled Note';
+            }
+            
+            // Get first line, clean it up, and limit length
+            const firstLine = textContent.split('\n')[0].trim();
+            if (!firstLine) {
+                return 'Untitled Note';
+            }
+            
+            // Limit title length and remove excessive whitespace
+            let title = firstLine.replace(/\s+/g, ' ');
+            if (title.length > 50) {
+                title = title.substring(0, 47) + '...';
+            }
+            
+            return title || 'Untitled Note';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function onNoteChange(noteId) {
@@ -916,6 +953,13 @@
                         const metaElement = noteElement.querySelector('.note-meta');
                         const modifiedDate = new Date(data.note.modified).toLocaleString();
                         metaElement.textContent = `Modified: ${modifiedDate}`;
+                        
+                        // Update the title display
+                        const titleElement = noteElement.querySelector('.note-title');
+                        if (titleElement) {
+                            const newTitle = data.note.title || generateNoteTitle(data.note.text) || 'Untitled Note';
+                            titleElement.textContent = newTitle;
+                        }
                     }
                     
                     showStatus('Note saved!');
@@ -1703,6 +1747,34 @@
                 }
             } catch (error) {
                 showStatus('Logout error: ' + error.message, true);
+            }
+        }
+
+        // Clean up OneDrive duplicates
+        async function cleanupOneDriveDuplicates() {
+            if (!confirm('This will remove duplicate files from OneDrive, keeping the most recent version of each. Continue?')) {
+                return;
+            }
+            
+            try {
+                showStatus('Cleaning up OneDrive duplicates...', false);
+                
+                const response = await authenticatedFetch('/api/onedrive/cleanup-duplicates', {
+                    method: 'POST'
+                });
+                
+                if (!response) return;
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    showStatus(`Cleanup completed: ${stats.duplicates_removed} duplicates removed from ${stats.groups_processed} groups`);
+                } else {
+                    showStatus('Cleanup failed: ' + data.error, true);
+                }
+            } catch (error) {
+                console.error('OneDrive cleanup error:', error);
+                showStatus('Cleanup error: ' + error.message, true);
             }
         }
 

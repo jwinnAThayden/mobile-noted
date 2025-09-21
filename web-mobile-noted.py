@@ -558,6 +558,23 @@ def trust_current_device():
         logger.error(f"Error trusting current device: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+def generate_note_title(text_content):
+    """Generate a title from the first line of note content"""
+    if not text_content or not text_content.strip():
+        return "Untitled Note"
+    
+    # Get first line, clean it up, and limit length
+    first_line = text_content.split('\n')[0].strip()
+    if not first_line:
+        return "Untitled Note"
+    
+    # Limit title length and remove excessive whitespace
+    title = ' '.join(first_line.split())
+    if len(title) > 50:
+        title = title[:47] + "..."
+    
+    return title or "Untitled Note"
+
 def get_notes_file():
     """Get the path to the notes JSON file"""
     return os.path.join(NOTES_DIR, 'notes.json')
@@ -659,8 +676,13 @@ def create_note():
         note_id = str(uuid.uuid4())
         timestamp = datetime.now().isoformat()
         
+        # Generate title from first line of text
+        text_content = data.get('text', '')
+        title = generate_note_title(text_content)
+        
         note_data = {
-            'text': data.get('text', ''),
+            'text': text_content,
+            'title': title,
             'created': timestamp,
             'modified': timestamp,
             'owner': session.get('username', 'anonymous')
@@ -697,7 +719,10 @@ def update_note(note_id):
         if notes[note_id].get('owner') != session.get('username') and session.get('username') != USERNAME:
             return jsonify({'success': False, 'error': 'Access denied'}), 403
         
-        notes[note_id]['text'] = data.get('text', notes[note_id]['text'])
+        # Update text and regenerate title
+        text_content = data.get('text', notes[note_id]['text'])
+        notes[note_id]['text'] = text_content
+        notes[note_id]['title'] = generate_note_title(text_content)
         notes[note_id]['modified'] = datetime.now().isoformat()
         
         if save_notes(notes):
@@ -950,6 +975,30 @@ def extend_device_flow_timeout():
         
     except Exception as e:
         logger.error(f"Error extending device flow timeout: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/onedrive/cleanup-duplicates', methods=['POST'])
+@login_required
+@limiter.limit("2 per minute")
+def cleanup_onedrive_duplicates():
+    """Clean up duplicate notes on OneDrive"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
+        
+        if not onedrive_manager.is_authenticated():
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated with OneDrive'
+            }), 401
+        
+        result = onedrive_manager.cleanup_duplicate_notes()
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error cleaning up OneDrive duplicates: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/onedrive/logout', methods=['POST'])
