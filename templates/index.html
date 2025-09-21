@@ -645,6 +645,21 @@
         .docked-bottom-left { bottom: 20px; left: 20px; }
         .docked-bottom-right { bottom: 20px; right: 20px; }
 
+        /* Connection status */
+        .connection-status {
+            transition: all 0.3s ease;
+        }
+        
+        .connection-status.online {
+            background: rgba(40, 167, 69, 0.9);
+            color: white;
+        }
+        
+        .connection-status.offline {
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+        }
+
         /* Keep notes always visible but highlight titles */
         .note-title-input {
             font-weight: bold;
@@ -1059,26 +1074,47 @@
                 return 'Untitled.txt';
             }
             
-            // Get first line and create filename-like title
+            // Get first line and create simple filename like desktop app
             const firstLine = textContent.split('\n')[0].trim();
             if (!firstLine) {
                 return 'Untitled.txt';
             }
             
-            // Clean up for filename: remove special chars, limit length
-            let cleanTitle = firstLine.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, '');
+            // Extract key words like desktop app
+            const cleanText = firstLine.replace(/[^a-zA-Z0-9\s]/g, '');
+            const words = cleanText.split(/\s+/).filter(word => word.length > 0);
             
-            // Limit length
-            if (cleanTitle.length > 30) {
-                cleanTitle = cleanTitle.substring(0, 30);
+            if (words.length === 0) {
+                return 'Untitled.txt';
+            }
+            
+            // Create simple filename from first 1-2 words, like desktop app
+            let title = '';
+            if (words.length === 1) {
+                title = words[0].toLowerCase();
+            } else if (words.length >= 2) {
+                title = words[0].toLowerCase();
+                // Add second word if first is very short
+                if (words[0].length <= 3 && words.length > 1) {
+                    title += words[1].toLowerCase();
+                }
+            }
+            
+            if (!title) {
+                return 'Untitled.txt';
+            }
+            
+            // Limit length to match desktop app pattern
+            if (title.length > 20) {
+                title = title.substring(0, 20);
             }
             
             // Add .txt extension like desktop app
-            if (cleanTitle && !cleanTitle.toLowerCase().endsWith('.txt')) {
-                cleanTitle += '.txt';
+            if (!title.toLowerCase().endsWith('.txt')) {
+                title += '.txt';
             }
             
-            return cleanTitle || 'Untitled.txt';
+            return title;
         }
 
         function escapeHtml(text) {
@@ -2232,10 +2268,172 @@
             autoHideTimer = setTimeout(hideInterface, 5000); // Hide after 5 seconds initially
         }
 
+        // Offline storage functionality
+        let isOnline = navigator.onLine;
+        let deviceId = localStorage.getItem('deviceId') || 'device-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('deviceId', deviceId);
+
+        function saveNotesOffline() {
+            try {
+                const offlineNotes = {};
+                notes.forEach(note => {
+                    offlineNotes[note.id] = note;
+                });
+                
+                localStorage.setItem('offlineNotes', JSON.stringify({
+                    notes: offlineNotes,
+                    timestamp: new Date().toISOString(),
+                    deviceId: deviceId
+                }));
+                
+                showStatus('📱 Notes saved offline', false);
+                return true;
+            } catch (error) {
+                console.error('Failed to save notes offline:', error);
+                return false;
+            }
+        }
+
+        function loadNotesOffline() {
+            try {
+                const offlineData = localStorage.getItem('offlineNotes');
+                if (offlineData) {
+                    const parsed = JSON.parse(offlineData);
+                    return parsed.notes || {};
+                }
+                return {};
+            } catch (error) {
+                console.error('Failed to load offline notes:', error);
+                return {};
+            }
+        }
+
+        async function syncOfflineNotes() {
+            if (!isOnline) return;
+            
+            try {
+                const offlineNotes = loadNotesOffline();
+                if (Object.keys(offlineNotes).length === 0) return;
+                
+                // Save offline notes to server
+                const response = await fetch('/api/offline/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        notes: offlineNotes,
+                        device_id: deviceId
+                    })
+                });
+                
+                if (response.ok) {
+                    // Sync with server
+                    const syncResponse = await fetch('/api/offline/sync', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            device_id: deviceId
+                        })
+                    });
+                    
+                    if (syncResponse.ok) {
+                        const syncData = await syncResponse.json();
+                        if (syncData.success && syncData.notes) {
+                            // Update local notes with synced data
+                            notes = Object.values(syncData.notes).map(note => ({
+                                ...note,
+                                id: Object.keys(syncData.notes).find(id => syncData.notes[id] === note)
+                            }));
+                            renderNotes();
+                            
+                            // Clear offline storage after successful sync
+                            localStorage.removeItem('offlineNotes');
+                            showStatus('☁️ Notes synced with OneDrive', false);
+                        }
+                    }
+                } else {
+                    showStatus('⚠️ Failed to sync offline notes', true);
+                }
+            } catch (error) {
+                console.error('Failed to sync offline notes:', error);
+                showStatus('⚠️ Sync failed - will retry when online', true);
+            }
+        }
+
+        function handleOnlineStatus() {
+            isOnline = navigator.onLine;
+            const statusElement = document.getElementById('connectionStatus') || createConnectionStatus();
+            
+            if (isOnline) {
+                statusElement.textContent = '🟢 Online';
+                statusElement.className = 'connection-status online';
+                syncOfflineNotes(); // Auto-sync when coming online
+            } else {
+                statusElement.textContent = '🔴 Offline';
+                statusElement.className = 'connection-status offline';
+            }
+        }
+
+        function createConnectionStatus() {
+            const status = document.createElement('div');
+            status.id = 'connectionStatus';
+            status.style.cssText = `
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-size: 0.8em;
+                z-index: 1002;
+                font-weight: bold;
+            `;
+            document.body.appendChild(status);
+            return status;
+        }
+
+        // Override save functions to include offline storage
+        const originalSaveNote = window.saveNote;
+        window.saveNote = async function(noteId) {
+            const result = await originalSaveNote.call(this, noteId);
+            
+            // Always save offline as backup
+            saveNotesOffline();
+            
+            return result;
+        };
+
         // Initialize auto-hide when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initAutoHide();
             initDialogMovement();
+            
+            // Initialize offline functionality
+            handleOnlineStatus();
+            window.addEventListener('online', handleOnlineStatus);
+            window.addEventListener('offline', handleOnlineStatus);
+            
+            // Load offline notes if no online notes available
+            if (notes.length === 0) {
+                const offlineNotes = loadNotesOffline();
+                if (Object.keys(offlineNotes).length > 0) {
+                    notes = Object.values(offlineNotes).map(note => ({
+                        ...note,
+                        id: Object.keys(offlineNotes).find(id => offlineNotes[id] === note)
+                    }));
+                    renderNotes();
+                    showStatus('📱 Loaded offline notes', false);
+                }
+            }
+            
+            // Try to sync offline notes on startup
+            if (isOnline) {
+                setTimeout(syncOfflineNotes, 2000);
+            }
         });
 
     </script>

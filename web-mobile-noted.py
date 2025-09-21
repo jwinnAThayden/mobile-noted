@@ -559,30 +559,47 @@ def trust_current_device():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 def generate_note_title(text_content):
-    """Generate a filename-like title to match desktop app behavior"""
+    """Generate a simple filename-like title to match desktop app behavior"""
     if not text_content or not text_content.strip():
         return "Untitled.txt"
     
-    # Get first line and create a filename-like title
+    # Get first line and create a simple filename
     first_line = text_content.split('\n')[0].strip()
     if not first_line:
         return "Untitled.txt"
     
-    # Clean up for filename: remove special chars, limit length
+    # Extract key words and create simple filename like desktop app
     import re
-    # Remove or replace special characters
-    clean_title = re.sub(r'[<>:"/\\|?*]', '', first_line)
-    clean_title = re.sub(r'\s+', '', clean_title)  # Remove spaces for filename
+    # Remove special characters but keep letters, numbers, spaces
+    clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', first_line)
+    # Take first few meaningful words
+    words = clean_text.split()
+    if not words:
+        return "Untitled.txt"
     
-    # Limit length
-    if len(clean_title) > 30:
-        clean_title = clean_title[:30]
+    # Create simple filename from first 1-3 words, like desktop app
+    title = ""
+    if len(words) == 1:
+        title = words[0].lower()
+    elif len(words) >= 2:
+        # Use first word or first two words combined
+        title = words[0].lower()
+        # Add second word if first is very short
+        if len(words[0]) <= 3 and len(words) > 1:
+            title += words[1].lower()
+    
+    if not title:
+        return "Untitled.txt"
+    
+    # Limit length to match desktop app pattern
+    if len(title) > 20:
+        title = title[:20]
     
     # Add .txt extension like desktop app
-    if clean_title and not clean_title.lower().endswith('.txt'):
-        clean_title += '.txt'
+    if not title.lower().endswith('.txt'):
+        title += '.txt'
     
-    return clean_title or "Untitled.txt"
+    return title
 
 def get_notes_file():
     """Get the path to the notes JSON file"""
@@ -750,6 +767,79 @@ def update_note(note_id):
             return jsonify({'success': False, 'error': 'Failed to save note'}), 500
     except Exception as e:
         logger.error(f"Error updating note: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/offline/save', methods=['POST'])
+@limiter.limit("50 per minute")
+def save_offline_notes():
+    """Save notes to server for offline sync later"""
+    try:
+        data = request.get_json()
+        offline_notes = data.get('notes', {})
+        device_id = data.get('device_id', 'unknown')
+        
+        # Save to temporary offline storage
+        offline_dir = os.path.join(NOTES_DIR, 'offline')
+        os.makedirs(offline_dir, exist_ok=True)
+        
+        offline_file = os.path.join(offline_dir, f'offline_{device_id}.json')
+        with open(offline_file, 'w', encoding='utf-8') as f:
+            json.dump({
+                'notes': offline_notes,
+                'device_id': device_id,
+                'timestamp': datetime.now().isoformat(),
+                'synced': False
+            }, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({'success': True, 'message': 'Notes saved offline'})
+    except Exception as e:
+        logger.error(f"Error saving offline notes: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/offline/sync', methods=['POST'])
+@limiter.limit("10 per minute")
+def sync_offline_notes():
+    """Sync offline notes back to main storage and OneDrive"""
+    try:
+        data = request.get_json()
+        device_id = data.get('device_id', 'unknown')
+        
+        offline_dir = os.path.join(NOTES_DIR, 'offline')
+        offline_file = os.path.join(offline_dir, f'offline_{device_id}.json')
+        
+        if not os.path.exists(offline_file):
+            return jsonify({'success': True, 'message': 'No offline notes to sync'})
+        
+        # Load offline notes
+        with open(offline_file, 'r', encoding='utf-8') as f:
+            offline_data = json.load(f)
+        
+        if offline_data.get('synced', False):
+            return jsonify({'success': True, 'message': 'Notes already synced'})
+        
+        # Merge with existing notes
+        current_notes = load_notes()
+        offline_notes = offline_data.get('notes', {})
+        
+        # Add or update notes from offline storage
+        for note_id, note_data in offline_notes.items():
+            if note_id not in current_notes or note_data.get('modified', '') > current_notes.get(note_id, {}).get('modified', ''):
+                current_notes[note_id] = note_data
+        
+        # Save merged notes
+        if save_notes(current_notes):
+            # Mark as synced
+            offline_data['synced'] = True
+            offline_data['sync_timestamp'] = datetime.now().isoformat()
+            with open(offline_file, 'w', encoding='utf-8') as f:
+                json.dump(offline_data, f, indent=2, ensure_ascii=False)
+            
+            return jsonify({'success': True, 'message': 'Offline notes synced successfully', 'notes': current_notes})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to save synced notes'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error syncing offline notes: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/notes/<note_id>/title', methods=['PUT'])
