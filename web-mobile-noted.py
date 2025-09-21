@@ -16,6 +16,7 @@ import os
 import sys
 import uuid
 import time
+import re
 from datetime import datetime, timedelta
 import logging
 from functools import wraps
@@ -569,7 +570,6 @@ def generate_note_title(text_content):
         return "Untitled.txt"
     
     # Extract key words and create simple filename like desktop app
-    import re
     # Remove special characters but keep letters, numbers, spaces
     clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', first_line)
     # Take first few meaningful words
@@ -770,10 +770,14 @@ def update_note(note_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/offline/save', methods=['POST'])
+@login_required
 @limiter.limit("50 per minute")
 def save_offline_notes():
     """Save notes to server for offline sync later"""
     try:
+        # Validate CSRF for API requests
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
+        
         data = request.get_json()
         offline_notes = data.get('notes', {})
         device_id = data.get('device_id', 'unknown')
@@ -797,10 +801,14 @@ def save_offline_notes():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/offline/sync', methods=['POST'])
+@login_required
 @limiter.limit("10 per minute")
 def sync_offline_notes():
     """Sync offline notes back to main storage and OneDrive"""
     try:
+        # Validate CSRF for API requests
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
+        
         data = request.get_json()
         device_id = data.get('device_id', 'unknown')
         

@@ -515,9 +515,9 @@
 
         /* OneDrive floating button */
         .onedrive-float-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
             width: 60px;
             height: 60px;
             background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
@@ -528,7 +528,11 @@
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 120, 212, 0.3);
             transition: all 0.3s ease;
-            z-index: 999;
+            z-index: 9999 !important;
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
         }
 
         .onedrive-float-btn:hover {
@@ -844,7 +848,10 @@
     </div>
 
     <!-- OneDrive Floating Action Button -->
-    <button id="onedriveFloatBtn" class="onedrive-float-btn" onclick="showOneDrivePanel()">
+    <!-- OneDrive Floating Action Button with enhanced error handling -->
+    <button id="onedriveFloatBtn" class="onedrive-float-btn" 
+            onclick="try { showOneDrivePanel(); } catch(e) { console.error('OneDrive button error:', e); alert('OneDrive button error: ' + e.message); }"
+            style="position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 9999 !important; display: block !important;">
         ☁️
     </button>
 
@@ -1485,17 +1492,26 @@
 
         // Check OneDrive connection status
         async function checkOneDriveStatus() {
+            const statusDiv = document.getElementById('onedriveStatus');
+            if (statusDiv) statusDiv.innerHTML = 'Checking OneDrive status...';
+            
             try {
-                // Try the authenticated endpoint first
-                let response = await authenticatedFetch('/api/onedrive/status');
+                console.log('Checking OneDrive status...');
                 
-                // If that fails, try the simple endpoint without auth/CSRF
-                if (!response) {
-                    console.log('Trying simple OneDrive status endpoint...');
-                    response = await fetch('/api/simple/onedrive/status');
+                // Try the simple endpoint first (no auth required)
+                let response = await fetch('/api/simple/onedrive/status');
+                
+                // If that fails, try the authenticated endpoint
+                if (!response || !response.ok) {
+                    console.log('Simple endpoint failed, trying authenticated endpoint...');
+                    response = await authenticatedFetch('/api/onedrive/status');
                 }
                 
-                if (!response) return;
+                if (!response || !response.ok) {
+                    console.error('Both endpoints failed');
+                    if (statusDiv) statusDiv.innerHTML = '❌ Could not connect to OneDrive service';
+                    return;
+                }
                 
                 // Check if response is actually JSON
                 const contentType = response.headers.get('content-type');
@@ -1510,6 +1526,21 @@
                 }
                 
                 const data = await response.json();
+                console.log('OneDrive status response:', data);
+                
+                // Update status in panel if it exists
+                if (statusDiv) {
+                    if (data.available) {
+                        if (data.authenticated) {
+                            statusDiv.innerHTML = '✅ OneDrive connected and authenticated';
+                        } else {
+                            statusDiv.innerHTML = '⚠️ OneDrive available but not authenticated';
+                        }
+                    } else {
+                        statusDiv.innerHTML = '❌ OneDrive not available: ' + (data.error || 'Unknown error');
+                    }
+                }
+                
                 updateOneDriveUI(data);
             } catch (error) {
                 console.warn('OneDrive status check failed, trying simple endpoint...', error);
@@ -1519,12 +1550,24 @@
                     const response = await fetch('/api/simple/onedrive/status');
                     if (response.ok) {
                         const data = await response.json();
+                        console.log('Simple endpoint response:', data);
+                        
+                        // Update status in panel
+                        if (statusDiv) {
+                            if (data.available) {
+                                statusDiv.innerHTML = '✅ OneDrive available (simple check)';
+                            } else {
+                                statusDiv.innerHTML = '❌ OneDrive not available';
+                            }
+                        }
+                        
                         updateOneDriveUI(data);
                     } else {
                         throw new Error(`Simple endpoint failed: ${response.status}`);
                     }
                 } catch (fallbackError) {
                     console.error('Both OneDrive endpoints failed:', fallbackError);
+                    if (statusDiv) statusDiv.innerHTML = '❌ OneDrive service not accessible';
                     updateOneDriveUI({
                         available: false,
                         authenticated: false,
@@ -1641,8 +1684,51 @@
 
         // Show/hide OneDrive panel
         function showOneDrivePanel() {
-            document.getElementById('onedrivePanel').style.display = 'block';
-            checkOneDriveStatus(); // Refresh status when opening
+            try {
+                console.log('showOneDrivePanel called');
+                const panel = document.getElementById('onedrivePanel');
+                if (!panel) {
+                    console.error('OneDrive panel element not found!');
+                    alert('Error: OneDrive panel not found in DOM');
+                    return;
+                }
+                
+                // Make panel visible with forced styling
+                panel.style.display = 'block';
+                panel.style.position = 'fixed';
+                panel.style.top = '50%';
+                panel.style.left = '50%';
+                panel.style.transform = 'translate(-50%, -50%)';
+                panel.style.zIndex = '10000';
+                panel.style.background = 'white';
+                panel.style.borderRadius = '15px';
+                panel.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3)';
+                panel.style.maxWidth = '500px';
+                panel.style.width = '90vw';
+                panel.style.maxHeight = '70vh';
+                
+                // Add content with working close button
+                panel.innerHTML = `
+                    <div class="panel-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 15px 15px 0 0;">
+                        <h3 style="margin: 0; font-size: 1.2em;">OneDrive Integration</h3>
+                        <button onclick="hideOneDrivePanel()" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px;">×</button>
+                    </div>
+                    <div class="panel-content" style="padding: 20px;">
+                        <div id="onedriveStatus">Loading OneDrive status...</div>
+                        <div style="margin-top: 15px;">
+                            <button onclick="checkOneDriveStatus()" class="btn" style="background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">Refresh Status</button>
+                            <button onclick="startOneDriveAuth()" class="btn" style="background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Connect OneDrive</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Load OneDrive status
+                checkOneDriveStatus();
+                
+            } catch (e) {
+                console.error('Error in showOneDrivePanel:', e);
+                alert('OneDrive panel error: ' + e.message);
+            }
         }
 
         function hideOneDrivePanel() {
