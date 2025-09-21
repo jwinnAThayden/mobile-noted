@@ -9,7 +9,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 from flask_session import Session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_wtf.csrf import CSRFProtect, validate_csrf, CSRFError
+from flask_wtf.csrf import CSRFProtect, validate_csrf, CSRFError, generate_csrf
 from werkzeug.security import check_password_hash, generate_password_hash
 import json
 import os
@@ -506,7 +506,7 @@ def get_trusted_devices():
 def remove_trusted_device(device_key):
     """Remove a trusted device"""
     try:
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         trusted_devices = load_trusted_devices()
         
@@ -530,7 +530,7 @@ def remove_trusted_device(device_key):
 def trust_current_device():
     """Trust the current device"""
     try:
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         data = request.get_json()
         device_name = data.get('name', '').strip()
@@ -617,7 +617,15 @@ def debug_info():
 @login_required
 def index():
     """Main page with mobile-optimized interface"""
-    return render_template('index.html')
+    # Pass CSRF token to template if authentication is enabled
+    csrf_token = None
+    if AUTH_ENABLED and csrf:
+        try:
+            csrf_token = generate_csrf()
+        except Exception as e:
+            logger.warning(f"Could not generate CSRF token: {e}")
+    
+    return render_template('index.html', csrf_token=csrf_token)
 
 @app.route('/api/notes', methods=['GET'])
 @login_required
@@ -645,7 +653,7 @@ def create_note():
     """Create a new note"""
     try:
         # Validate CSRF for API requests
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         data = request.get_json()
         note_id = str(uuid.uuid4())
@@ -677,7 +685,7 @@ def update_note(note_id):
     """Update an existing note"""
     try:
         # Validate CSRF for API requests
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         data = request.get_json()
         notes = load_notes()
@@ -708,7 +716,7 @@ def delete_note(note_id):
     """Delete a note"""
     try:
         # Validate CSRF for API requests
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         notes = load_notes()
         
@@ -843,7 +851,7 @@ def cancel_onedrive_auth():
         return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
     
     try:
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         session_id = session.get('session_id')
         if session_id:
@@ -952,7 +960,7 @@ def onedrive_logout():
         return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
     
     try:
-        validate_csrf(request.headers.get('X-CSRFToken'))
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         success = onedrive_manager.logout()
         return jsonify({'success': success})

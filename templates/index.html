@@ -673,6 +673,11 @@
         ☁️
     </button>
 
+    <!-- Hidden CSRF token for JavaScript -->
+    {% if csrf_token %}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% endif %}
+
     <script>
         let notes = [];
         let saveTimeout = null;
@@ -682,16 +687,26 @@
         async function getCsrfToken() {
             if (!csrfToken) {
                 try {
+                    // First try to get CSRF token from the current page
+                    const tokenInput = document.querySelector('input[name="csrf_token"]');
+                    if (tokenInput) {
+                        csrfToken = tokenInput.value;
+                        return csrfToken;
+                    }
+                    
+                    // Fallback: try to fetch from login page (older method)
                     const response = await fetch('/login');
                     const text = await response.text();
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(text, 'text/html');
-                    const tokenInput = doc.querySelector('input[name="csrf_token"]');
-                    if (tokenInput) {
-                        csrfToken = tokenInput.value;
+                    const loginTokenInput = doc.querySelector('input[name="csrf_token"]');
+                    if (loginTokenInput) {
+                        csrfToken = loginTokenInput.value;
                     }
                 } catch (error) {
-                    console.warn('Could not fetch CSRF token:', error);
+                    console.warn('Could not fetch CSRF token (may be disabled):', error);
+                    // CSRF may be disabled, return null
+                    return null;
                 }
             }
             return csrfToken;
