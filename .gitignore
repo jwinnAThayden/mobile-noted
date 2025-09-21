@@ -66,3 +66,15 @@ bin/
 
 # Local configuration
 config.local.json
+
+# OneDrive token cache (contains sensitive auth tokens)
+onedrive_token_cache.json
+
+# Flask session files (Railway deployment)
+flask_session/
+
+# Web notes storage
+web_notes/
+
+# Trusted devices file (contains sensitive device info)
+trusted_devices.json
