@@ -850,7 +850,7 @@
     <!-- OneDrive Floating Action Button -->
     <!-- OneDrive Floating Action Button with enhanced error handling -->
     <button id="onedriveFloatBtn" class="onedrive-float-btn" 
-            onclick="try { showOneDrivePanel(); } catch(e) { console.error('OneDrive button error:', e); alert('OneDrive button error: ' + e.message); }"
+            onclick="try { const panel = document.getElementById('onedrivePanel'); if (panel) { panel.style.display = 'block'; checkOneDriveStatus(); } else { alert('OneDrive panel not found'); } } catch(e) { console.error('OneDrive button error:', e); alert('OneDrive button error: ' + e.message); }"
             style="position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 9999 !important; display: block !important;">
         ☁️
     </button>
@@ -864,6 +864,33 @@
         let notes = [];
         let saveTimeout = null;
         let csrfToken = null;
+        
+        // Simple OneDrive panel function
+        function showOneDrivePanel() {
+            try {
+                const panel = document.getElementById('onedrivePanel');
+                if (panel) {
+                    panel.style.display = 'block';
+                    checkOneDriveStatus();
+                } else {
+                    alert('OneDrive panel not found in page');
+                }
+            } catch (e) {
+                console.error('showOneDrivePanel error:', e);
+                alert('Error showing OneDrive panel: ' + e.message);
+            }
+        }
+        
+        function hideOneDrivePanel() {
+            try {
+                const panel = document.getElementById('onedrivePanel');
+                if (panel) {
+                    panel.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('hideOneDrivePanel error:', e);
+            }
+        }
 
         // Get CSRF token
         async function getCsrfToken() {
