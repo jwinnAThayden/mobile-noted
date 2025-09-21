@@ -242,7 +242,7 @@ class EditableBoxApp:
         # Status bar
         self.status_bar = tk.Label(
             self.toolbar_dock, 
-            text="Ready • 0 boxes • No focus", 
+            text="Ready • 0 tabs • No focus", 
             bg="#f0f0f0", 
             fg="#333333",
             relief=tk.SUNKEN, 
@@ -404,7 +404,7 @@ class EditableBoxApp:
             pass
 
     def _handle_ctrl_s(self, event=None):
-        """Ctrl+S handler: save the focused box/tab."""
+        """Ctrl+S handler: save the focused tab."""
         try:
             # Try tabbed mode first
             nb = getattr(self, 'notebook', None)
@@ -625,19 +625,20 @@ class EditableBoxApp:
                             first_line = content.split('\n')[0][:30] if content else "Empty note"
                             print(f"DEBUG: Loading note {i+1}/{len(boxes)}: {first_line}")
                             
-                            # For OneDrive notes, try to get original filename if available
+                            # For OneDrive notes, prioritize stored title (for renamed files) over cache
                             onedrive_name = None
                             if file_path and file_path.startswith("onedrive:"):
-                                # Try to get original OneDrive filename from the item_id
-                                item_id = file_path.replace("onedrive:", "")
-                                original_filename = self._get_onedrive_filename_from_id(item_id)
-                                if original_filename:
-                                    onedrive_name = original_filename
-                                    print(f"DEBUG: Restoring OneDrive note with original filename: '{original_filename}'")
-                                elif title:
-                                    # Fallback to saved title if filename lookup fails
+                                # Prioritize stored title (updated during rename) over OneDrive filename cache
+                                if title and title not in ["Untitled", ""]:
                                     onedrive_name = title
-                                    print(f"DEBUG: Restoring OneDrive note with saved title (fallback): '{title}'")
+                                    print(f"DEBUG: Restoring OneDrive note with stored title: '{title}'")
+                                else:
+                                    # Fallback: try to get original filename from cache
+                                    item_id = file_path.replace("onedrive:", "")
+                                    original_filename = self._get_onedrive_filename_from_id(item_id)
+                                    if original_filename:
+                                        onedrive_name = original_filename
+                                        print(f"DEBUG: Restoring OneDrive note with cached filename: '{original_filename}'")
                             
                             self.add_text_box(content=content, file_path=file_path or "", font_size=font_size, onedrive_name=onedrive_name)
                         except Exception:
@@ -678,8 +679,8 @@ class EditableBoxApp:
 
         # Close current focused box/tab: Ctrl+W
         try:
-            self.root.bind_all("<Control-w>", lambda e: self._close_focused_box() or "break")
-            self.root.bind_all("<Control-W>", lambda e: self._close_focused_box() or "break")
+            self.root.bind_all("<Control-w>", lambda e: self._close_focused_tab() or "break")
+            self.root.bind_all("<Control-W>", lambda e: self._close_focused_tab() or "break")
             print("DEBUG: Added Ctrl+W shortcut for close focused box/tab")
         except Exception as ex:
             print(f"DEBUG: Failed to bind Ctrl+W: {ex}")
@@ -851,7 +852,7 @@ class EditableBoxApp:
             add_section("Editing That Feels Right")
             add_bullet("Spell checking with misspelling highlights", "orange")
             add_bullet("Spelling suggestions and Add‑to‑dictionary from right‑click", "orange")
-            add_bullet("Rename Box & File from tab or text context menu", "blue")
+            add_bullet("Rename Tab & File from tab or text context menu", "blue")
             add_bullet("Research popup, Summarize, Rewrite, and Proofread via AI", "purple")
 
             add_section("Save, Sync, and Safety")
@@ -2603,9 +2604,15 @@ class EditableBoxApp:
                     pass
 
                 i = len(nb.tabs())
-                # For OneDrive files, use original title; for local files use Tab X: format
+                # For OneDrive files, use original filename; for local files use Tab X: format
                 if file_path.startswith("onedrive:") and onedrive_name:
+                    # Use the provided OneDrive filename
                     tab_title = onedrive_name
+                elif file_path.startswith("onedrive:"):
+                    # Try to get OneDrive filename, fallback to generic name
+                    item_id = file_path.replace("onedrive:", "")
+                    original_filename = self._get_onedrive_filename_from_id(item_id)
+                    tab_title = original_filename if original_filename else f"OneDrive Note {i+1}"
                 elif file_path and not file_path.startswith("onedrive:"):
                     file_name = os.path.basename(file_path)
                     tab_title = f"Tab {i+1}: {file_name}"
@@ -2728,8 +2735,8 @@ class EditableBoxApp:
             self.notebook.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
             
             # Add Ctrl+W binding to notebook for tab closing
-            self.notebook.bind("<Control-w>", lambda e: self._close_focused_box() or "break")
-            self.notebook.bind("<Control-W>", lambda e: self._close_focused_box() or "break")
+            self.notebook.bind("<Control-w>", lambda e: self._close_focused_tab() or "break")
+            self.notebook.bind("<Control-W>", lambda e: self._close_focused_tab() or "break")
             print("DEBUG: Added Ctrl+W binding to notebook widget")
 
             # Clear text_boxes and recreate as tabs
@@ -2805,26 +2812,31 @@ class EditableBoxApp:
                         text_widget.insert("1.0", data["content"])
                         print(f"DEBUG: Inserted {len(data['content'])} chars into tab {i+1}")
 
-                    # Generate simple tab title - use original OneDrive titles, Tab X: format for local files
+                    # Generate simple tab title - prioritize stored title (for renamed files) over OneDrive cache
                     file_path = data.get("file_path", "")
                     if file_path.startswith("onedrive:"):
-                        # For OneDrive files, get the original filename from OneDrive
-                        item_id = file_path.replace("onedrive:", "")
-                        original_filename = self._get_onedrive_filename_from_id(item_id)
-                        if original_filename:
-                            tab_title = original_filename
-                            print(f"DEBUG: Using OneDrive filename mapping for tab {i+1}: '{original_filename}'")
+                        # For OneDrive files, prioritize stored title (updated during rename) over cache
+                        stored_title = data.get("title", "")
+                        if stored_title and stored_title not in ["Untitled", ""]:
+                            tab_title = stored_title
+                            print(f"DEBUG: Using stored title for tab {i+1}: '{stored_title}'")
                         else:
-                            # Fallback to stored title
-                            stored_title = data.get("title", "")
-                            if stored_title and stored_title != "Untitled":
-                                tab_title = stored_title
+                            # Fallback: get the original filename from OneDrive cache
+                            item_id = file_path.replace("onedrive:", "")
+                            original_filename = self._get_onedrive_filename_from_id(item_id)
+                            if original_filename:
+                                tab_title = original_filename
+                                print(f"DEBUG: Using OneDrive filename mapping for tab {i+1}: '{original_filename}'")
                             else:
-                                tab_title = f"Untitled {i+1}"
+                                tab_title = f"OneDrive Note {i+1}"
+                                print(f"DEBUG: Using fallback OneDrive title for tab {i+1}")
                     else:
                         # For local files, use "Tab X: filename" format
-                        file_name = os.path.basename(file_path) or f"Untitled {i+1}"
-                        tab_title = f"Tab {i+1}: {file_name}"
+                        if file_path:
+                            file_name = os.path.basename(file_path)
+                            tab_title = f"Tab {i+1}: {file_name}"
+                        else:
+                            tab_title = f"Untitled {i+1}"
 
                     # Store tab data in text_boxes array for proper tracking
                     # Use the mapped OneDrive filename if available
@@ -2917,14 +2929,21 @@ class EditableBoxApp:
             if 0 <= tab_index < len(self.text_boxes) and self.notebook:
                 box_data = self.text_boxes[tab_index]
                 
-                # Generate clean, consistent title (no OneDrive names in title)
+                # Generate clean, consistent title using FILENAMES not content
                 if file_path and file_path.startswith("onedrive:"):
-                    # For OneDrive files, use original stored title without "Tab X: " prefix
+                    # For OneDrive files, prioritize stored title first (handles renamed files)
                     stored_title = box_data.get("title", "")
                     if stored_title and stored_title != "Untitled":
+                        # Use the stored title (could be original or renamed)
                         tab_title = stored_title
                     else:
-                        tab_title = f"Untitled {tab_index+1}"
+                        # Fallback: try to get original filename from OneDrive mapping
+                        item_id = file_path.replace("onedrive:", "")
+                        original_filename = self._get_onedrive_filename_from_id(item_id)
+                        if original_filename:
+                            tab_title = original_filename
+                        else:
+                            tab_title = f"OneDrive Note {tab_index+1}"
                 elif file_path:
                     # For local files, use "Tab X: filename" format for consistency
                     file_name = os.path.basename(file_path)
@@ -2950,20 +2969,20 @@ class EditableBoxApp:
         except Exception as e:
             print(f"Error updating tab title: {e}")
 
-    def close_all_boxes(self):
-        """Close all text boxes and clear the layout."""
+    def close_all_tabs(self):
+        """Close all tabs and clear the layout."""
         try:
-            total_boxes = len(self.text_boxes)
-            if total_boxes == 0:
+            total_tabs = len(self.text_boxes)
+            if total_tabs == 0:
                 return
                 
-            # Show progress dialog for closing boxes
-            progress = ProgressDialog(self.root, "Closing Boxes", f"Closing {total_boxes} boxes...")
+            # Show progress dialog for closing tabs
+            progress = ProgressDialog(self.root, "Closing Tabs", f"Closing {total_tabs} tabs...")
             self.root.update()
             
             # Proceed without confirmation
             for i, box in enumerate(self.text_boxes):
-                progress.update_message(f"Closing box {i + 1} of {total_boxes}...")
+                progress.update_message(f"Closing tab {i + 1} of {total_tabs}...")
                 self.root.update()
                 
                 outer = box.get("outer_frame")
@@ -3171,7 +3190,7 @@ class EditableBoxApp:
                         return None
                     _idx_box = _find_box_index_for_text_widget()
                     if _idx_box is not None:
-                        menu.add_command(label="Rename Box & File", command=lambda i=_idx_box: self._rename_tab_and_file(i))
+                        menu.add_command(label="Rename Tab & File", command=lambda i=_idx_box: self._rename_tab_and_file(i))
 
                     # Spelling suggestions (only if we have a checker and clicked word is misspelled)
                     def get_word_under_cursor():
@@ -3327,7 +3346,7 @@ class EditableBoxApp:
                 """Handle Ctrl+W for this specific text widget."""
                 try:
                     print(f"DEBUG: Ctrl+W triggered on text widget: {text_widget}")
-                    result = self._close_focused_box()
+                    result = self._close_focused_tab()
                     return "break"  # Prevent default handling
                 except Exception as e:
                     print(f"DEBUG: Error in text widget Ctrl+W handler: {e}")
@@ -3389,7 +3408,7 @@ class EditableBoxApp:
                 elif self.onedrive_manager:
                     onedrive_status = " | OneDrive: Available"
                 
-                status_text = f"Boxes: {len(self.text_boxes)} | View: {self.current_view_mode}{onedrive_status} | {current_time}"
+                status_text = f"Tabs: {len(self.text_boxes)} | View: {self.current_view_mode}{onedrive_status} | {current_time}"
                 self.status_bar.config(text=status_text)
         except Exception as e:
             print(f"DEBUG: Error updating status bar: {e}")
@@ -3574,16 +3593,22 @@ class EditableBoxApp:
                     nb.tab(index, image=(normal_icon if saved else dirty_icon))
                 except Exception:
                     pass
-                # Update title with consistent naming (original OneDrive titles, Tab X: for local)
+                # Update title with consistent naming using FILENAMES not content
                 try:
                     file_path = box.get("file_path", "")
                     if file_path and file_path.startswith("onedrive:"):
-                        # For OneDrive files, use original stored title without prefix
+                        # For OneDrive files, prioritize stored title (updated during rename) over cache
                         stored_title = box.get("title", "")
-                        if stored_title and stored_title != "Untitled":
+                        if stored_title and stored_title not in ["Untitled", ""]:
                             title = f"{stored_title}{'' if saved else ' *'}"
                         else:
-                            title = f"Untitled {index+1}{'' if saved else ' *'}"
+                            # Fallback: try to get original filename from cache
+                            item_id = file_path.replace("onedrive:", "")
+                            original_filename = self._get_onedrive_filename_from_id(item_id)
+                            if original_filename:
+                                title = f"{original_filename}{'' if saved else ' *'}"
+                            else:
+                                title = f"OneDrive Note {index+1}{'' if saved else ' *'}"
                     elif file_path:
                         # For local files, use Tab X: format
                         file_name = os.path.basename(file_path)
@@ -3973,7 +3998,7 @@ class EditableBoxApp:
                 command=lambda: self._reload_tab(tab_index)
             )
             context_menu.add_command(
-                label="Rename Box & File",
+                label="Rename Tab & File",
                 command=lambda: self._rename_tab_and_file(tab_index)
             )
             context_menu.add_separator()
@@ -4032,12 +4057,60 @@ class EditableBoxApp:
                 box["saved"] = False  # Mark as dirty so it will be synced
                 print(f"DEBUG: Renamed OneDrive note from '{current_title}' to '{new_name}' - marked for sync")
                 
-                # Auto-sync the renamed OneDrive file if network is available
-                if self._check_network_connectivity():
+                # For OneDrive files, we need to create a new file with the new name and delete the old one
+                # This is because OneDrive doesn't support renaming files directly through the API
+                if self._check_network_connectivity() and self.onedrive_manager:
                     try:
-                        self._sync_individual_onedrive_file(box)
+                        item_id = current_path.replace("onedrive:", "")
+                        
+                        # Get the current content
+                        text_widget = box.get("text_box")
+                        if text_widget:
+                            content = text_widget.get("1.0", tk.END)
+                            # Save as new file with new name
+                            json_filename = f"{new_name}.json" if not new_name.endswith(".json") else new_name
+                            
+                            # Create note data
+                            note_data = {
+                                "content": content,
+                                "title": new_name,
+                                "timestamp": time.time()
+                            }
+                            
+                            # Save new file to OneDrive  
+                            result = self.onedrive_manager.save_note(json_filename, note_data)
+                            if result and result.get("success"):
+                                # Update file_path to new item_id
+                                new_item_id = result.get("item_id")
+                                if new_item_id:
+                                    box["file_path"] = f"onedrive:{new_item_id}"
+                                    print(f"DEBUG: Created new OneDrive file with item_id: {new_item_id}")
+                                    
+                                    # Update OneDrive filename cache mapping for the new item_id
+                                    if hasattr(self, 'onedrive_filename_cache'):
+                                        self.onedrive_filename_cache[new_item_id] = json_filename
+                                        print(f"DEBUG: Updated OneDrive filename cache: {new_item_id} -> {json_filename}")
+                                    
+                                    # Try to delete the old file (optional - if this fails, that's okay)
+                                    try:
+                                        self.onedrive_manager.delete_note(item_id)
+                                        print(f"DEBUG: Deleted old OneDrive file with item_id: {item_id}")
+                                        
+                                        # Remove old item_id from cache
+                                        if hasattr(self, 'onedrive_filename_cache') and item_id in self.onedrive_filename_cache:
+                                            del self.onedrive_filename_cache[item_id]
+                                            print(f"DEBUG: Removed old item_id from cache: {item_id}")
+                                    except Exception as delete_e:
+                                        print(f"DEBUG: Could not delete old OneDrive file: {delete_e}")
+                                else:
+                                    print("DEBUG: Warning - new OneDrive file saved but no item_id returned")
+                            else:
+                                print(f"DEBUG: Failed to save renamed OneDrive file: {result}")
+                        
                     except Exception as e:
-                        print(f"DEBUG: Auto-sync after rename failed: {e}")
+                        print(f"DEBUG: Auto-rename-sync failed: {e}")
+                        # Fallback to just updating local title
+                        pass
             # Handle local files
             elif current_path and os.path.exists(current_path):
                 new_path = os.path.join(os.path.dirname(current_path), new_name)
@@ -4061,31 +4134,23 @@ class EditableBoxApp:
                 except Exception:
                     pass
             
-            # Update tab title with proper format (original OneDrive titles, Tab X: for local)
-            if self.current_view_mode == "tabbed" and self.notebook:
-                try:
-                    if current_path.startswith("onedrive:"):
-                        # For OneDrive files, use original title without prefix
-                        tab_title = new_name
-                    else:
-                        # For local files, use Tab X: format
-                        tab_title = f"Tab {tab_index+1}: {new_name}"
-                    self.notebook.tab(tab_index, text=tab_title)
-                    print(f"DEBUG: Updated tab title to: {tab_title}")
-                except Exception:
-                    pass
+            # Ensure the box data has the updated title
+            box["title"] = new_name
+            print(f"DEBUG: Confirmed box title updated to: {new_name}")
             
-            # Update dirty indicator
+            # Update tab title and dirty indicator using the fixed method that prioritizes stored title
             try:
                 self._update_dirty_indicator(tab_index)
-            except Exception:
-                pass
+                print(f"DEBUG: Updated tab title via dirty indicator to: {new_name}")
+            except Exception as e:
+                print(f"DEBUG: Error updating dirty indicator: {e}")
                 
-            # Persist layout locally
+            # Persist layout locally with the new title
             try:
                 self.save_layout_to_file()
-            except Exception:
-                pass
+                print(f"DEBUG: Layout saved with renamed title: {new_name}")
+            except Exception as e:
+                print(f"DEBUG: Error saving layout after rename: {e}")
                 
         except Exception as e:
             print(f"DEBUG: Error renaming tab/file: {e}")
@@ -4201,7 +4266,7 @@ class EditableBoxApp:
         except Exception as e:
             print(f"DEBUG: Error closing all tabs: {e}")
 
-    def _close_focused_box(self):
+    def _close_focused_tab(self):
         """Close the currently focused box or tab."""
         try:
             print("DEBUG: Ctrl+W pressed - attempting to close focused box/tab")
@@ -4226,14 +4291,14 @@ class EditableBoxApp:
             # Find the index of the focused text widget
             for i, box in enumerate(self.text_boxes):
                 if box.get("text_box") is tw:
-                    print(f"DEBUG: Closing focused box/tab at index {i}")
+                    print(f"DEBUG: Closing focused tab at index {i}")
                     # Only tabbed mode is supported now
                     if self.current_view_mode == "tabbed":
                         self._close_tab(i)
                     return True
             return True
         except Exception as e:
-            print(f"DEBUG: Error closing focused box: {e}")
+            print(f"DEBUG: Error closing focused tab: {e}")
             return True
 
 

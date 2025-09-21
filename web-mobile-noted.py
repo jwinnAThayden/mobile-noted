@@ -37,7 +37,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = True  # Make sessions persistent
-app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 7  # 7 days for OneDrive auth persistence
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 30  # 30 days to match device trust duration
 app.config['SESSION_FILE_THRESHOLD'] = 100
 app.config['WTF_CSRF_TIME_LIMIT'] = 3600
 
@@ -162,6 +162,7 @@ def is_device_trusted():
     
     trusted_devices = load_trusted_devices()
     
+    # First check if device is in trusted devices file
     for device_data in trusted_devices.values():
         if (device_data.get('device_id') == device_id and 
             device_data.get('fingerprint') == fingerprint):
@@ -173,6 +174,21 @@ def is_device_trusted():
             else:
                 # Remove expired trust
                 remove_device_trust(device_id)
+    
+    # Railway fallback: If trusted_devices.json is empty/missing but we have a device cookie,
+    # check if the cookie seems recent (was set in the browser)
+    # This handles Railway container restarts where filesystem is lost
+    if not trusted_devices and device_id and request.cookies.get(DEVICE_COOKIE_NAME):
+        # If we have a device cookie but no trusted devices file (likely Railway restart),
+        # we'll temporarily trust the device. This gives users a grace period after restarts.
+        logger.info(f"Railway fallback: Temporarily trusting device with valid cookie: {device_id[:8]}...")
+        
+        # Auto-recreate the trust entry for this session
+        try:
+            add_device_trust("Auto-recovered device")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to auto-recover device trust: {e}")
     
     return False
 
@@ -523,7 +539,20 @@ def trust_current_device():
         session['trusted_device'] = True
         session['device_id'] = device_id
         
-        return jsonify({'success': True, 'message': 'Device has been trusted for 30 days', 'device_id': device_id})
+        # Create response with device cookie for 30-day persistence
+        response = make_response(jsonify({'success': True, 'message': 'Device has been trusted for 30 days', 'device_id': device_id}))
+        
+        # Set device ID cookie (30 days) - this is crucial for persistent trust
+        response.set_cookie(
+            DEVICE_COOKIE_NAME, 
+            device_id, 
+            max_age=30*24*60*60,  # 30 days
+            secure=request.is_secure,
+            httponly=True,
+            samesite='Lax'
+        )
+        
+        return response
         
     except Exception as e:
         logger.error(f"Error trusting current device: {e}")

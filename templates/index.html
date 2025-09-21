@@ -771,6 +771,21 @@
             const container = document.getElementById('notesContainer');
             const emptyState = document.getElementById('emptyState');
 
+            // Add null check to prevent error
+            if (!emptyState) {
+                console.error('emptyState element not found in DOM');
+                if (notes.length === 0) {
+                    container.innerHTML = '<p>No notes available</p>';
+                    return;
+                }
+                container.innerHTML = '';
+                notes.forEach(note => {
+                    const noteElement = createNoteElement(note);
+                    container.appendChild(noteElement);
+                });
+                return;
+            }
+
             if (notes.length === 0) {
                 emptyState.style.display = 'block';
                 container.innerHTML = '';
@@ -1106,6 +1121,16 @@
         
         // Load OneDrive status on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Restore auto-sync setting from localStorage
+            const savedAutoSync = localStorage.getItem('notedAutoSync');
+            if (savedAutoSync !== null) {
+                autoSyncEnabled = savedAutoSync === 'true';
+                const checkbox = document.getElementById('autoSync');
+                if (checkbox) {
+                    checkbox.checked = autoSyncEnabled;
+                }
+            }
+            
             checkOneDriveStatus();
             
             // Check status periodically
@@ -1660,6 +1685,9 @@
         function toggleAutoSync() {
             const checkbox = document.getElementById('autoSync');
             autoSyncEnabled = checkbox.checked;
+            
+            // Save setting to localStorage
+            localStorage.setItem('notedAutoSync', autoSyncEnabled.toString());
             
             if (autoSyncEnabled) {
                 showStatus('Auto-sync enabled');
