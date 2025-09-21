@@ -733,9 +733,14 @@
                     return;
                 }
                 
+                if (!response.ok) {
+                    console.error(`HTTP error ${response.status} for ${url}:`, response.statusText);
+                }
+                
                 return response;
             } catch (error) {
-                console.error('Network error:', error);
+                console.error('Network error for', url, ':', error);
+                console.error('Request options:', defaultOptions);
                 throw error;
             }
         }
@@ -1620,7 +1625,12 @@
                     showStatus('Sync failed: ' + data.error, true);
                 }
             } catch (error) {
-                showStatus('Sync error: ' + error.message, true);
+                console.error('OneDrive sync error:', error);
+                if (error.name === 'NetworkError' || error.message.includes('NetworkError')) {
+                    showStatus('Network error: Please check your connection and try again. If the issue persists, try using the simple sync endpoint.', true);
+                } else {
+                    showStatus('Sync error: ' + error.message, true);
+                }
             }
         }
 

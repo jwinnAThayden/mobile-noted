@@ -1356,9 +1356,8 @@ def simple_sync_to_onedrive():
         return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
     
     try:
-        # Don't validate CSRF when auth is disabled
-        if AUTH_ENABLED:
-            validate_csrf(request.headers.get('X-CSRFToken'))
+        # Use conditional CSRF validation
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         if not onedrive_manager.is_authenticated():
             return jsonify({
@@ -1389,9 +1388,8 @@ def simple_sync_from_onedrive():
         return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
     
     try:
-        # Don't validate CSRF when auth is disabled
-        if AUTH_ENABLED:
-            validate_csrf(request.headers.get('X-CSRFToken'))
+        # Use conditional CSRF validation
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
         
         if not onedrive_manager.is_authenticated():
             return jsonify({
