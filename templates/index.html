@@ -561,6 +561,90 @@
             pointer-events: auto;
         }
 
+        /* Always visible dialogs and modals */
+        .dialog-always-visible, .modal-always-visible, .onedrive-panel {
+            opacity: 1 !important;
+            transform: none !important;
+            pointer-events: auto !important;
+            z-index: 9999 !important;
+        }
+
+        /* Moveable dialog styles */
+        .moveable-dialog {
+            position: fixed;
+            background: white;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            min-width: 300px;
+            max-width: 500px;
+            z-index: 10000;
+            cursor: move;
+        }
+
+        .dialog-header {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px 6px 0 0;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .dialog-content {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dialog-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dialog-close:hover, .dock-btn:hover {
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+        }
+
+        .dialog-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .dock-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Dock positions */
+        .docked-top-left { top: 20px; left: 20px; }
+        .docked-top-right { top: 20px; right: 20px; }
+        .docked-bottom-left { bottom: 20px; left: 20px; }
+        .docked-bottom-right { bottom: 20px; right: 20px; }
+
         /* Keep notes always visible but highlight titles */
         .note-title-input {
             font-weight: bold;
@@ -646,10 +730,13 @@
         </div>
 
         <!-- OneDrive Integration Panel -->
-        <div id="onedrivePanel" class="onedrive-panel auto-hide visible" style="display: none;">
-            <div class="panel-header">
+        <div id="onedrivePanel" class="onedrive-panel dialog-always-visible moveable-dialog docked-top-right" style="display: none;">
+            <div class="panel-header dialog-header">
                 <h3>☁️ OneDrive Sync</h3>
-                <button class="close-btn" onclick="hideOneDrivePanel()">✕</button>
+                <div class="dialog-controls">
+                    <button class="dock-btn" onclick="toggleDockPosition('onedrivePanel')" title="Change dock position">📌</button>
+                    <button class="dialog-close" onclick="hideOneDrivePanel()">✕</button>
+                </div>
             </div>
             <div class="panel-content">
                 <div id="onedriveStatus" class="onedrive-status">
@@ -840,6 +927,48 @@
             setTimeout(() => {
                 status.classList.remove('show');
             }, 3000);
+        }
+
+        function showMoveableDialog(title, content, buttons = []) {
+            const dialogId = 'dialog-' + Date.now();
+            const dialog = document.createElement('div');
+            dialog.id = dialogId;
+            dialog.className = 'moveable-dialog dialog-always-visible docked-top-right';
+            
+            let buttonHtml = '';
+            if (buttons.length === 0) {
+                buttonHtml = '<button onclick="closeMoveableDialog(\'' + dialogId + '\')" class="btn">OK</button>';
+            } else {
+                buttonHtml = buttons.map(btn => 
+                    `<button onclick="${btn.onclick}; closeMoveableDialog('${dialogId}')" class="btn ${btn.class || ''}">${btn.text}</button>`
+                ).join(' ');
+            }
+            
+            dialog.innerHTML = `
+                <div class="dialog-header">
+                    <h4>${title}</h4>
+                    <div class="dialog-controls">
+                        <button class="dock-btn" onclick="toggleDockPosition('${dialogId}')" title="Change dock position">📌</button>
+                        <button class="dialog-close" onclick="closeMoveableDialog('${dialogId}')">✕</button>
+                    </div>
+                </div>
+                <div class="dialog-content">
+                    <p>${content}</p>
+                    <div style="margin-top: 15px; text-align: right;">
+                        ${buttonHtml}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(dialog);
+            return dialogId;
+        }
+
+        function closeMoveableDialog(dialogId) {
+            const dialog = document.getElementById(dialogId);
+            if (dialog) {
+                dialog.remove();
+            }
         }
 
         async function loadNotes() {
@@ -1964,6 +2093,109 @@
             }
         }
 
+        // Dialog movement functionality
+        let dragState = {
+            isDragging: false,
+            currentDialog: null,
+            startX: 0,
+            startY: 0,
+            elementStartX: 0,
+            elementStartY: 0
+        };
+
+        function initDialogMovement() {
+            document.addEventListener('mousedown', function(e) {
+                const dialogHeader = e.target.closest('.dialog-header');
+                if (dialogHeader && !e.target.closest('.dialog-close, .dock-btn')) {
+                    const dialog = dialogHeader.closest('.moveable-dialog');
+                    if (dialog) {
+                        startDragging(e, dialog);
+                    }
+                }
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (dragState.isDragging) {
+                    e.preventDefault();
+                    updateDialogPosition(e);
+                }
+            });
+
+            document.addEventListener('mouseup', function() {
+                stopDragging();
+            });
+        }
+
+        function startDragging(e, dialog) {
+            dragState.isDragging = true;
+            dragState.currentDialog = dialog;
+            dragState.startX = e.clientX;
+            dragState.startY = e.clientY;
+            
+            const rect = dialog.getBoundingClientRect();
+            dragState.elementStartX = rect.left;
+            dragState.elementStartY = rect.top;
+            
+            dialog.style.position = 'fixed';
+            dialog.style.zIndex = '10001';
+            document.body.style.cursor = 'move';
+        }
+
+        function updateDialogPosition(e) {
+            if (!dragState.currentDialog) return;
+            
+            const deltaX = e.clientX - dragState.startX;
+            const deltaY = e.clientY - dragState.startY;
+            
+            const newX = dragState.elementStartX + deltaX;
+            const newY = dragState.elementStartY + deltaY;
+            
+            // Keep dialog within viewport
+            const maxX = window.innerWidth - dragState.currentDialog.offsetWidth;
+            const maxY = window.innerHeight - dragState.currentDialog.offsetHeight;
+            
+            const constrainedX = Math.max(0, Math.min(newX, maxX));
+            const constrainedY = Math.max(0, Math.min(newY, maxY));
+            
+            dragState.currentDialog.style.left = constrainedX + 'px';
+            dragState.currentDialog.style.top = constrainedY + 'px';
+            
+            // Remove dock classes when manually moved
+            dragState.currentDialog.className = dragState.currentDialog.className.replace(/\bdocked-\w+-\w+\b/g, '');
+        }
+
+        function stopDragging() {
+            dragState.isDragging = false;
+            dragState.currentDialog = null;
+            document.body.style.cursor = '';
+        }
+
+        function toggleDockPosition(dialogId) {
+            const dialog = document.getElementById(dialogId);
+            if (!dialog) return;
+            
+            const dockPositions = ['docked-top-left', 'docked-top-right', 'docked-bottom-left', 'docked-bottom-right'];
+            let currentDock = dockPositions.find(pos => dialog.classList.contains(pos));
+            
+            // Remove all dock positions
+            dockPositions.forEach(pos => dialog.classList.remove(pos));
+            
+            // Clear manual positioning
+            dialog.style.left = '';
+            dialog.style.top = '';
+            dialog.style.bottom = '';
+            dialog.style.right = '';
+            
+            // Cycle to next dock position
+            if (!currentDock) {
+                dialog.classList.add('docked-top-right');
+            } else {
+                const currentIndex = dockPositions.indexOf(currentDock);
+                const nextIndex = (currentIndex + 1) % dockPositions.length;
+                dialog.classList.add(dockPositions[nextIndex]);
+            }
+        }
+
         function initAutoHide() {
             // Show interface on mouse movement
             document.addEventListener('mousemove', showInterface);
@@ -1989,6 +2221,13 @@
                 });
             });
             
+            // Keep interface visible when interacting with dialogs
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.dialog-always-visible, .modal-always-visible')) {
+                    showInterface();
+                }
+            });
+            
             // Initial hide timer
             autoHideTimer = setTimeout(hideInterface, 5000); // Hide after 5 seconds initially
         }
@@ -1996,6 +2235,7 @@
         // Initialize auto-hide when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initAutoHide();
+            initDialogMovement();
         });
 
     </script>
