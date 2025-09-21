@@ -356,7 +356,7 @@ def login_required(f):
 
 # Authentication routes
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
+@limiter.limit("20 per minute")
 def login():
     """Login page and authentication"""
     # If authentication is disabled, redirect to main app
@@ -559,21 +559,30 @@ def trust_current_device():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 def generate_note_title(text_content):
-    """Generate a title from the first line of note content"""
+    """Generate a filename-like title to match desktop app behavior"""
     if not text_content or not text_content.strip():
-        return "Untitled Note"
+        return "Untitled.txt"
     
-    # Get first line, clean it up, and limit length
+    # Get first line and create a filename-like title
     first_line = text_content.split('\n')[0].strip()
     if not first_line:
-        return "Untitled Note"
+        return "Untitled.txt"
     
-    # Limit title length and remove excessive whitespace
-    title = ' '.join(first_line.split())
-    if len(title) > 50:
-        title = title[:47] + "..."
+    # Clean up for filename: remove special chars, limit length
+    import re
+    # Remove or replace special characters
+    clean_title = re.sub(r'[<>:"/\\|?*]', '', first_line)
+    clean_title = re.sub(r'\s+', '', clean_title)  # Remove spaces for filename
     
-    return title or "Untitled Note"
+    # Limit length
+    if len(clean_title) > 30:
+        clean_title = clean_title[:30]
+    
+    # Add .txt extension like desktop app
+    if clean_title and not clean_title.lower().endswith('.txt'):
+        clean_title += '.txt'
+    
+    return clean_title or "Untitled.txt"
 
 def get_notes_file():
     """Get the path to the notes JSON file"""

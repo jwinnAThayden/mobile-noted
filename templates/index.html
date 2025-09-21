@@ -885,22 +885,29 @@
 
         function generateNoteTitle(textContent) {
             if (!textContent || !textContent.trim()) {
-                return 'Untitled Note';
+                return 'Untitled.txt';
             }
             
-            // Get first line, clean it up, and limit length
+            // Get first line and create filename-like title
             const firstLine = textContent.split('\n')[0].trim();
             if (!firstLine) {
-                return 'Untitled Note';
+                return 'Untitled.txt';
             }
             
-            // Limit title length and remove excessive whitespace
-            let title = firstLine.replace(/\s+/g, ' ');
-            if (title.length > 50) {
-                title = title.substring(0, 47) + '...';
+            // Clean up for filename: remove special chars, limit length
+            let cleanTitle = firstLine.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, '');
+            
+            // Limit length
+            if (cleanTitle.length > 30) {
+                cleanTitle = cleanTitle.substring(0, 30);
             }
             
-            return title || 'Untitled Note';
+            // Add .txt extension like desktop app
+            if (cleanTitle && !cleanTitle.toLowerCase().endsWith('.txt')) {
+                cleanTitle += '.txt';
+            }
+            
+            return cleanTitle || 'Untitled.txt';
         }
 
         function escapeHtml(text) {
