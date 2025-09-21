@@ -719,10 +719,19 @@ def update_note(note_id):
         if notes[note_id].get('owner') != session.get('username') and session.get('username') != USERNAME:
             return jsonify({'success': False, 'error': 'Access denied'}), 403
         
-        # Update text and regenerate title
+        # Update text content
         text_content = data.get('text', notes[note_id]['text'])
         notes[note_id]['text'] = text_content
-        notes[note_id]['title'] = generate_note_title(text_content)
+        
+        # Only update title if explicitly provided or if note has no title yet
+        if 'title' in data:
+            # User provided explicit title
+            notes[note_id]['title'] = data['title']
+        elif not notes[note_id].get('title'):
+            # Note has no title, auto-generate one
+            notes[note_id]['title'] = generate_note_title(text_content)
+        # Otherwise, preserve existing title
+        
         notes[note_id]['modified'] = datetime.now().isoformat()
         
         if save_notes(notes):
@@ -733,6 +742,44 @@ def update_note(note_id):
     except Exception as e:
         logger.error(f"Error updating note: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/notes/<note_id>/title', methods=['PUT'])
+@login_required
+@limiter.limit("20 per minute")
+def update_note_title(note_id):
+    """Update only the title of a note without changing content"""
+    try:
+        # Validate CSRF for API requests
+        validate_csrf_if_enabled(request.headers.get('X-CSRFToken'))
+        
+        data = request.get_json()
+        new_title = data.get('title', '').strip()
+        
+        if not new_title:
+            return jsonify({'success': False, 'error': 'Title cannot be empty'}), 400
+            
+        notes = load_notes()
+        
+        if note_id not in notes:
+            return jsonify({'success': False, 'error': 'Note not found'}), 404
+        
+        # Check ownership
+        if notes[note_id].get('owner') != session.get('username') and session.get('username') != USERNAME:
+            return jsonify({'success': False, 'error': 'Access denied'}), 403
+        
+        # Update only the title
+        notes[note_id]['title'] = new_title
+        notes[note_id]['modified'] = datetime.now().isoformat()
+        
+        if save_notes(notes):
+            notes[note_id]['id'] = note_id
+            return jsonify({'success': True, 'note': notes[note_id]})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to save note'}), 500
+    except Exception as e:
+        logger.error(f"Error updating note title: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/api/notes/<note_id>', methods=['DELETE'])
 @login_required
