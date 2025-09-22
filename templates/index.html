@@ -756,7 +756,7 @@
             <button class="btn" onclick="addNewNote()">➕ New Note</button>
             <button class="btn" onclick="saveAllNotes()">💾 Save All</button>
             <button class="btn delete" onclick="deleteAllNotes()">🗑️ Clear All</button>
-            <button id="onedriveFloatBtn" class="btn" onclick="alert('OneDrive button clicked!'); console.log('OneDrive button clicked!'); showOneDrivePanelProperly();" style="background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);">☁️ OneDrive</button>
+            <button id="onedriveFloatBtn" class="btn" onclick="showOneDrivePanelProperly()" style="background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);">☁️ OneDrive</button>
             <a href="/devices" class="btn" style="text-decoration: none; display: inline-block; text-align: center; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">🔒 Devices</a>
             <button class="btn" onclick="logout()" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">🚪 Logout</button>
         </div>
@@ -911,8 +911,6 @@
         
         // OneDrive popup window approach - guaranteed to work
         function showOneDrivePanelProperly() {
-            alert('showOneDrivePanelProperly function called!');
-            console.log('🚀 Opening OneDrive popup window...');
             
             // Create popup window with OneDrive controls
             const popupContent = `
@@ -974,7 +972,7 @@
                 popup.document.write(popupContent);
                 popup.document.close();
                 popup.focus();
-                console.log('✅ OneDrive popup window opened');
+
             } else {
                 // Fallback to alert if popup blocked
                 alert('OneDrive Integration\n\nPopup blocked! Please allow popups for this site to use OneDrive features.\n\nAlternatively, check browser console for OneDrive status.');
@@ -994,7 +992,7 @@
                 fetch('/api/simple/onedrive/status')
                     .then(response => response.json())
                     .then(data => {
-                        console.log('OneDrive status:', data);
+
                         if (statusDiv) {
                             if (data.authenticated) {
                                 statusDiv.innerHTML = '✅ OneDrive connected and ready';
@@ -1010,7 +1008,7 @@
                         }
                     })
                     .catch(error => {
-                        console.error('Status check failed:', error);
+
                         if (statusDiv) {
                             statusDiv.innerHTML = '⚠️ Status check failed - try again';
                         }
@@ -1039,7 +1037,7 @@
                 panel.style.display = 'none';
                 document.body.style.overflow = '';
             }
-            console.log('✅ OneDrive modal closed');
+
         }
         
         // Legacy compatibility
@@ -1051,10 +1049,7 @@
 
         // Debug: Check if functions are defined
         window.addEventListener('load', function() {
-            console.log('🔍 Function availability check:');
-            console.log('showOneDrivePanelProperly:', typeof showOneDrivePanelProperly);
-            console.log('showOneDrivePanel:', typeof showOneDrivePanel);
-            console.log('setupOneDriveDragImmediate:', typeof setupOneDriveDragImmediate);
+
         });
         
         // Dedicated OneDrive panel drag functionality
@@ -1063,22 +1058,22 @@
             const header = panel ? panel.querySelector('.dialog-header') : null;
             
             if (!panel || !header) {
-                console.log('OneDrive panel or header not found for drag init');
+
                 return;
             }
             
-            console.log('Initializing OneDrive drag for panel:', panel.id);
+
             
             let isDragging = false;
             let startX, startY, startLeft, startTop;
             
             // Remove any existing listeners to avoid duplicates
             header.onmousedown = function(e) {
-                console.log('OneDrive header mousedown:', e.target);
+
                 
                 // Don't drag if clicking on buttons
                 if (e.target.closest('.dialog-close, .dock-btn')) {
-                    console.log('Clicked on button, not dragging');
+
                     return;
                 }
                 
@@ -1096,7 +1091,7 @@
                 panel.style.zIndex = '10001';
                 document.body.style.cursor = 'move';
                 
-                console.log('OneDrive drag started at:', startX, startY);
+
                 
                 document.onmousemove = function(e) {
                     if (!isDragging) return;
@@ -1126,7 +1121,7 @@
                     document.body.style.cursor = '';
                     document.onmousemove = null;
                     document.onmouseup = null;
-                    console.log('OneDrive drag ended');
+
                 };
             };
         }
@@ -1138,7 +1133,7 @@
                     panel.style.display = 'none';
                 }
             } catch (e) {
-                console.error('hideOneDrivePanel error:', e);
+
             }
         }
         
@@ -1147,18 +1142,18 @@
             const statusDiv = document.getElementById('onedriveStatus');
             
             try {
-                console.log('Starting OneDrive status check...');
+
                 if (statusDiv) statusDiv.innerHTML = 'Checking connection...';
                 
                 // Create AbortController for manual timeout control
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => {
-                    console.log('Request timeout - aborting');
+
                     controller.abort();
                 }, 5000); // Reduced to 5 seconds
                 
                 try {
-                    console.log('Fetching from /api/simple/onedrive/status...');
+
                     const response = await fetch('/api/simple/onedrive/status', {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' },
@@ -1166,11 +1161,11 @@
                     });
                     
                     clearTimeout(timeoutId);
-                    console.log('Response received:', response.status, response.statusText);
+
                     
                     if (response.ok) {
                         const data = await response.json();
-                        console.log('OneDrive status data:', data);
+
                         
                         if (statusDiv) {
                             if (data.available) {
@@ -1190,7 +1185,7 @@
                     console.error('Fetch error:', fetchError);
                     
                     if (fetchError.name === 'AbortError') {
-                        console.log('Request was aborted due to timeout');
+
                         if (statusDiv) statusDiv.innerHTML = '⏱️ Request timeout - server may be slow';
                         return;
                     }
@@ -1198,7 +1193,7 @@
                 }
                 
                 // If we get here, the simple endpoint failed
-                console.log('Simple endpoint failed, showing error');
+
                 if (statusDiv) statusDiv.innerHTML = '❌ OneDrive service unavailable';
                 
             } catch (error) {
@@ -1688,10 +1683,10 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/static/sw.js')
                 .then(function(registration) {
-                    console.log('SW registered: ', registration);
+
                 })
                 .catch(function(registrationError) {
-                    console.log('SW registration failed: ', registrationError);
+
                 });
         }
 
@@ -1740,7 +1735,7 @@
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
+
                         showStatus('App installing... Check your home screen!');
                         if (installButton) {
                             installButton.remove();
@@ -1779,7 +1774,7 @@
 
         // Detect when app is installed and running as PWA
         window.addEventListener('appinstalled', (evt) => {
-            console.log('App was installed');
+
             showStatus('App installed successfully! 🎉');
             if (installButton) {
                 installButton.remove();
@@ -1807,7 +1802,7 @@
 
         // Check if running as installed PWA
         if (navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-            console.log('Running as installed PWA');
+
             document.title = '📝 Noted';
         }
 
@@ -1957,11 +1952,10 @@
         // Show/hide OneDrive panel
         function showOneDrivePanel() {
             try {
-                console.log('showOneDrivePanel called');
+
                 const panel = document.getElementById('onedrivePanel');
                 if (!panel) {
-                    console.error('OneDrive panel element not found!');
-                    alert('Error: OneDrive panel not found in DOM');
+                    // OneDrive panel element not found - using popup instead
                     return;
                 }
                 
