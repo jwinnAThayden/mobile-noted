@@ -872,7 +872,7 @@
         let saveTimeout = null;
         let csrfToken = null;
         
-        // Simple, reliable OneDrive panel function - defined early to ensure availability
+        // OneDrive panel function with proper status checking
         function showOneDrivePanelProperly() {
             console.log('🚀 showOneDrivePanelProperly called!');
             const panel = document.getElementById('onedrivePanel');
@@ -890,6 +890,54 @@
             panel.style.zIndex = '1000';
             
             console.log('✅ OneDrive panel shown');
+            
+            // Check OneDrive status and show appropriate content
+            const statusDiv = document.getElementById('onedriveStatus');
+            if (statusDiv) {
+                statusDiv.innerHTML = 'Checking OneDrive status...';
+            }
+            
+            // Check authentication status
+            setTimeout(() => {
+                fetch('/api/simple/onedrive/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('OneDrive status:', data);
+                        if (statusDiv) {
+                            if (data.authenticated) {
+                                statusDiv.innerHTML = '✅ OneDrive connected and ready';
+                                // Show sync controls
+                                showSyncControls();
+                            } else if (data.available) {
+                                statusDiv.innerHTML = '🔗 OneDrive available - click Connect to authenticate';
+                                // Show auth controls
+                                showAuthControls();
+                            } else {
+                                statusDiv.innerHTML = '❌ OneDrive not available';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Status check failed:', error);
+                        if (statusDiv) {
+                            statusDiv.innerHTML = '⚠️ Status check failed - try again';
+                        }
+                    });
+            }, 100);
+        }
+        
+        function showAuthControls() {
+            const authSection = document.querySelector('.auth-section');
+            if (authSection) {
+                authSection.style.display = 'block';
+            }
+        }
+        
+        function showSyncControls() {
+            const syncSection = document.querySelector('.sync-section');
+            if (syncSection) {
+                syncSection.style.display = 'block';
+            }
         }
         
         // Legacy compatibility
@@ -2769,22 +2817,9 @@
                     return;
                 }
                 
-                console.log('🎯 Potential drag detected - preparing...');
-                e.preventDefault();
-                
-                // Store initial state but don't start dragging yet
-                dragData.element = draggableElement;
-                dragData.startX = e.clientX;
-                dragData.startY = e.clientY;
-                dragData.isDragging = false; // Don't start dragging immediately
-                dragData.preparingDrag = true; // Flag to indicate we're preparing
-                
-                // Get current position
-                const rect = draggableElement.getBoundingClientRect();
-                dragData.offsetX = e.clientX - rect.left;
-                dragData.offsetY = e.clientY - rect.top;
-                
-                console.log('⏳ Drag prepared, waiting for movement...');
+                console.log('🚫 DRAG DISABLED - preventing jumping issue');
+                // Temporarily disable all drag functionality to isolate jumping problem
+                return;
             });
             
             document.addEventListener('mousemove', function(e) {
