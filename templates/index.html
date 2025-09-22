@@ -1162,12 +1162,12 @@
 
                 if (statusDiv) statusDiv.innerHTML = 'Checking connection...';
                 
-                // Create AbortController for manual timeout control  
+                // Create AbortController for manual timeout control - Railway needs much longer timeouts
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => {
-                    console.log('⏱️ OneDrive status check timed out after 20 seconds');
+                    console.log('⏱️ OneDrive status check timed out after 60 seconds');
                     controller.abort();
-                }, 20000); // Increased to 20 seconds for Railway deployments
+                }, 60000); // Increased to 60 seconds for Railway heavy load
                 
                 try {
 
