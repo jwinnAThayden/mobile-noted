@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 # --- Configuration ---
 CLIENT_ID = os.environ.get("NOTED_CLIENT_ID", "cf7bb4c5-7271-4caf-adb3-f8f1f1bef9d5") 
-AUTHORITY = "https://login.microsoftonline.com/5834cf33-1f0f-463a-9150-b123cae25d8d"
+# Use common endpoint to support both personal and work/school Microsoft accounts
+AUTHORITY = "https://login.microsoftonline.com/common"
 SCOPES = ["Files.ReadWrite.AppFolder", "User.Read"]
 
 # API Endpoint for the app's special folder in the user's OneDrive
