@@ -850,7 +850,7 @@
     <!-- OneDrive Floating Action Button -->
     <!-- OneDrive Floating Action Button with enhanced error handling -->
     <button id="onedriveFloatBtn" class="onedrive-float-btn" 
-            onclick="try { const panel = document.getElementById('onedrivePanel'); if (panel) { panel.style.display = 'block'; checkOneDriveStatus(); } else { alert('OneDrive panel not found'); } } catch(e) { console.error('OneDrive button error:', e); alert('OneDrive button error: ' + e.message); }"
+            onclick="try { const panel = document.getElementById('onedrivePanel'); if (panel) { panel.style.display = 'block'; if (typeof checkOneDriveStatus === 'function') { checkOneDriveStatus(); } else { console.log('checkOneDriveStatus not available'); } } else { alert('OneDrive panel not found'); } } catch(e) { console.error('OneDrive button error:', e); alert('OneDrive button error: ' + e.message); }"
             style="position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 9999 !important; display: block !important;">
         ☁️
     </button>
@@ -871,7 +871,11 @@
                 const panel = document.getElementById('onedrivePanel');
                 if (panel) {
                     panel.style.display = 'block';
-                    checkOneDriveStatus();
+                    if (typeof checkOneDriveStatus === 'function') {
+                        checkOneDriveStatus();
+                    } else {
+                        console.log('checkOneDriveStatus not available, panel shown without status check');
+                    }
                 } else {
                     alert('OneDrive panel not found in page');
                 }
@@ -889,6 +893,50 @@
                 }
             } catch (e) {
                 console.error('hideOneDrivePanel error:', e);
+            }
+        }
+        
+        // Simple OneDrive status check function
+        async function checkOneDriveStatus() {
+            try {
+                console.log('Checking OneDrive status...');
+                const statusDiv = document.getElementById('onedriveStatus');
+                if (statusDiv) statusDiv.innerHTML = 'Checking OneDrive status...';
+                
+                // Try the simple endpoint first
+                let response = await fetch('/api/simple/onedrive/status');
+                
+                if (!response || !response.ok) {
+                    console.log('Simple endpoint failed, trying authenticated endpoint...');
+                    response = await fetch('/api/onedrive/status');
+                }
+                
+                if (!response || !response.ok) {
+                    console.error('Both endpoints failed');
+                    if (statusDiv) statusDiv.innerHTML = '❌ Could not connect to OneDrive service';
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('OneDrive status response:', data);
+                
+                // Update status in panel if it exists
+                if (statusDiv) {
+                    if (data.available) {
+                        if (data.authenticated) {
+                            statusDiv.innerHTML = '✅ OneDrive connected and authenticated';
+                        } else {
+                            statusDiv.innerHTML = '⚠️ OneDrive available but not authenticated';
+                        }
+                    } else {
+                        statusDiv.innerHTML = '❌ OneDrive not available: ' + (data.error || 'Unknown error');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error checking OneDrive status:', error);
+                const statusDiv = document.getElementById('onedriveStatus');
+                if (statusDiv) statusDiv.innerHTML = '❌ Error: ' + error.message;
             }
         }
 
