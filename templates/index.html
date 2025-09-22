@@ -2720,6 +2720,7 @@
             // Global drag state for OneDrive panel
             let dragData = {
                 isDragging: false,
+                preparingDrag: false,
                 startX: 0,
                 startY: 0,
                 offsetX: 0,
@@ -2727,7 +2728,7 @@
                 element: null
             };
             
-            // Add event listeners to document for OneDrive panel drag
+            // Add event listeners to document for OneDrive panel drag with movement threshold
             document.addEventListener('mousedown', function(e) {
                 console.log('🔍 Global mousedown:', e.target);
                 
@@ -2768,42 +2769,55 @@
                     return;
                 }
                 
-                console.log('✅ OneDrive panel drag detected - starting drag');
+                console.log('🎯 Potential drag detected - preparing...');
                 e.preventDefault();
                 
-                // Get current position before any changes
-                const rect = draggableElement.getBoundingClientRect();
-                console.log('📍 Initial rect:', rect.left, rect.top, rect.width, rect.height);
-                
-                // Ensure consistent positioning without jumping
-                draggableElement.style.position = 'fixed';
-                draggableElement.style.left = rect.left + 'px';
-                draggableElement.style.top = rect.top + 'px';
-                draggableElement.style.right = '';  // Clear right positioning
-                
-                console.log('🔧 Set positioning - left:', rect.left + 'px', 'top:', rect.top + 'px');
-                
-                dragData.isDragging = true;
+                // Store initial state but don't start dragging yet
                 dragData.element = draggableElement;
                 dragData.startX = e.clientX;
                 dragData.startY = e.clientY;
+                dragData.isDragging = false; // Don't start dragging immediately
+                dragData.preparingDrag = true; // Flag to indicate we're preparing
                 
-                // Calculate offset from mouse to element's top-left corner
+                // Get current position
+                const rect = draggableElement.getBoundingClientRect();
                 dragData.offsetX = e.clientX - rect.left;
                 dragData.offsetY = e.clientY - rect.top;
                 
-                draggableElement.style.position = 'fixed';
-                draggableElement.style.zIndex = '10001';
-                document.body.style.cursor = 'move';
-                document.body.style.userSelect = 'none';
-                
-                console.log('🚀 OneDrive panel drag started');
-                console.log('📍 Element rect:', rect.left, rect.top, rect.width, rect.height);
-                console.log('🎯 Mouse position:', e.clientX, e.clientY);
-                console.log('📏 Calculated offset:', dragData.offsetX, dragData.offsetY);
+                console.log('⏳ Drag prepared, waiting for movement...');
             });
             
             document.addEventListener('mousemove', function(e) {
+                // Check if we're preparing to drag
+                if (dragData.preparingDrag && dragData.element) {
+                    const deltaX = Math.abs(e.clientX - dragData.startX);
+                    const deltaY = Math.abs(e.clientY - dragData.startY);
+                    const threshold = 5; // pixels
+                    
+                    // Only start dragging if mouse moved enough
+                    if (deltaX > threshold || deltaY > threshold) {
+                        console.log('🚀 Movement detected, starting drag...');
+                        
+                        // Now actually start dragging
+                        const rect = dragData.element.getBoundingClientRect();
+                        
+                        // Set positioning
+                        dragData.element.style.position = 'fixed';
+                        dragData.element.style.left = rect.left + 'px';
+                        dragData.element.style.top = rect.top + 'px';
+                        dragData.element.style.right = '';
+                        dragData.element.style.zIndex = '10001';
+                        
+                        dragData.isDragging = true;
+                        dragData.preparingDrag = false;
+                        document.body.style.cursor = 'move';
+                        document.body.style.userSelect = 'none';
+                        
+                        console.log('✅ Drag started after movement');
+                    }
+                }
+                
+                // Handle actual dragging
                 if (!dragData.isDragging || !dragData.element) return;
                 
                 e.preventDefault();
@@ -2827,9 +2841,10 @@
             });
             
             document.addEventListener('mouseup', function(e) {
-                if (dragData.isDragging) {
-                    console.log('🏁 OneDrive panel drag ended');
+                if (dragData.isDragging || dragData.preparingDrag) {
+                    console.log('🏁 OneDrive panel drag/prep ended');
                     dragData.isDragging = false;
+                    dragData.preparingDrag = false;
                     dragData.element = null;
                     document.body.style.cursor = '';
                     document.body.style.userSelect = '';
