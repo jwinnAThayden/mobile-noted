@@ -767,9 +767,10 @@
                         <small id="accountEmail"></small>
                     </div>
                     <div style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
-                        <small>💡 <strong>Tip:</strong> Click and drag the header above to move this dialog</small>
+                        <small>💡 <strong>Tip:</strong> Click and drag the blue header above to move this dialog</small>
                         <br>
-                        <button onclick="initOneDriveDrag(); alert('Drag re-initialized!');" style="margin-top: 5px; padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">🔄 Re-init Drag</button>
+                        <button onclick="setupOneDriveDragImmediate(); alert('Drag system re-initialized!');" style="margin-top: 5px; padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">🔄 Re-init Drag</button>
+                        <button onclick="console.log('Panel:', document.getElementById('onedrivePanel')); console.log('Header:', document.querySelector('#onedrivePanel .dialog-header'));" style="margin-top: 5px; margin-left: 5px; padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer;">🔍 Debug</button>
                     </div>
                 </div>
                 
@@ -883,10 +884,7 @@
                 
                 // Show panel immediately
                 panel.style.display = 'block';
-                console.log('Panel displayed');
-                
-                // Initialize drag for this specific panel
-                initOneDriveDrag();
+                console.log('Panel displayed - drag should already be active');
                 
                 // Add basic content if needed
                 const statusDiv = document.getElementById('onedriveStatus');
@@ -2708,6 +2706,106 @@
         
         // Run cleanup periodically (every 5 minutes)
         setInterval(cleanupUnusedNotes, 5 * 60 * 1000);
+
+        // Bulletproof OneDrive dialog drag - initialize immediately when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, setting up OneDrive drag...');
+            setupOneDriveDragImmediate();
+        });
+        
+        // Also try to set it up immediately if DOM is already loaded
+        if (document.readyState === 'loading') {
+            // DOM is still loading
+            document.addEventListener('DOMContentLoaded', setupOneDriveDragImmediate);
+        } else {
+            // DOM is already loaded
+            setupOneDriveDragImmediate();
+        }
+        
+        function setupOneDriveDragImmediate() {
+            console.log('Setting up immediate OneDrive drag...');
+            
+            // Global drag state for OneDrive panel
+            let dragData = {
+                isDragging: false,
+                startX: 0,
+                startY: 0,
+                startLeft: 0,
+                startTop: 0,
+                element: null
+            };
+            
+            // Add event listeners to document for OneDrive drag
+            document.addEventListener('mousedown', function(e) {
+                const panel = document.getElementById('onedrivePanel');
+                if (!panel || panel.style.display === 'none') return;
+                
+                const header = e.target.closest('.dialog-header');
+                if (!header) return;
+                
+                const isOneDrivePanel = header.closest('#onedrivePanel');
+                if (!isOneDrivePanel) return;
+                
+                // Don't drag on buttons
+                if (e.target.closest('.dialog-close, .dock-btn')) return;
+                
+                console.log('OneDrive drag mousedown detected');
+                e.preventDefault();
+                
+                dragData.isDragging = true;
+                dragData.element = panel;
+                dragData.startX = e.clientX;
+                dragData.startY = e.clientY;
+                
+                const rect = panel.getBoundingClientRect();
+                dragData.startLeft = rect.left;
+                dragData.startTop = rect.top;
+                
+                panel.style.position = 'fixed';
+                panel.style.zIndex = '10001';
+                document.body.style.cursor = 'move';
+                document.body.style.userSelect = 'none';
+                
+                console.log('OneDrive drag started');
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!dragData.isDragging || !dragData.element) return;
+                
+                e.preventDefault();
+                
+                const deltaX = e.clientX - dragData.startX;
+                const deltaY = e.clientY - dragData.startY;
+                
+                const newLeft = dragData.startLeft + deltaX;
+                const newTop = dragData.startTop + deltaY;
+                
+                // Constrain to viewport
+                const maxLeft = window.innerWidth - dragData.element.offsetWidth;
+                const maxTop = window.innerHeight - dragData.element.offsetHeight;
+                
+                const constrainedLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                const constrainedTop = Math.max(0, Math.min(newTop, maxTop));
+                
+                dragData.element.style.left = constrainedLeft + 'px';
+                dragData.element.style.top = constrainedTop + 'px';
+                
+                // Remove dock classes
+                dragData.element.className = dragData.element.className.replace(/\bdocked-\w+-\w+\b/g, '');
+            });
+            
+            document.addEventListener('mouseup', function(e) {
+                if (dragData.isDragging) {
+                    console.log('OneDrive drag ended');
+                    dragData.isDragging = false;
+                    dragData.element = null;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+            
+            console.log('OneDrive drag listeners attached to document');
+        }
 
     </script>
 </body>
