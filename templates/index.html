@@ -890,10 +890,12 @@
                 panel.style.right = '';
                 panel.style.bottom = '';
                 
-                // Set a clear, explicit position
+                // Set a clear, explicit position using left/top (not right) to avoid drag offset issues
                 panel.style.top = '20px';
-                panel.style.right = '20px';
+                panel.style.left = (window.innerWidth - 520) + 'px'; // Position like top-right but using left
                 panel.style.zIndex = '1000';
+                
+                console.log('🎯 Panel positioned at left:', panel.style.left, 'top:', panel.style.top);
                 
                 // Remove dock classes that might interfere
                 panel.className = panel.className.replace(/\bdocked-\w+-\w+\b/g, '');
@@ -2794,14 +2796,27 @@
                 console.log('✅ OneDrive panel drag detected - starting drag');
                 e.preventDefault();
                 
+                // Ensure element uses left/top positioning before calculating offsets
                 const rect = draggableElement.getBoundingClientRect();
+                
+                // Convert right-positioned element to left-positioned to avoid offset issues
+                if (draggableElement.style.right && !draggableElement.style.left) {
+                    console.log('🔄 Converting right positioning to left positioning');
+                    draggableElement.style.left = rect.left + 'px';
+                    draggableElement.style.right = '';
+                }
+                
+                // Ensure top positioning is set
+                if (!draggableElement.style.top) {
+                    draggableElement.style.top = rect.top + 'px';
+                }
                 
                 dragData.isDragging = true;
                 dragData.element = draggableElement;
                 dragData.startX = e.clientX;
                 dragData.startY = e.clientY;
                 
-                // Calculate offset from mouse to element's top-left corner
+                // Calculate offset from mouse to element's top-left corner using actual rect
                 dragData.offsetX = e.clientX - rect.left;
                 dragData.offsetY = e.clientY - rect.top;
                 
@@ -2810,7 +2825,10 @@
                 document.body.style.cursor = 'move';
                 document.body.style.userSelect = 'none';
                 
-                console.log('🚀 OneDrive panel drag started with offset:', dragData.offsetX, dragData.offsetY);
+                console.log('🚀 OneDrive panel drag started');
+                console.log('📍 Element rect:', rect.left, rect.top, rect.width, rect.height);
+                console.log('🎯 Mouse position:', e.clientX, e.clientY);
+                console.log('📏 Calculated offset:', dragData.offsetX, dragData.offsetY);
             });
             
             document.addEventListener('mousemove', function(e) {
