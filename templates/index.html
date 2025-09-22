@@ -848,9 +848,9 @@
     </div>
 
     <!-- OneDrive Floating Action Button -->
-    <!-- OneDrive Floating Action Button with enhanced error handling -->
+    <!-- OneDrive Floating Action Button with direct approach -->
     <button id="onedriveFloatBtn" class="onedrive-float-btn" 
-            onclick="try { const panel = document.getElementById('onedrivePanel'); if (panel) { panel.style.display = 'block'; if (typeof checkOneDriveStatus === 'function') { checkOneDriveStatus(); } else { console.log('checkOneDriveStatus not available'); } } else { alert('OneDrive panel not found'); } } catch(e) { console.error('OneDrive button error:', e); alert('OneDrive button error: ' + e.message); }"
+            onclick="console.log('OneDrive button clicked'); try { const panel = document.getElementById('onedrivePanel'); if (panel) { console.log('Panel found, showing...'); panel.style.display = 'block'; const statusDiv = document.getElementById('onedriveStatus'); if (statusDiv) statusDiv.innerHTML = 'Panel opened - checking status...'; setTimeout(() => { console.log('Attempting status check...'); fetch('/api/simple/onedrive/status').then(r => r.json()).then(data => { console.log('Status:', data); if (statusDiv) statusDiv.innerHTML = data.available ? '✅ OneDrive available' : '❌ OneDrive unavailable'; }).catch(err => { console.error('Status error:', err); if (statusDiv) statusDiv.innerHTML = '❌ Status check failed'; }); }, 500); } else { console.error('Panel not found'); alert('OneDrive panel not found'); } } catch(e) { console.error('Button error:', e); alert('Button error: ' + e.message); }"
             style="position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 9999 !important; display: block !important;">
         ☁️
     </button>
@@ -865,20 +865,38 @@
         let saveTimeout = null;
         let csrfToken = null;
         
-        // Simple OneDrive panel function
+        // Simple OneDrive panel function with safer approach
         function showOneDrivePanel() {
             try {
+                console.log('showOneDrivePanel called');
                 const panel = document.getElementById('onedrivePanel');
-                if (panel) {
-                    panel.style.display = 'block';
+                if (!panel) {
+                    console.error('OneDrive panel not found');
+                    alert('OneDrive panel not found in page');
+                    return;
+                }
+                
+                // Show panel immediately
+                panel.style.display = 'block';
+                console.log('Panel displayed');
+                
+                // Add basic content if needed
+                const statusDiv = document.getElementById('onedriveStatus');
+                if (statusDiv) {
+                    statusDiv.innerHTML = 'Panel opened successfully';
+                }
+                
+                // Check status after a brief delay to avoid blocking
+                setTimeout(() => {
                     if (typeof checkOneDriveStatus === 'function') {
+                        console.log('Calling checkOneDriveStatus...');
                         checkOneDriveStatus();
                     } else {
-                        console.log('checkOneDriveStatus not available, panel shown without status check');
+                        console.log('checkOneDriveStatus not available');
+                        if (statusDiv) statusDiv.innerHTML = '⚠️ Status check unavailable';
                     }
-                } else {
-                    alert('OneDrive panel not found in page');
-                }
+                }, 100);
+                
             } catch (e) {
                 console.error('showOneDrivePanel error:', e);
                 alert('Error showing OneDrive panel: ' + e.message);
@@ -896,76 +914,69 @@
             }
         }
         
-        // Robust OneDrive status check function with timeout
+        // Simple and robust OneDrive status check with immediate fallback
         async function checkOneDriveStatus() {
             const statusDiv = document.getElementById('onedriveStatus');
-            let timeoutId;
             
             try {
-                console.log('Checking OneDrive status...');
+                console.log('Starting OneDrive status check...');
                 if (statusDiv) statusDiv.innerHTML = 'Checking connection...';
                 
-                // Set a 10-second timeout
-                const timeoutPromise = new Promise((_, reject) => {
-                    timeoutId = setTimeout(() => reject(new Error('Request timeout')), 10000);
-                });
+                // Create AbortController for manual timeout control
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    console.log('Request timeout - aborting');
+                    controller.abort();
+                }, 5000); // Reduced to 5 seconds
                 
-                // Try the simple endpoint first with timeout
-                const fetchPromise = fetch('/api/simple/onedrive/status', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    signal: AbortController ? new AbortController().signal : undefined
-                });
-                
-                let response = await Promise.race([fetchPromise, timeoutPromise]);
-                clearTimeout(timeoutId);
-                
-                if (!response || !response.ok) {
-                    console.log('Simple endpoint failed, trying authenticated endpoint...');
-                    if (statusDiv) statusDiv.innerHTML = 'Trying authenticated endpoint...';
-                    
-                    const authFetchPromise = fetch('/api/onedrive/status');
-                    const authTimeoutPromise = new Promise((_, reject) => {
-                        timeoutId = setTimeout(() => reject(new Error('Auth request timeout')), 10000);
+                try {
+                    console.log('Fetching from /api/simple/onedrive/status...');
+                    const response = await fetch('/api/simple/onedrive/status', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                        signal: controller.signal
                     });
                     
-                    response = await Promise.race([authFetchPromise, authTimeoutPromise]);
                     clearTimeout(timeoutId);
-                }
-                
-                if (!response || !response.ok) {
-                    console.error('Both endpoints failed');
-                    if (statusDiv) statusDiv.innerHTML = '❌ Could not connect to OneDrive service';
-                    return;
-                }
-                
-                const data = await response.json();
-                console.log('OneDrive status response:', data);
-                
-                // Update status in panel if it exists
-                if (statusDiv) {
-                    if (data.available) {
-                        if (data.authenticated) {
-                            statusDiv.innerHTML = '✅ OneDrive connected and authenticated';
-                        } else {
-                            statusDiv.innerHTML = '⚠️ OneDrive available but not authenticated';
+                    console.log('Response received:', response.status, response.statusText);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('OneDrive status data:', data);
+                        
+                        if (statusDiv) {
+                            if (data.available) {
+                                if (data.authenticated) {
+                                    statusDiv.innerHTML = '✅ OneDrive connected and authenticated';
+                                } else {
+                                    statusDiv.innerHTML = '⚠️ OneDrive available but not authenticated';
+                                }
+                            } else {
+                                statusDiv.innerHTML = '❌ OneDrive not available: ' + (data.error || 'Unknown error');
+                            }
                         }
-                    } else {
-                        statusDiv.innerHTML = '❌ OneDrive not available: ' + (data.error || 'Unknown error');
+                        return;
                     }
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    console.error('Fetch error:', fetchError);
+                    
+                    if (fetchError.name === 'AbortError') {
+                        console.log('Request was aborted due to timeout');
+                        if (statusDiv) statusDiv.innerHTML = '⏱️ Request timeout - server may be slow';
+                        return;
+                    }
+                    throw fetchError;
                 }
+                
+                // If we get here, the simple endpoint failed
+                console.log('Simple endpoint failed, showing error');
+                if (statusDiv) statusDiv.innerHTML = '❌ OneDrive service unavailable';
                 
             } catch (error) {
-                clearTimeout(timeoutId);
-                console.error('Error checking OneDrive status:', error);
+                console.error('OneDrive status check error:', error);
                 if (statusDiv) {
-                    if (error.message === 'Request timeout' || error.message === 'Auth request timeout') {
-                        statusDiv.innerHTML = '⏱️ Connection timeout - OneDrive service may be slow';
-                    } else {
-                        statusDiv.innerHTML = '❌ Error: ' + error.message;
-                    }
+                    statusDiv.innerHTML = '❌ Connection error: ' + (error.message || 'Unknown error');
                 }
             }
         }
