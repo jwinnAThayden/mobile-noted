@@ -756,6 +756,7 @@
             <button class="btn" onclick="addNewNote()">➕ New Note</button>
             <button class="btn" onclick="saveAllNotes()">💾 Save All</button>
             <button class="btn delete" onclick="deleteAllNotes()">🗑️ Clear All</button>
+            <button id="onedriveFloatBtn" class="btn" onclick="showOneDrivePanelProperly()" style="background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);">☁️ OneDrive</button>
             <a href="/devices" class="btn" style="text-decoration: none; display: inline-block; text-align: center; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">🔒 Devices</a>
             <button class="btn" onclick="logout()" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">🚪 Logout</button>
         </div>
@@ -864,22 +865,7 @@
         </div>
     </div>
 
-    <!-- DEBUG TEST DIV -->
-    <div style="position: fixed !important; bottom: 80px !important; right: 20px !important; z-index: 99999 !important; 
-                background: yellow !important; color: black !important; padding: 10px !important; border: 2px solid red !important;">
-        TEST DIV - CAN YOU SEE THIS?
-    </div>
 
-    <!-- OneDrive Floating Action Button -->
-    <!-- OneDrive Floating Action Button - simple and reliable -->
-    <button id="onedriveFloatBtn" class="onedrive-float-btn" 
-            onclick="console.log('🔘 Button clicked!'); showOneDrivePanelProperly();"
-            style="position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 99999 !important; display: block !important; 
-                   width: 60px !important; height: 60px !important; background: #ff0000 !important; color: white !important; 
-                   border: 3px solid #00ff00 !important; border-radius: 50% !important; font-size: 24px !important; 
-                   opacity: 1 !important; visibility: visible !important; pointer-events: auto !important;">
-        ☁️
-    </button>
 
 
 
@@ -1764,21 +1750,25 @@
 
         // Update OneDrive UI based on status
         function updateOneDriveUI(status) {
-            const floatBtn = document.getElementById('onedriveFloatBtn');
+            const onedriveBtn = document.getElementById('onedriveFloatBtn');
             const statusIcon = document.getElementById('statusIcon');
             const statusText = document.getElementById('statusText');
             const accountInfo = document.getElementById('accountInfo');
             const accountEmail = document.getElementById('accountEmail');
             
             if (!status.available) {
-                floatBtn.className = 'onedrive-float-btn error';
+                if (onedriveBtn) {
+                    onedriveBtn.className = 'btn';
+                    onedriveBtn.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                    onedriveBtn.innerHTML = '❌ OneDrive';
+                }
                 
                 if (status.setup_required) {
-                    floatBtn.title = 'OneDrive setup required - click for details';
+                    if (onedriveBtn) onedriveBtn.title = 'OneDrive setup required - click for details';
                     if (statusIcon) statusIcon.textContent = '⚙️';
                     if (statusText) statusText.innerHTML = 'OneDrive Setup Required<br><small>Click to see setup instructions</small>';
                 } else {
-                    floatBtn.title = 'OneDrive not available';
+                    if (onedriveBtn) onedriveBtn.title = 'OneDrive not available';
                     if (statusIcon) statusIcon.textContent = '❌';
                     if (statusText) statusText.textContent = status.error || 'OneDrive not available';
                 }
@@ -1788,8 +1778,12 @@
             }
             
             if (status.authenticated) {
-                floatBtn.className = 'onedrive-float-btn connected';
-                floatBtn.title = 'Connected to OneDrive';
+                if (onedriveBtn) {
+                    onedriveBtn.className = 'btn connected';
+                    onedriveBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                    onedriveBtn.innerHTML = '✅ OneDrive';
+                    onedriveBtn.title = 'Connected to OneDrive';
+                }
                 if (statusIcon) statusIcon.textContent = '✅';
                 if (statusText) statusText.textContent = 'Connected to OneDrive';
                 
@@ -1800,8 +1794,12 @@
                 
                 showOneDriveControls('authenticated');
             } else {
-                floatBtn.className = 'onedrive-float-btn';
-                floatBtn.title = 'OneDrive available - click to connect';
+                if (onedriveBtn) {
+                    onedriveBtn.className = 'btn';
+                    onedriveBtn.style.background = 'linear-gradient(135deg, #0078d4 0%, #106ebe 100%)';
+                    onedriveBtn.innerHTML = '☁️ OneDrive';
+                    onedriveBtn.title = 'OneDrive available - click to connect';
+                }
                 if (statusIcon) statusIcon.textContent = '⚡';
                 if (statusText) statusText.textContent = 'OneDrive available';
                 if (accountInfo) accountInfo.style.display = 'none';
@@ -2356,7 +2354,7 @@
             saveNotesOffline();
             
             // Auto-sync if enabled and connected
-            if (autoSyncEnabled && document.getElementById('onedriveFloatBtn').classList.contains('connected')) {
+            if (autoSyncEnabled && document.getElementById('onedriveFloatBtn') && document.getElementById('onedriveFloatBtn').classList.contains('connected')) {
                 setTimeout(() => {
                     syncToOneDrive();
                 }, 2000); // Sync 2 seconds after save
