@@ -1675,6 +1675,43 @@ def simple_start_onedrive_auth():
         logger.error(f"🔍 Traceback: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/simple/onedrive/auth/check', methods=['GET'])
+def simple_check_onedrive_auth():
+    """Simple OneDrive auth check without CSRF/auth requirements"""
+    logger.info("🔍 Simple OneDrive auth check endpoint called")
+    
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        logger.error(f"OneDrive not available: ONEDRIVE_AVAILABLE={ONEDRIVE_AVAILABLE}, manager={onedrive_manager is not None}")
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        session_id = session.get('session_id')
+        if not session_id:
+            logger.info("🔍 No session ID found - no auth in progress")
+            return jsonify({
+                'status': 'error',
+                'message': 'No authentication in progress'
+            })
+        
+        logger.info(f"🔍 Checking auth progress for session: {session_id}")
+        auth_result = onedrive_manager.check_device_flow_auth(session_id)
+        logger.info(f"🔍 Auth check result: {auth_result}")
+        
+        if auth_result:
+            return jsonify(auth_result)
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Authentication check failed'
+            })
+            
+    except Exception as e:
+        logger.error(f"🔍 Exception in simple auth check: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Auth check error: {str(e)}'
+        })
+
 if __name__ == '__main__':
     # Only run development server if not in production
     is_production = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT')
