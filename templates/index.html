@@ -2771,27 +2771,24 @@
                 console.log('✅ OneDrive panel drag detected - starting drag');
                 e.preventDefault();
                 
-                // Ensure element uses left/top positioning before calculating offsets
+                // Get current position before any changes
                 const rect = draggableElement.getBoundingClientRect();
+                console.log('📍 Initial rect:', rect.left, rect.top, rect.width, rect.height);
                 
-                // Convert right-positioned element to left-positioned to avoid offset issues
-                if (draggableElement.style.right && !draggableElement.style.left) {
-                    console.log('🔄 Converting right positioning to left positioning');
-                    draggableElement.style.left = rect.left + 'px';
-                    draggableElement.style.right = '';
-                }
+                // Ensure consistent positioning without jumping
+                draggableElement.style.position = 'fixed';
+                draggableElement.style.left = rect.left + 'px';
+                draggableElement.style.top = rect.top + 'px';
+                draggableElement.style.right = '';  // Clear right positioning
                 
-                // Ensure top positioning is set
-                if (!draggableElement.style.top) {
-                    draggableElement.style.top = rect.top + 'px';
-                }
+                console.log('🔧 Set positioning - left:', rect.left + 'px', 'top:', rect.top + 'px');
                 
                 dragData.isDragging = true;
                 dragData.element = draggableElement;
                 dragData.startX = e.clientX;
                 dragData.startY = e.clientY;
                 
-                // Calculate offset from mouse to element's top-left corner using actual rect
+                // Calculate offset from mouse to element's top-left corner
                 dragData.offsetX = e.clientX - rect.left;
                 dragData.offsetY = e.clientY - rect.top;
                 
