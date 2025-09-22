@@ -969,6 +969,7 @@
         
         // Update OneDrive status within the modal
         function updateOneDriveModalStatus() {
+            console.log('🔍 Updating OneDrive modal status...');
             const statusIcon = document.getElementById('onedriveStatusIcon');
             const statusText = document.getElementById('onedriveStatusText');
             const accountInfo = document.getElementById('onedriveAccountInfo');
@@ -976,12 +977,28 @@
             const authSection = document.getElementById('onedriveAuthSection');
             const syncSection = document.getElementById('onedriveSyncSection');
             
-            if (!statusIcon || !statusText) return; // Modal not open
+            console.log('🔍 Modal elements found:', {
+                statusIcon: !!statusIcon,
+                statusText: !!statusText,
+                authSection: !!authSection,
+                syncSection: !!syncSection
+            });
             
+            if (!statusIcon || !statusText) {
+                console.log('🔍 Modal not open - status elements not found');
+                return; // Modal not open
+            }
+            
+            console.log('🔍 Fetching OneDrive status...');
             fetch('/api/simple/onedrive/status')
-                .then(response => response.json())
+                .then(response => {
+                    console.log('🔍 Status response:', response.status, response.ok);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('🔍 OneDrive status data:', data);
                     if (data.authenticated) {
+                        console.log('🔍 OneDrive is authenticated');
                         statusIcon.textContent = '✅';
                         statusText.textContent = 'OneDrive connected and ready';
                         if (data.user_email && accountEmail) {
@@ -991,12 +1008,17 @@
                         if (authSection) authSection.style.display = 'none';
                         if (syncSection) syncSection.style.display = 'block';
                     } else if (data.available) {
+                        console.log('🔍 OneDrive is available but not authenticated - showing connect button');
                         statusIcon.textContent = '🔗';
                         statusText.textContent = 'OneDrive available - click Connect to authenticate';
                         if (accountInfo) accountInfo.style.display = 'none';
-                        if (authSection) authSection.style.display = 'block';
+                        if (authSection) {
+                            authSection.style.display = 'block';
+                            console.log('🔍 Auth section should now be visible');
+                        }
                         if (syncSection) syncSection.style.display = 'none';
                     } else {
+                        console.log('🔍 OneDrive is not available');
                         statusIcon.textContent = '❌';
                         statusText.textContent = 'OneDrive not available - missing client configuration';
                         if (accountInfo) accountInfo.style.display = 'none';
@@ -1005,9 +1027,9 @@
                     }
                 })
                 .catch(error => {
+                    console.error('🔍 OneDrive status check failed:', error);
                     statusIcon.textContent = '⚠️';
                     statusText.textContent = 'Status check failed - check connection';
-                    console.error('OneDrive status check failed:', error);
                 });
         }
         
@@ -1951,7 +1973,8 @@
 
         // Start OneDrive authentication
         async function startOneDriveAuth() {
-            console.log('🔍 Starting OneDrive authentication...');
+            console.log('🔍 🚀 CONNECT BUTTON CLICKED - Starting OneDrive authentication...');
+            alert('Connect button clicked! Check console for details.');
             
             try {
                 // Try the simple endpoint first (more reliable)
