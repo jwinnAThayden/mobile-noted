@@ -11,7 +11,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Personal Notes (v2.1)</title>
+    <title>📝 Mobile Noted - Personal Notes (v2.2)</title>
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/static/manifest.json">
@@ -1993,7 +1993,7 @@
                 
             } catch (e) {
                 console.error('Error in showOneDrivePanel:', e);
-                alert('OneDrive panel error: ' + e.message);
+                // OneDrive panel error - using popup instead
             }
         }
 
@@ -2017,7 +2017,7 @@
                 
                 // If that fails, try the simple endpoint
                 if (!response) {
-                    console.log('Trying simple OneDrive auth endpoint...');
+
                     response = await fetch('/api/simple/onedrive/auth/start', {
                         method: 'POST',
                         headers: {
@@ -2231,7 +2231,6 @@
                 
                 // If that fails, try the simple endpoint
                 if (!response) {
-                    console.log('Trying simple OneDrive sync endpoint...');
                     response = await fetch('/api/simple/onedrive/sync/push', {
                         method: 'POST',
                         headers: {
@@ -2278,7 +2277,6 @@
                 
                 // If that fails, try the simple endpoint
                 if (!response) {
-                    console.log('Trying simple OneDrive sync endpoint...');
                     response = await fetch('/api/simple/onedrive/sync/pull', {
                         method: 'POST',
                         headers: {
@@ -2496,16 +2494,14 @@
 
         function initDialogMovement() {
             document.addEventListener('mousedown', function(e) {
-                console.log('Mousedown event on:', e.target);
                 const dialogHeader = e.target.closest('.dialog-header');
-                console.log('Dialog header found:', dialogHeader);
                 
                 if (dialogHeader && !e.target.closest('.dialog-close, .dock-btn')) {
                     const dialog = dialogHeader.closest('.moveable-dialog');
-                    console.log('Moveable dialog found:', dialog);
+
                     
                     if (dialog) {
-                        console.log('Starting drag for dialog:', dialog.id);
+
                         startDragging(e, dialog);
                     }
                 }
