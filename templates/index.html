@@ -853,9 +853,9 @@
     </div>
 
     <!-- OneDrive Floating Action Button -->
-    <!-- OneDrive Floating Action Button with proper positioning -->
+    <!-- OneDrive Floating Action Button with proper positioning and debugging -->
     <button id="onedriveFloatBtn" class="onedrive-float-btn" 
-            onclick="showOneDrivePanelProperly()"
+            onclick="console.log('🔘 OneDrive button clicked!'); try { showOneDrivePanelProperly(); } catch(e) { console.error('❌ Button click error:', e); alert('Button error: ' + e.message); }"
             style="position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 9999 !important; display: block !important;">
         ☁️
     </button>
@@ -931,6 +931,14 @@
         function showOneDrivePanel() {
             showOneDrivePanelProperly();
         }
+
+        // Debug: Check if functions are defined
+        window.addEventListener('load', function() {
+            console.log('🔍 Function availability check:');
+            console.log('showOneDrivePanelProperly:', typeof showOneDrivePanelProperly);
+            console.log('showOneDrivePanel:', typeof showOneDrivePanel);
+            console.log('setupOneDriveDragImmediate:', typeof setupOneDriveDragImmediate);
+        });
         
         // Dedicated OneDrive panel drag functionality
         function initOneDriveDrag() {
