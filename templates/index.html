@@ -771,7 +771,7 @@
                 </div>
                 
                 <!-- Content -->
-                <div style="padding: 20px; max-height: calc(80vh - 80px); overflow-y: auto;">
+                <div class="panel-content" style="padding: 20px; max-height: calc(80vh - 80px); overflow-y: auto;">
                     <div id="onedriveStatus" class="onedrive-status">
                         <div class="status-indicator">
                             <span id="statusIcon">⚡</span>
@@ -781,6 +781,40 @@
                             <small id="accountEmail"></small>
                         </div>
                     </div>
+                    
+                    <div id="onedriveControls" class="onedrive-controls">
+                        <!-- Auth controls -->
+                        <div id="authControls" style="display: none;">
+                            <button class="btn onedrive-btn" onclick="startOneDriveAuth()">🔗 Connect OneDrive</button>
+                        </div>
+                        
+                        <!-- Device flow display -->
+                        <div id="deviceFlowDisplay" style="display: none;">
+                            <div class="device-flow-info">
+                                <h4>Device Authentication</h4>
+                                <p>Please visit: <strong id="verificationUri"></strong></p>
+                                <p>Enter code: <strong id="userCode"></strong></p>
+                                <div class="button-group">
+                                    <button class="btn onedrive-btn" onclick="checkAuthProgress()">🔄 Check Status</button>
+                                    <button class="btn delete" onclick="cancelOneDriveAuth()">❌ Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sync controls -->
+                        <div id="syncControls" style="display: none;">
+                            <div class="button-group">
+                                <button class="btn onedrive-btn" onclick="syncToOneDrive()">⬆️ Push to Cloud</button>
+                                <button class="btn onedrive-btn" onclick="syncFromOneDrive()">⬇️ Pull from Cloud</button>
+                                <button class="btn" onclick="showOneDriveNotes()">📋 View Cloud Notes</button>
+                                <button class="btn" onclick="cleanupOneDriveDuplicates()" title="Remove duplicate files from OneDrive">🧹 Clean Duplicates</button>
+                            </div>
+                            <div class="button-group" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                                <button class="btn delete" onclick="logoutOneDrive()">🚪 Disconnect</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div id="onedriveControls" class="onedrive-controls">
                     <!-- Auth controls -->
@@ -875,23 +909,23 @@
         let saveTimeout = null;
         let csrfToken = null;
         
-        // Simple alert-based OneDrive function as fallback
+        // OneDrive modal function - simple and working
         function showOneDrivePanelProperly() {
-            console.log('🚀 Attempting to open OneDrive modal...');
-            
-            // Simple alert fallback for now
-            const choice = confirm('OneDrive Integration\n\nWould you like to connect to OneDrive?\n\nClick OK to connect, Cancel to close.');
-            
-            if (choice) {
-                // User wants to connect
-                if (typeof startOneDriveAuth === 'function') {
-                    startOneDriveAuth();
-                } else {
-                    alert('OneDrive authentication not available. Please check the server configuration.');
-                }
+            console.log('🚀 Opening OneDrive modal...');
+            const panel = document.getElementById('onedrivePanel');
+            if (!panel) {
+                console.error('OneDrive panel not found');
+                return;
             }
             
-            console.log('✅ OneDrive action completed');
+            // Show the panel
+            panel.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            // Check OneDrive status immediately
+            checkOneDriveStatus();
+            
+            console.log('✅ OneDrive modal opened');
             
             // Check OneDrive status and show appropriate content
             const statusDiv = document.getElementById('onedriveStatus');
@@ -943,9 +977,13 @@
         }
         
         function hideOneDrivePanel() {
-            console.log('🚪 Closing OneDrive interface...');
-            // Simple function - just log for now since we're using alerts
-            console.log('✅ OneDrive interface closed');
+            console.log('🚪 Closing OneDrive modal...');
+            const panel = document.getElementById('onedrivePanel');
+            if (panel) {
+                panel.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+            console.log('✅ OneDrive modal closed');
         }
         
         // Legacy compatibility
