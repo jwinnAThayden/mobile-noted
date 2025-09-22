@@ -913,150 +913,102 @@
         let saveTimeout = null;
         let csrfToken = null;
         
-        // OneDrive popup window approach - guaranteed to work
+        // OneDrive modal dialog - stays within the main page for better UX
         function showOneDrivePanelProperly() {
-            // Debug: Show user feedback immediately
+            // Update button state
             const originalBtn = document.getElementById('onedriveFloatBtn');
             if (originalBtn) {
-                originalBtn.textContent = '🔄 Opening...';
+                originalBtn.textContent = '🔄 Loading...';
                 originalBtn.disabled = true;
             }
             
-            // Create popup window with OneDrive controls
-            const popupContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>OneDrive Integration</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
-                        .header { background: #0078d4; color: white; padding: 15px; margin: -20px -20px 20px -20px; }
-                        .btn { padding: 10px 15px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
-                        .onedrive-btn { background: #0078d4; color: white; }
-                        .delete { background: #dc3545; color: white; }
-                        .status { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h2>☁️ OneDrive Integration</h2>
+            // Create modal content with OneDrive controls
+            const modalContent = `
+                <div id="onedriveModalStatus" class="status" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid #0078d4;">
+                    <div><span id="onedriveStatusIcon">⚡</span> <span id="onedriveStatusText">Checking connection...</span></div>
+                    <div id="onedriveAccountInfo" style="display: none; margin-top: 8px;"><small id="onedriveAccountEmail" style="color: #666;"></small></div>
+                </div>
+                
+                <div id="onedriveControls">
+                    <div id="onedriveAuthSection" style="display: none;">
+                        <h4 style="margin: 15px 0 10px 0; color: #0078d4;">🔗 Connection</h4>
+                        <button class="btn onedrive-btn" onclick="startOneDriveAuth()" style="background: #0078d4; margin: 5px;">🔗 Connect OneDrive</button>
                     </div>
                     
-                    <div id="status" class="status">
-                        <div><span id="statusIcon">⚡</span> <span id="statusText">Checking connection...</span></div>
-                        <div id="accountInfo" style="display: none;"><small id="accountEmail"></small></div>
+                    <div id="onedriveSyncSection" style="display: none;">
+                        <h4 style="margin: 15px 0 10px 0; color: #0078d4;">☁️ Sync Operations</h4>
+                        <button class="btn onedrive-btn" onclick="syncToOneDrive()" style="background: #0078d4; margin: 5px;">⬆️ Push to Cloud</button>
+                        <button class="btn onedrive-btn" onclick="syncFromOneDrive()" style="background: #0078d4; margin: 5px;">⬇️ Pull from Cloud</button>
+                        <button class="btn" onclick="showOneDriveNotes()" style="background: #6c757d; color: white; margin: 5px;">📋 View Cloud Notes</button>
+                        <button class="btn" onclick="cleanupOneDriveDuplicates()" style="background: #28a745; color: white; margin: 5px;">🧹 Clean Duplicates</button>
+                        
+                        <h4 style="margin: 15px 0 10px 0; color: #0078d4;">🔧 Management</h4>
+                        <button class="btn delete" onclick="logoutOneDrive()" style="background: #dc3545; color: white; margin: 5px;">🚪 Disconnect</button>
                     </div>
-                    
-                    <div id="controls">
-                        <h3>Connection</h3>
-                        <button class="btn onedrive-btn" onclick="parent.startOneDriveAuth(); checkStatus();">🔗 Connect OneDrive</button>
-                        
-                        <h3>Sync Operations</h3>
-                        <button class="btn onedrive-btn" onclick="parent.syncToOneDrive();">⬆️ Push to Cloud</button>
-                        <button class="btn onedrive-btn" onclick="parent.syncFromOneDrive();">⬇️ Pull from Cloud</button>
-                        <button class="btn" onclick="parent.showOneDriveNotes();">📋 View Cloud Notes</button>
-                        <button class="btn" onclick="parent.cleanupOneDriveDuplicates();">🧹 Clean Duplicates</button>
-                        
-                        <h3>Management</h3>
-                        <button class="btn delete" onclick="parent.logoutOneDrive(); checkStatus();">🚪 Disconnect</button>
-                        <button class="btn" onclick="window.close();">✕ Close Window</button>
-                    </div>
-                    
-                    <script>
-                        function checkStatus() {
-                            if (parent.checkOneDriveStatus) {
-                                parent.checkOneDriveStatus();
-                            }
-                        }
-                        
-                        // Check status on load
-                        setTimeout(checkStatus, 500);
-                    </sc` + `ript>
-                </body>
-                </html>
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 12px; color: #666; text-align: center;">
+                    💡 OneDrive integration requires Microsoft account authentication
+                </div>
             `;
             
-            // Open popup window
-            try {
-                const popup = window.open('', 'OneDriveIntegration', 'width=600,height=500,scrollbars=yes,resizable=yes');
-                
-                // Restore button state
-                if (originalBtn) {
-                    originalBtn.textContent = '☁️ OneDrive';
-                    originalBtn.disabled = false;
-                }
-                
-                if (popup && !popup.closed) {
-                    popup.document.write(popupContent);
-                    popup.document.close();
-                    popup.focus();
-                    
-                    // Add success feedback
-                    setTimeout(() => {
-                        if (originalBtn) {
-                            originalBtn.textContent = '✅ Opened';
-                            setTimeout(() => {
-                                originalBtn.textContent = '☁️ OneDrive';
-                            }, 2000);
-                        }
-                    }, 100);
-                    
-                } else {
-                    // Popup blocked or failed
-                    if (originalBtn) {
-                        originalBtn.textContent = '🚫 Blocked';
-                        setTimeout(() => {
-                            originalBtn.textContent = '☁️ OneDrive';
-                        }, 3000);
-                    }
-                    alert('OneDrive Integration\n\nPopup blocked! Please allow popups for this site to use OneDrive features.\n\nAlternatively, check browser console for OneDrive status.');
-                    if (typeof checkOneDriveStatus === 'function') {
-                        checkOneDriveStatus();
-                    }
-                }
-            } catch (error) {
-                // Error opening popup
-                if (originalBtn) {
-                    originalBtn.textContent = '❌ Error';
-                    originalBtn.disabled = false;
-                    setTimeout(() => {
-                        originalBtn.textContent = '☁️ OneDrive';
-                    }, 3000);
-                }
-                alert('Error opening OneDrive window: ' + error.message);
-            }
+            // Create modal dialog
+            const dialogId = showMoveableDialog('☁️ OneDrive Integration', modalContent, []);
             
-            // Check OneDrive status and show appropriate content
-            const statusDiv = document.getElementById('onedriveStatus');
-            if (statusDiv) {
-                statusDiv.innerHTML = 'Checking OneDrive status...';
-            }
-            
-            // Check authentication status
+            // Update OneDrive status immediately
             setTimeout(() => {
-                fetch('/api/simple/onedrive/status')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (statusDiv) {
-                            if (data.authenticated) {
-                                statusDiv.innerHTML = '✅ OneDrive connected and ready';
-                                // Show sync controls
-                                showSyncControls();
-                            } else if (data.available) {
-                                statusDiv.innerHTML = '🔗 OneDrive available - click Connect to authenticate';
-                                // Show auth controls
-                                showAuthControls();
-                            } else {
-                                statusDiv.innerHTML = '❌ OneDrive not available';
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        if (statusDiv) {
-                            statusDiv.innerHTML = '⚠️ Status check failed - try again';
-                        }
-                    });
+                updateOneDriveModalStatus();
             }, 100);
+            
+            // Restore button state
+            if (originalBtn) {
+                originalBtn.textContent = '☁️ OneDrive';
+                originalBtn.disabled = false;
+            }
+        }
+        
+        // Update OneDrive status within the modal
+        function updateOneDriveModalStatus() {
+            const statusIcon = document.getElementById('onedriveStatusIcon');
+            const statusText = document.getElementById('onedriveStatusText');
+            const accountInfo = document.getElementById('onedriveAccountInfo');
+            const accountEmail = document.getElementById('onedriveAccountEmail');
+            const authSection = document.getElementById('onedriveAuthSection');
+            const syncSection = document.getElementById('onedriveSyncSection');
+            
+            if (!statusIcon || !statusText) return; // Modal not open
+            
+            fetch('/api/simple/onedrive/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        statusIcon.textContent = '✅';
+                        statusText.textContent = 'OneDrive connected and ready';
+                        if (data.user_email && accountEmail) {
+                            accountEmail.textContent = data.user_email;
+                            accountInfo.style.display = 'block';
+                        }
+                        if (authSection) authSection.style.display = 'none';
+                        if (syncSection) syncSection.style.display = 'block';
+                    } else if (data.available) {
+                        statusIcon.textContent = '🔗';
+                        statusText.textContent = 'OneDrive available - click Connect to authenticate';
+                        if (accountInfo) accountInfo.style.display = 'none';
+                        if (authSection) authSection.style.display = 'block';
+                        if (syncSection) syncSection.style.display = 'none';
+                    } else {
+                        statusIcon.textContent = '❌';
+                        statusText.textContent = 'OneDrive not available - missing client configuration';
+                        if (accountInfo) accountInfo.style.display = 'none';
+                        if (authSection) authSection.style.display = 'none';
+                        if (syncSection) syncSection.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    statusIcon.textContent = '⚠️';
+                    statusText.textContent = 'Status check failed - check connection';
+                    console.error('OneDrive status check failed:', error);
+                });
         }
         
         function showAuthControls() {
@@ -2050,6 +2002,8 @@
                 
                 if (data.success) {
                     displayDeviceFlow(data.auth_flow);
+                    // Update modal status if it's open
+                    setTimeout(() => updateOneDriveModalStatus(), 500);
                 } else {
                     showStatus('Failed to start OneDrive authentication: ' + data.error, true);
                 }
@@ -2238,6 +2192,9 @@
                     
                     // Reload notes to get updated IDs
                     loadNotes();
+                    
+                    // Update modal status if it's open
+                    setTimeout(() => updateOneDriveModalStatus(), 500);
                 } else {
                     showStatus('Sync failed: ' + data.error, true);
                 }
@@ -2287,6 +2244,9 @@
                     
                     // Reload notes with cloud data
                     loadNotes();
+                    
+                    // Update modal status if it's open
+                    setTimeout(() => updateOneDriveModalStatus(), 500);
                 } else {
                     showStatus('Sync failed: ' + data.error, true);
                 }
@@ -2364,6 +2324,9 @@
                 if (data.success) {
                     showStatus('Disconnected from OneDrive');
                     checkOneDriveStatus();
+                    
+                    // Update modal status if it's open
+                    setTimeout(() => updateOneDriveModalStatus(), 500);
                 } else {
                     showStatus('Failed to disconnect: ' + data.error, true);
                 }
