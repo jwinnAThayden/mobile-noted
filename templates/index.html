@@ -1951,54 +1951,48 @@
 
         // Start OneDrive authentication
         async function startOneDriveAuth() {
+            console.log('🔍 Starting OneDrive authentication...');
+            
             try {
-                // Try the authenticated endpoint first
-                let response = await authenticatedFetch('/api/onedrive/auth/start', {
-                    method: 'POST'
+                // Try the simple endpoint first (more reliable)
+                console.log('🔍 Trying simple auth endpoint...');
+                let response = await fetch('/api/simple/onedrive/auth/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
                 
-                // If that fails, try the simple endpoint
-                if (!response) {
-
-                    response = await fetch('/api/simple/onedrive/auth/start', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
+                console.log('🔍 Simple auth response status:', response ? response.status : 'null');
+                console.log('🔍 Simple auth response ok:', response ? response.ok : 'null');
+                
+                if (!response || !response.ok) {
+                    console.error('🔍 Simple auth endpoint failed, trying authenticated endpoint...');
+                    response = await authenticatedFetch('/api/onedrive/auth/start', {
+                        method: 'POST'
                     });
                 }
                 
-                if (!response) return;
+                if (!response) {
+                    console.error('🔍 Both auth endpoints failed - no response');
+                    showStatus('OneDrive authentication endpoints unavailable', true);
+                    return;
+                }
                 
                 // Check if response is JSON
                 const contentType = response.headers.get('content-type');
+                console.log('🔍 Response content-type:', contentType);
+                
                 if (!contentType || !contentType.includes('application/json')) {
-                    // Try the simple endpoint as fallback
-                    try {
-                        const simpleResponse = await fetch('/api/simple/onedrive/auth/start', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        if (simpleResponse.ok) {
-                            const data = await simpleResponse.json();
-                            if (data.success) {
-                                displayDeviceFlow(data.auth_flow);
-                            } else {
-                                showStatus('Failed to start OneDrive auth: ' + data.error, true);
-                            }
-                        } else {
-                            throw new Error('Simple endpoint failed too');
-                        }
-                    } catch (fallbackError) {
-                        showStatus('OneDrive authentication not available', true);
-                        console.error('All auth endpoints failed:', fallbackError);
-                    }
+                    console.error('🔍 Response is not JSON, content-type:', contentType);
+                    const responseText = await response.text();
+                    console.error('🔍 Response text:', responseText.substring(0, 200));
+                    showStatus('OneDrive authentication endpoint returned invalid response', true);
                     return;
                 }
                 
                 const data = await response.json();
+                console.log('🔍 Auth response data:', data);
                 
                 if (data.success) {
                     displayDeviceFlow(data.auth_flow);
@@ -2008,27 +2002,12 @@
                     showStatus('Failed to start OneDrive authentication: ' + data.error, true);
                 }
             } catch (error) {
-                // Try simple endpoint as final fallback
-                try {
-                    const response = await fetch('/api/simple/onedrive/auth/start', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.success) {
-                            displayDeviceFlow(data.auth_flow);
-                        } else {
-                            showStatus('OneDrive auth failed: ' + data.error, true);
-                        }
-                    } else {
-                        throw new Error('Simple auth endpoint failed');
-                    }
-                } catch (fallbackError) {
-                    showStatus('OneDrive authentication unavailable: ' + error.message, true);
-                }
+                console.error('🔍 OneDrive auth error:', error);
+                console.error('🔍 Error details:', error.message, error.stack);
+                showStatus('OneDrive authentication failed: ' + error.message, true);
+                
+                // Update modal status to reflect error
+                setTimeout(() => updateOneDriveModalStatus(), 500);
             }
         }
 
