@@ -3721,6 +3721,72 @@ class EditableBoxApp:
         except Exception:
             pass
 
+    def _cleanup_unused_notes(self):
+        """Clean up notes that are not currently open in tabs."""
+        try:
+            print("🧹 Cleaning up unused notes...")
+            
+            # Get list of currently open files (from tabs)
+            open_files = set()
+            for box in self.text_boxes:
+                if box.get('file_path'):
+                    open_files.add(os.path.normpath(box['file_path']))
+            
+            print(f"Found {len(open_files)} open files: {list(open_files)}")
+            
+            # Check notes directory for unused files
+            if hasattr(self, 'notes_dir') and os.path.exists(self.notes_dir):
+                cleanup_count = 0
+                for filename in os.listdir(self.notes_dir):
+                    if filename.endswith('.txt'):
+                        file_path = os.path.normpath(os.path.join(self.notes_dir, filename))
+                        
+                        # Skip if file is currently open
+                        if file_path in open_files:
+                            continue
+                        
+                        # Check if file is empty or contains only whitespace
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                content = f.read().strip()
+                                
+                            # Delete if empty or very short (less than 10 characters)
+                            if len(content) < 10:
+                                os.remove(file_path)
+                                cleanup_count += 1
+                                print(f"  Removed empty/short file: {filename}")
+                                
+                        except Exception as e:
+                            print(f"  Error checking file {filename}: {e}")
+                
+                if cleanup_count > 0:
+                    print(f"✅ Cleaned up {cleanup_count} unused note files")
+                else:
+                    print("✅ No cleanup needed - all files are in use or contain content")
+                    
+            # Also clean up any temporary files
+            temp_patterns = ['temp_*.txt', 'untitled_*.txt', '.tmp*']
+            temp_cleanup_count = 0
+            
+            if hasattr(self, 'notes_dir') and os.path.exists(self.notes_dir):
+                for filename in os.listdir(self.notes_dir):
+                    for pattern in temp_patterns:
+                        if filename.startswith(pattern.replace('*', '')):
+                            try:
+                                temp_file_path = os.path.join(self.notes_dir, filename)
+                                if os.path.normpath(temp_file_path) not in open_files:
+                                    os.remove(temp_file_path)
+                                    temp_cleanup_count += 1
+                                    print(f"  Removed temp file: {filename}")
+                            except Exception as e:
+                                print(f"  Error removing temp file {filename}: {e}")
+            
+            if temp_cleanup_count > 0:
+                print(f"✅ Cleaned up {temp_cleanup_count} temporary files")
+                
+        except Exception as e:
+            print(f"❌ Error during note cleanup: {e}")
+
     def _on_close_request(self):
         """Handle window close: save files, layout, and geometry locally only."""
         # Show progress dialog for closing operations
@@ -3730,6 +3796,13 @@ class EditableBoxApp:
             progress.update_message("Saving open files...")
             # Always save locally, no OneDrive sync on exit
             self._save_all_open_files()
+        except Exception:
+            pass
+        
+        try:
+            progress.update_message("Cleaning up unused notes...")
+            # Clean up notes that aren't currently open
+            self._cleanup_unused_notes()
         except Exception:
             pass
         

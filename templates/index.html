@@ -896,19 +896,43 @@
             }
         }
         
-        // Simple OneDrive status check function
+        // Robust OneDrive status check function with timeout
         async function checkOneDriveStatus() {
+            const statusDiv = document.getElementById('onedriveStatus');
+            let timeoutId;
+            
             try {
                 console.log('Checking OneDrive status...');
-                const statusDiv = document.getElementById('onedriveStatus');
-                if (statusDiv) statusDiv.innerHTML = 'Checking OneDrive status...';
+                if (statusDiv) statusDiv.innerHTML = 'Checking connection...';
                 
-                // Try the simple endpoint first
-                let response = await fetch('/api/simple/onedrive/status');
+                // Set a 10-second timeout
+                const timeoutPromise = new Promise((_, reject) => {
+                    timeoutId = setTimeout(() => reject(new Error('Request timeout')), 10000);
+                });
+                
+                // Try the simple endpoint first with timeout
+                const fetchPromise = fetch('/api/simple/onedrive/status', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    signal: AbortController ? new AbortController().signal : undefined
+                });
+                
+                let response = await Promise.race([fetchPromise, timeoutPromise]);
+                clearTimeout(timeoutId);
                 
                 if (!response || !response.ok) {
                     console.log('Simple endpoint failed, trying authenticated endpoint...');
-                    response = await fetch('/api/onedrive/status');
+                    if (statusDiv) statusDiv.innerHTML = 'Trying authenticated endpoint...';
+                    
+                    const authFetchPromise = fetch('/api/onedrive/status');
+                    const authTimeoutPromise = new Promise((_, reject) => {
+                        timeoutId = setTimeout(() => reject(new Error('Auth request timeout')), 10000);
+                    });
+                    
+                    response = await Promise.race([authFetchPromise, authTimeoutPromise]);
+                    clearTimeout(timeoutId);
                 }
                 
                 if (!response || !response.ok) {
@@ -934,9 +958,15 @@
                 }
                 
             } catch (error) {
+                clearTimeout(timeoutId);
                 console.error('Error checking OneDrive status:', error);
-                const statusDiv = document.getElementById('onedriveStatus');
-                if (statusDiv) statusDiv.innerHTML = '❌ Error: ' + error.message;
+                if (statusDiv) {
+                    if (error.message === 'Request timeout' || error.message === 'Auth request timeout') {
+                        statusDiv.innerHTML = '⏱️ Connection timeout - OneDrive service may be slow';
+                    } else {
+                        statusDiv.innerHTML = '❌ Error: ' + error.message;
+                    }
+                }
             }
         }
 
@@ -1566,91 +1596,7 @@
         });
 
         // Check OneDrive connection status
-        async function checkOneDriveStatus() {
-            const statusDiv = document.getElementById('onedriveStatus');
-            if (statusDiv) statusDiv.innerHTML = 'Checking OneDrive status...';
-            
-            try {
-                console.log('Checking OneDrive status...');
-                
-                // Try the simple endpoint first (no auth required)
-                let response = await fetch('/api/simple/onedrive/status');
-                
-                // If that fails, try the authenticated endpoint
-                if (!response || !response.ok) {
-                    console.log('Simple endpoint failed, trying authenticated endpoint...');
-                    response = await authenticatedFetch('/api/onedrive/status');
-                }
-                
-                if (!response || !response.ok) {
-                    console.error('Both endpoints failed');
-                    if (statusDiv) statusDiv.innerHTML = '❌ Could not connect to OneDrive service';
-                    return;
-                }
-                
-                // Check if response is actually JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    console.warn('OneDrive status returned non-JSON response:', await response.text());
-                    updateOneDriveUI({
-                        available: false,
-                        authenticated: false,
-                        error: 'Server returned non-JSON response'
-                    });
-                    return;
-                }
-                
-                const data = await response.json();
-                console.log('OneDrive status response:', data);
-                
-                // Update status in panel if it exists
-                if (statusDiv) {
-                    if (data.available) {
-                        if (data.authenticated) {
-                            statusDiv.innerHTML = '✅ OneDrive connected and authenticated';
-                        } else {
-                            statusDiv.innerHTML = '⚠️ OneDrive available but not authenticated';
-                        }
-                    } else {
-                        statusDiv.innerHTML = '❌ OneDrive not available: ' + (data.error || 'Unknown error');
-                    }
-                }
-                
-                updateOneDriveUI(data);
-            } catch (error) {
-                console.warn('OneDrive status check failed, trying simple endpoint...', error);
-                
-                // Fallback to simple endpoint
-                try {
-                    const response = await fetch('/api/simple/onedrive/status');
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('Simple endpoint response:', data);
-                        
-                        // Update status in panel
-                        if (statusDiv) {
-                            if (data.available) {
-                                statusDiv.innerHTML = '✅ OneDrive available (simple check)';
-                            } else {
-                                statusDiv.innerHTML = '❌ OneDrive not available';
-                            }
-                        }
-                        
-                        updateOneDriveUI(data);
-                    } else {
-                        throw new Error(`Simple endpoint failed: ${response.status}`);
-                    }
-                } catch (fallbackError) {
-                    console.error('Both OneDrive endpoints failed:', fallbackError);
-                    if (statusDiv) statusDiv.innerHTML = '❌ OneDrive service not accessible';
-                    updateOneDriveUI({
-                        available: false,
-                        authenticated: false,
-                        error: 'OneDrive endpoints not accessible'
-                    });
-                }
-            }
-        }
+
 
         // Update OneDrive UI based on status
         function updateOneDriveUI(status) {
@@ -2596,6 +2542,66 @@
                 setTimeout(syncOfflineNotes, 2000);
             }
         });
+
+        // Automatic cleanup of unused notes when exiting
+        function cleanupUnusedNotes() {
+            try {
+                console.log('Cleaning up unused notes...');
+                
+                // Get currently open tab indices
+                const openTabIndices = [];
+                const tabButtons = document.querySelectorAll('.tab-button');
+                tabButtons.forEach((button, index) => {
+                    if (button.style.display !== 'none') {
+                        openTabIndices.push(index);
+                    }
+                });
+                
+                console.log('Open tab indices:', openTabIndices);
+                
+                // Clean up notes array - keep only open tabs
+                const originalLength = notes.length;
+                const cleanedNotes = [];
+                
+                for (let i = 0; i < notes.length; i++) {
+                    if (openTabIndices.includes(i) || i === currentNoteIndex) {
+                        cleanedNotes.push(notes[i]);
+                    }
+                }
+                
+                if (cleanedNotes.length !== originalLength) {
+                    console.log(`Cleaned up ${originalLength - cleanedNotes.length} unused notes`);
+                    notes = cleanedNotes;
+                    
+                    // Update current note index if needed
+                    if (currentNoteIndex >= notes.length) {
+                        currentNoteIndex = Math.max(0, notes.length - 1);
+                    }
+                    
+                    // Save cleaned notes
+                    localStorage.setItem('mobile_noted_notes', JSON.stringify(notes));
+                    console.log('Cleanup completed, saved cleaned notes');
+                }
+                
+            } catch (error) {
+                console.error('Error during cleanup:', error);
+            }
+        }
+        
+        // Run cleanup on page unload
+        window.addEventListener('beforeunload', function(event) {
+            cleanupUnusedNotes();
+        });
+        
+        // Run cleanup on visibility change (when switching tabs/apps)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                cleanupUnusedNotes();
+            }
+        });
+        
+        // Run cleanup periodically (every 5 minutes)
+        setInterval(cleanupUnusedNotes, 5 * 60 * 1000);
 
     </script>
 </body>
