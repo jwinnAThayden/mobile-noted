@@ -905,12 +905,21 @@
             const content = panel.querySelector('.onedrive-content');
             if (content) {
                 content.style.background = 'white';
+                content.style.border = '5px solid red'; // DEBUG: Make it very obvious
                 content.style.borderRadius = '15px';
                 content.style.maxWidth = '600px';
                 content.style.width = '90vw';
                 content.style.maxHeight = '80vh';
                 content.style.position = 'relative';
-                console.log('✅ Content box styled explicitly');
+                content.style.display = 'block';
+                content.style.padding = '20px';
+                content.innerHTML = '<h2 style="color: red;">DEBUG: CAN YOU SEE THIS?</h2><button onclick="hideOneDrivePanel()" style="background: red; color: white; padding: 10px 20px; border: none; cursor: pointer;">CLOSE</button>';
+                console.log('✅ Content box styled explicitly with debug content');
+            } else {
+                console.error('❌ Content box (.onedrive-content) not found!');
+                // Create a simple fallback content
+                panel.innerHTML = '<div style="background: white; padding: 40px; border: 5px solid red; border-radius: 15px; text-align: center;"><h2 style="color: red;">DEBUG MODAL</h2><p>OneDrive content goes here</p><button onclick="hideOneDrivePanel()" style="background: red; color: white; padding: 10px 20px; border: none; cursor: pointer;">CLOSE</button></div>';
+                console.log('✅ Created fallback content');
             }
             
             // Check OneDrive status and show appropriate content
