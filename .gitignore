@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Config files with potential secrets
+noted_config.json
 *.so
 .Python
 build/
