@@ -251,19 +251,19 @@
 
         /* OneDrive Panel Styles - Full Screen Modal */
         .onedrive-panel, .cloud-notes-browser {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: rgba(255, 0, 0, 0.9) !important; /* DEBUG: Red background to make it obvious */
-            z-index: 99999 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            backdrop-filter: blur(5px) !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
         }
         
         .onedrive-content {
@@ -275,7 +275,6 @@
             max-height: 80vh;
             overflow: hidden;
             position: relative;
-            border: 3px solid #ff0000 !important; /* DEBUG: Red border to make it visible */
         }
 
         .panel-header {
