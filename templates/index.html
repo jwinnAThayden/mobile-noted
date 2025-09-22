@@ -11,8 +11,11 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Personal Notes (v2.4)</title>
-    <!-- Cache buster: 2025-09-22-14:30 -->
+    <title>📝 Mobile Noted - Personal Notes (v2.4.1)</title>
+    <!-- Cache buster: 2025-09-22-15:00 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/static/manifest.json">
@@ -912,6 +915,9 @@
         
         // OneDrive popup window approach - guaranteed to work
         function showOneDrivePanelProperly() {
+            // TEMPORARY DEBUG - Remove after testing
+            alert('OneDrive function called! v2.4.1');
+            
             // Debug: Show user feedback immediately
             const originalBtn = document.getElementById('onedriveFloatBtn');
             if (originalBtn) {
