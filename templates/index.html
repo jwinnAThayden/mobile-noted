@@ -750,8 +750,8 @@
 
         <!-- OneDrive Integration Panel -->
         <div id="onedrivePanel" class="onedrive-panel dialog-always-visible moveable-dialog docked-top-right" style="display: none;">
-            <div class="panel-header dialog-header">
-                <h3>☁️ OneDrive Sync</h3>
+            <div class="panel-header dialog-header" style="cursor: move; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;">
+                <h3 style="pointer-events: none;">☁️ OneDrive Sync</h3>
                 <div class="dialog-controls">
                     <button class="dock-btn" onclick="toggleDockPosition('onedrivePanel')" title="Change dock position">📌</button>
                     <button class="dialog-close" onclick="hideOneDrivePanel()">✕</button>
@@ -2259,10 +2259,16 @@
 
         function initDialogMovement() {
             document.addEventListener('mousedown', function(e) {
+                console.log('Mousedown event on:', e.target);
                 const dialogHeader = e.target.closest('.dialog-header');
+                console.log('Dialog header found:', dialogHeader);
+                
                 if (dialogHeader && !e.target.closest('.dialog-close, .dock-btn')) {
                     const dialog = dialogHeader.closest('.moveable-dialog');
+                    console.log('Moveable dialog found:', dialog);
+                    
                     if (dialog) {
+                        console.log('Starting drag for dialog:', dialog.id);
                         startDragging(e, dialog);
                     }
                 }
@@ -2281,6 +2287,9 @@
         }
 
         function startDragging(e, dialog) {
+            console.log('startDragging called for:', dialog.id);
+            e.preventDefault();
+            
             dragState.isDragging = true;
             dragState.currentDialog = dialog;
             dragState.startX = e.clientX;
@@ -2290,9 +2299,13 @@
             dragState.elementStartX = rect.left;
             dragState.elementStartY = rect.top;
             
+            console.log('Start position:', dragState.elementStartX, dragState.elementStartY);
+            
             dialog.style.position = 'fixed';
             dialog.style.zIndex = '10001';
             document.body.style.cursor = 'move';
+            
+            console.log('Drag state set:', dragState);
         }
 
         function updateDialogPosition(e) {
