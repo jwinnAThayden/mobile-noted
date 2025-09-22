@@ -2285,10 +2285,13 @@
             }
         }
 
-        // Enhanced save note with auto-sync
+        // Enhanced save note with auto-sync and offline storage
         const originalSaveNote = saveNote;
         saveNote = async function(noteId) {
             const result = await originalSaveNote(noteId);
+            
+            // Always save offline as backup
+            saveNotesOffline();
             
             // Auto-sync if enabled and connected
             if (autoSyncEnabled && document.getElementById('onedriveFloatBtn').classList.contains('connected')) {
@@ -2618,16 +2621,7 @@
             return status;
         }
 
-        // Override save functions to include offline storage
-        const originalSaveNote = window.saveNote;
-        window.saveNote = async function(noteId) {
-            const result = await originalSaveNote.call(this, noteId);
-            
-            // Always save offline as backup
-            saveNotesOffline();
-            
-            return result;
-        };
+        // Note: saveNote override is now handled above with combined auto-sync and offline storage
 
         // Initialize auto-hide when page loads
         document.addEventListener('DOMContentLoaded', function() {
