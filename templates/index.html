@@ -764,22 +764,23 @@
         <!-- OneDrive Integration Panel -->
         <div id="onedrivePanel" class="onedrive-panel" style="display: none;">
             <div class="onedrive-content">
+                <!-- Header -->
                 <div class="panel-header">
                     <h3>☁️ OneDrive Integration</h3>
                     <button onclick="hideOneDrivePanel()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 50%; cursor: pointer; font-size: 16px;">✕</button>
                 </div>
-                <div class="panel-content" style="padding: 20px; max-height: calc(80vh - 80px); overflow-y: auto;">
-            <div class="panel-content">
-                <div id="onedriveStatus" class="onedrive-status">
-                    <div class="status-indicator">
-                        <span id="statusIcon">⚡</span>
-                        <span id="statusText">Checking connection...</span>
+                
+                <!-- Content -->
+                <div style="padding: 20px; max-height: calc(80vh - 80px); overflow-y: auto;">
+                    <div id="onedriveStatus" class="onedrive-status">
+                        <div class="status-indicator">
+                            <span id="statusIcon">⚡</span>
+                            <span id="statusText">Checking connection...</span>
+                        </div>
+                        <div id="accountInfo" class="account-info" style="display: none;">
+                            <small id="accountEmail"></small>
+                        </div>
                     </div>
-                    <div id="accountInfo" class="account-info" style="display: none;">
-                        <small id="accountEmail"></small>
-                    </div>
-
-                </div>
                 
                 <div id="onedriveControls" class="onedrive-controls">
                     <!-- Auth controls -->
@@ -884,11 +885,33 @@
                 return;
             }
             
-            // Show full-screen modal
+            // DEBUG: Add explicit styles to ensure visibility
+            panel.style.position = 'fixed';
+            panel.style.top = '0';
+            panel.style.left = '0';
+            panel.style.width = '100vw';
+            panel.style.height = '100vh';
+            panel.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            panel.style.zIndex = '99999';
             panel.style.display = 'flex';
+            panel.style.alignItems = 'center';
+            panel.style.justifyContent = 'center';
+            
             document.body.style.overflow = 'hidden'; // Prevent background scrolling
             
-            console.log('✅ OneDrive full-screen modal shown');
+            console.log('✅ OneDrive full-screen modal shown with explicit styles');
+            
+            // Also ensure the content box is visible
+            const content = panel.querySelector('.onedrive-content');
+            if (content) {
+                content.style.background = 'white';
+                content.style.borderRadius = '15px';
+                content.style.maxWidth = '600px';
+                content.style.width = '90vw';
+                content.style.maxHeight = '80vh';
+                content.style.position = 'relative';
+                console.log('✅ Content box styled explicitly');
+            }
             
             // Check OneDrive status and show appropriate content
             const statusDiv = document.getElementById('onedriveStatus');
