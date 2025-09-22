@@ -251,19 +251,19 @@
 
         /* OneDrive Panel Styles - Full Screen Modal */
         .onedrive-panel, .cloud-notes-browser {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(255, 0, 0, 0.9) !important; /* DEBUG: Red background to make it obvious */
+            z-index: 99999 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            backdrop-filter: blur(5px) !important;
         }
         
         .onedrive-content {
@@ -275,6 +275,7 @@
             max-height: 80vh;
             overflow: hidden;
             position: relative;
+            border: 3px solid #ff0000 !important; /* DEBUG: Red border to make it visible */
         }
 
         .panel-header {
@@ -764,11 +765,11 @@
         <!-- OneDrive Integration Panel -->
         <div id="onedrivePanel" class="onedrive-panel" style="display: none;">
             <div class="onedrive-content">
-                <div class="dialog-header" style="background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 20px; border-radius: 15px 15px 0 0; position: relative;">
-                    <h3 style="margin: 0; font-size: 20px; font-weight: 600; text-align: center;">☁️ OneDrive Integration</h3>
-                    <button class="dialog-close" onclick="hideOneDrivePanel()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 50%; cursor: pointer; font-size: 16px;">✕</button>
+                <div class="panel-header">
+                    <h3>☁️ OneDrive Integration</h3>
+                    <button onclick="hideOneDrivePanel()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 50%; cursor: pointer; font-size: 16px;">✕</button>
                 </div>
-                <div style="padding: 30px; max-height: calc(80vh - 80px); overflow-y: auto;">
+                <div class="panel-content" style="padding: 20px; max-height: calc(80vh - 80px); overflow-y: auto;">
             <div class="panel-content">
                 <div id="onedriveStatus" class="onedrive-status">
                     <div class="status-indicator">
@@ -778,12 +779,7 @@
                     <div id="accountInfo" class="account-info" style="display: none;">
                         <small id="accountEmail"></small>
                     </div>
-                    <div style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
-                        <small>💡 <strong>Tip:</strong> Click and drag the blue header above to move this dialog</small>
-                        <br>
-                        <button onclick="setupOneDriveDragImmediate(); alert('Drag system re-initialized!');" style="margin-top: 5px; padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">🔄 Re-init Drag</button>
-                        <button onclick="console.log('Panel:', document.getElementById('onedrivePanel')); console.log('Header:', document.querySelector('#onedrivePanel .dialog-header'));" style="margin-top: 5px; margin-left: 5px; padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer;">🔍 Debug</button>
-                    </div>
+
                 </div>
                 
                 <div id="onedriveControls" class="onedrive-controls">
