@@ -11,7 +11,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Personal Notes (v2.3)</title>
+    <title>📝 Mobile Noted - Personal Notes (v2.4)</title>
     <!-- Cache buster: 2025-09-22-14:30 -->
     
     <!-- PWA Manifest -->
@@ -912,6 +912,12 @@
         
         // OneDrive popup window approach - guaranteed to work
         function showOneDrivePanelProperly() {
+            // Debug: Show user feedback immediately
+            const originalBtn = document.getElementById('onedriveFloatBtn');
+            if (originalBtn) {
+                originalBtn.textContent = '🔄 Opening...';
+                originalBtn.disabled = true;
+            }
             
             // Create popup window with OneDrive controls
             const popupContent = `
@@ -968,18 +974,53 @@
             `;
             
             // Open popup window
-            const popup = window.open('', 'OneDriveIntegration', 'width=600,height=500,scrollbars=yes,resizable=yes');
-            if (popup) {
-                popup.document.write(popupContent);
-                popup.document.close();
-                popup.focus();
-
-            } else {
-                // Fallback to alert if popup blocked
-                alert('OneDrive Integration\n\nPopup blocked! Please allow popups for this site to use OneDrive features.\n\nAlternatively, check browser console for OneDrive status.');
-                if (typeof checkOneDriveStatus === 'function') {
-                    checkOneDriveStatus();
+            try {
+                const popup = window.open('', 'OneDriveIntegration', 'width=600,height=500,scrollbars=yes,resizable=yes');
+                
+                // Restore button state
+                if (originalBtn) {
+                    originalBtn.textContent = '☁️ OneDrive';
+                    originalBtn.disabled = false;
                 }
+                
+                if (popup && !popup.closed) {
+                    popup.document.write(popupContent);
+                    popup.document.close();
+                    popup.focus();
+                    
+                    // Add success feedback
+                    setTimeout(() => {
+                        if (originalBtn) {
+                            originalBtn.textContent = '✅ Opened';
+                            setTimeout(() => {
+                                originalBtn.textContent = '☁️ OneDrive';
+                            }, 2000);
+                        }
+                    }, 100);
+                    
+                } else {
+                    // Popup blocked or failed
+                    if (originalBtn) {
+                        originalBtn.textContent = '🚫 Blocked';
+                        setTimeout(() => {
+                            originalBtn.textContent = '☁️ OneDrive';
+                        }, 3000);
+                    }
+                    alert('OneDrive Integration\n\nPopup blocked! Please allow popups for this site to use OneDrive features.\n\nAlternatively, check browser console for OneDrive status.');
+                    if (typeof checkOneDriveStatus === 'function') {
+                        checkOneDriveStatus();
+                    }
+                }
+            } catch (error) {
+                // Error opening popup
+                if (originalBtn) {
+                    originalBtn.textContent = '❌ Error';
+                    originalBtn.disabled = false;
+                    setTimeout(() => {
+                        originalBtn.textContent = '☁️ OneDrive';
+                    }, 3000);
+                }
+                alert('Error opening OneDrive window: ' + error.message);
             }
             
             // Check OneDrive status and show appropriate content
