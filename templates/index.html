@@ -853,9 +853,9 @@
     </div>
 
     <!-- OneDrive Floating Action Button -->
-    <!-- OneDrive Floating Action Button with proper positioning and debugging -->
+    <!-- OneDrive Floating Action Button - simple and reliable -->
     <button id="onedriveFloatBtn" class="onedrive-float-btn" 
-            onclick="console.log('🔘 OneDrive button clicked!'); try { showOneDrivePanelProperly(); } catch(e) { console.error('❌ Button click error:', e); alert('Button error: ' + e.message); }"
+            onclick="console.log('🔘 Button clicked!'); showOneDrivePanelProperly();"
             style="position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 9999 !important; display: block !important;">
         ☁️
     </button>
@@ -872,65 +872,32 @@
         let saveTimeout = null;
         let csrfToken = null;
         
-        // Properly position and show OneDrive panel to avoid drag offset issues
+        // Simple, reliable OneDrive panel function - defined early to ensure availability
         function showOneDrivePanelProperly() {
-            try {
-                console.log('📂 Opening OneDrive panel with proper positioning...');
-                const panel = document.getElementById('onedrivePanel');
-                if (!panel) {
-                    console.error('OneDrive panel not found');
-                    alert('OneDrive panel not found in page');
-                    return;
-                }
-                
-                // Clear any existing positioning that might cause conflicts
-                panel.style.position = 'fixed';
-                panel.style.top = '';
-                panel.style.left = '';
-                panel.style.right = '';
-                panel.style.bottom = '';
-                
-                // Set a clear, explicit position using left/top (not right) to avoid drag offset issues
-                panel.style.top = '20px';
-                panel.style.left = (window.innerWidth - 520) + 'px'; // Position like top-right but using left
-                panel.style.zIndex = '1000';
-                
-                console.log('🎯 Panel positioned at left:', panel.style.left, 'top:', panel.style.top);
-                
-                // Remove dock classes that might interfere
-                panel.className = panel.className.replace(/\bdocked-\w+-\w+\b/g, '');
-                
-                // Show panel
-                panel.style.display = 'block';
-                console.log('✅ Panel positioned and displayed');
-                
-                // Add basic content if needed
-                const statusDiv = document.getElementById('onedriveStatus');
-                if (statusDiv) {
-                    statusDiv.innerHTML = 'Panel opened successfully';
-                }
-                
-                // Check status after a brief delay to avoid blocking
-                setTimeout(() => {
-                    if (typeof checkOneDriveStatus === 'function') {
-                        console.log('Calling checkOneDriveStatus...');
-                        checkOneDriveStatus();
-                    } else {
-                        console.log('checkOneDriveStatus not available');
-                        if (statusDiv) statusDiv.innerHTML = '⚠️ Status check unavailable';
-                    }
-                }, 100);
-                
-            } catch (e) {
-                console.error('showOneDrivePanelProperly error:', e);
-                alert('Error showing OneDrive panel: ' + e.message);
+            console.log('🚀 showOneDrivePanelProperly called!');
+            const panel = document.getElementById('onedrivePanel');
+            if (!panel) {
+                console.error('OneDrive panel not found');
+                alert('OneDrive panel not found');
+                return;
             }
+            
+            // Simple positioning
+            panel.style.display = 'block';
+            panel.style.position = 'fixed';
+            panel.style.top = '20px';
+            panel.style.right = '20px';
+            panel.style.zIndex = '1000';
+            
+            console.log('✅ OneDrive panel shown');
         }
-
-        // Legacy function for compatibility
+        
+        // Legacy compatibility
         function showOneDrivePanel() {
             showOneDrivePanelProperly();
         }
+        
+
 
         // Debug: Check if functions are defined
         window.addEventListener('load', function() {
