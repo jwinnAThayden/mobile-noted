@@ -860,17 +860,7 @@
         ☁️
     </button>
 
-    <!-- Test Drag Dialog -->
-    <div id="testDragDialog" style="display: none; position: fixed; top: 100px; left: 100px; width: 300px; background: white; border: 2px solid #007bff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000;">
-        <div class="dialog-header" style="background: #007bff; color: white; padding: 10px; cursor: move; user-select: none;">
-            <h3 style="margin: 0;">🧪 Test Drag Dialog</h3>
-        </div>
-        <div style="padding: 15px;">
-            <p>This is a test dialog to verify drag functionality works.</p>
-            <button onclick="document.getElementById('testDragDialog').style.display='none';" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Close</button>
-        </div>
-    </div>
-    <button onclick="document.getElementById('testDragDialog').style.display='block';" style="position: fixed; bottom: 90px; right: 20px; background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; z-index: 9999;">🧪 Test Drag</button>
+
 
     <!-- Hidden CSRF token for JavaScript -->
     {% if csrf_token %}
@@ -2728,23 +2718,23 @@
         }
         
         function setupOneDriveDragImmediate() {
-            console.log('Setting up universal dialog drag system...');
+            console.log('Setting up OneDrive panel drag system...');
             
-            // Global drag state for any draggable dialog
+            // Global drag state for OneDrive panel
             let dragData = {
                 isDragging: false,
                 startX: 0,
                 startY: 0,
-                startLeft: 0,
-                startTop: 0,
+                offsetX: 0,
+                offsetY: 0,
                 element: null
             };
             
-            // Add event listeners to document for universal dialog drag
+            // Add event listeners to document for OneDrive panel drag
             document.addEventListener('mousedown', function(e) {
                 console.log('🔍 Global mousedown:', e.target);
                 
-                // Find any dialog header element (works for both OneDrive and test dialogs)
+                // Find dialog header element for OneDrive panel
                 const header = e.target.closest('.dialog-header');
                 console.log('📋 Header found:', header);
                 
@@ -2753,12 +2743,12 @@
                     return;
                 }
                 
-                // Find the draggable container (could be OneDrive panel or test dialog)
-                const draggableElement = header.closest('#onedrivePanel, #testDragDialog');
-                console.log('🎯 Draggable element found:', draggableElement);
+                // Find the OneDrive panel container
+                const draggableElement = header.closest('#onedrivePanel');
+                console.log('🎯 OneDrive panel found:', draggableElement);
                 
                 if (!draggableElement) {
-                    console.log('❌ No draggable container found');
+                    console.log('❌ No OneDrive panel found');
                     return;
                 }
                 
@@ -2781,24 +2771,26 @@
                     return;
                 }
                 
-                console.log('✅ Dialog drag mousedown detected - starting drag');
+                console.log('✅ OneDrive panel drag detected - starting drag');
                 e.preventDefault();
+                
+                const rect = draggableElement.getBoundingClientRect();
                 
                 dragData.isDragging = true;
                 dragData.element = draggableElement;
                 dragData.startX = e.clientX;
                 dragData.startY = e.clientY;
                 
-                const rect = draggableElement.getBoundingClientRect();
-                dragData.startLeft = rect.left;
-                dragData.startTop = rect.top;
+                // Calculate offset from mouse to element's top-left corner
+                dragData.offsetX = e.clientX - rect.left;
+                dragData.offsetY = e.clientY - rect.top;
                 
                 draggableElement.style.position = 'fixed';
                 draggableElement.style.zIndex = '10001';
                 document.body.style.cursor = 'move';
                 document.body.style.userSelect = 'none';
                 
-                console.log('🚀 Dialog drag started for:', draggableElement.id);
+                console.log('🚀 OneDrive panel drag started with offset:', dragData.offsetX, dragData.offsetY);
             });
             
             document.addEventListener('mousemove', function(e) {
@@ -2806,11 +2798,9 @@
                 
                 e.preventDefault();
                 
-                const deltaX = e.clientX - dragData.startX;
-                const deltaY = e.clientY - dragData.startY;
-                
-                const newLeft = dragData.startLeft + deltaX;
-                const newTop = dragData.startTop + deltaY;
+                // Calculate new position using cursor offset for smooth dragging
+                const newLeft = e.clientX - dragData.offsetX;
+                const newTop = e.clientY - dragData.offsetY;
                 
                 // Constrain to viewport
                 const maxLeft = window.innerWidth - dragData.element.offsetWidth;
@@ -2828,7 +2818,7 @@
             
             document.addEventListener('mouseup', function(e) {
                 if (dragData.isDragging) {
-                    console.log('OneDrive drag ended');
+                    console.log('🏁 OneDrive panel drag ended');
                     dragData.isDragging = false;
                     dragData.element = null;
                     document.body.style.cursor = '';
