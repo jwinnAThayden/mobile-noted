@@ -1210,7 +1210,7 @@
                             const retryController = new AbortController();
                             const retryTimeoutId = setTimeout(() => {
                                 retryController.abort();
-                            }, 30000); // 30 seconds for retry
+                            }, 90000); // 90 seconds for retry on Railway
                             
                             const retryResponse = await fetch('/api/simple/onedrive/status', {
                                 method: 'GET',
@@ -1864,6 +1864,7 @@
         // ========= OneDrive Integration =========
         
         let oneDriveAuthTimer = null;
+        let authTimeoutCount = 0;  // Track timeout retries
         let autoSyncEnabled = false;
         
         // Load OneDrive status on page load
@@ -2012,6 +2013,7 @@
         // Start OneDrive authentication
         async function startOneDriveAuth() {
             console.log('🔍 🚀 CONNECT BUTTON CLICKED - Starting OneDrive authentication...');
+            authTimeoutCount = 0;  // Reset timeout counter for new auth attempt
             alert('Connect button clicked! Check console for details.');
             
             try {
@@ -2112,9 +2114,9 @@
                 // Create AbortController for timeout control
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => {
-                    console.log('⏱️ Auth progress check timed out after 15 seconds');
+                    console.log('⏱️ Auth progress check timed out after 45 seconds');
                     controller.abort();
-                }, 15000); // 15 seconds timeout for auth checks
+                }, 45000); // 45 seconds timeout for auth checks on Railway
                 
                 // Use simple endpoint to avoid authentication issues
                 const response = await fetch('/api/simple/onedrive/auth/check', {
@@ -2144,6 +2146,7 @@
                             clearInterval(oneDriveAuthTimer);
                             oneDriveAuthTimer = null;
                         }
+                        authTimeoutCount = 0;  // Reset timeout counter on success
                         showStatus('OneDrive connected successfully! ✅');
                         checkOneDriveStatus();
                         break;
@@ -2164,6 +2167,17 @@
                         checkOneDriveStatus();
                         break;
                         
+                    case 'not_found':
+                        console.log('🔄 Authentication flow lost, attempting to restart...');
+                        if (oneDriveAuthTimer) {
+                            clearInterval(oneDriveAuthTimer);
+                            oneDriveAuthTimer = null;
+                        }
+                        // Show error message and stop polling
+                        showStatus('Authentication flow lost due to server timeout. Please try connecting again.', true);
+                        checkOneDriveStatus();
+                        break;
+                        
                     default:
                         progressText.textContent = 'Checking authentication status...';
                         setTimeout(checkAuthProgress, 5000);
@@ -2173,13 +2187,27 @@
                 
                 // Handle timeout errors specifically
                 if (error.name === 'AbortError') {
-                    console.log('⏱️ Auth progress check timed out, will retry on next poll');
+                    authTimeoutCount++;
+                    console.log(`⏱️ Auth progress check timed out (${authTimeoutCount}/5), will retry on next poll`);
+                    
+                    if (authTimeoutCount >= 5) {
+                        console.log('❌ Too many auth timeouts, stopping retry attempts');
+                        if (oneDriveAuthTimer) {
+                            clearInterval(oneDriveAuthTimer);
+                            oneDriveAuthTimer = null;
+                        }
+                        showStatus('Authentication failed due to repeated server timeouts. Please try again later.', true);
+                        checkOneDriveStatus();
+                        authTimeoutCount = 0;  // Reset counter
+                        return;
+                    }
+                    
                     const progressText = document.getElementById('authProgressText');
                     if (progressText) {
-                        progressText.textContent = 'Connection timeout - retrying...';
+                        progressText.textContent = `Connection timeout - retrying (${authTimeoutCount}/5)...`;
                     }
-                    // Continue polling with longer delay for timeout recovery
-                    setTimeout(checkAuthProgress, 10000);
+                    // Continue polling with much longer delay for Railway timeout recovery
+                    setTimeout(checkAuthProgress, 20000);
                     return;
                 }
                 
