@@ -249,19 +249,32 @@
             }
         }
 
-        /* OneDrive Panel Styles */
+        /* OneDrive Panel Styles - Full Screen Modal */
         .onedrive-panel, .cloud-notes-browser {
             position: fixed;
-            top: 100px;
-            left: 100px;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .onedrive-content {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
             width: 90vw;
-            max-height: 70vh;
+            max-height: 80vh;
             overflow: hidden;
+            position: relative;
         }
 
         .panel-header {
@@ -748,14 +761,13 @@
         </div>
 
         <!-- OneDrive Integration Panel -->
-        <div id="onedrivePanel" class="onedrive-panel dialog-always-visible moveable-dialog docked-top-right" style="display: none;">
-            <div class="panel-header dialog-header" style="cursor: move; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; background: #007bff; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="pointer-events: none; margin: 0; font-size: 1.1em;">☁️ OneDrive Sync</h3>
-                <div class="dialog-controls" style="display: flex; gap: 5px;">
-                    <button class="dock-btn" onclick="toggleDockPosition('onedrivePanel')" title="Change dock position" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 8px; border-radius: 3px; cursor: pointer;">📌</button>
-                    <button class="dialog-close" onclick="hideOneDrivePanel()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 8px; border-radius: 3px; cursor: pointer;">✕</button>
+        <div id="onedrivePanel" class="onedrive-panel" style="display: none;">
+            <div class="onedrive-content">
+                <div class="dialog-header" style="background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 20px; border-radius: 15px 15px 0 0; position: relative;">
+                    <h3 style="margin: 0; font-size: 20px; font-weight: 600; text-align: center;">☁️ OneDrive Integration</h3>
+                    <button class="dialog-close" onclick="hideOneDrivePanel()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 50%; cursor: pointer; font-size: 16px;">✕</button>
                 </div>
-            </div>
+                <div style="padding: 30px; max-height: calc(80vh - 80px); overflow-y: auto;">
             <div class="panel-content">
                 <div id="onedriveStatus" class="onedrive-status">
                     <div class="status-indicator">
@@ -872,9 +884,9 @@
         let saveTimeout = null;
         let csrfToken = null;
         
-        // OneDrive panel function with proper status checking
+        // OneDrive full-screen modal function
         function showOneDrivePanelProperly() {
-            console.log('🚀 showOneDrivePanelProperly called!');
+            console.log('🚀 Opening OneDrive full-screen modal...');
             const panel = document.getElementById('onedrivePanel');
             if (!panel) {
                 console.error('OneDrive panel not found');
@@ -882,14 +894,11 @@
                 return;
             }
             
-            // Simple positioning
-            panel.style.display = 'block';
-            panel.style.position = 'fixed';
-            panel.style.top = '20px';
-            panel.style.right = '20px';
-            panel.style.zIndex = '1000';
+            // Show full-screen modal
+            panel.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
             
-            console.log('✅ OneDrive panel shown');
+            console.log('✅ OneDrive full-screen modal shown');
             
             // Check OneDrive status and show appropriate content
             const statusDiv = document.getElementById('onedriveStatus');
@@ -937,6 +946,15 @@
             const syncSection = document.querySelector('.sync-section');
             if (syncSection) {
                 syncSection.style.display = 'block';
+            }
+        }
+        
+        function hideOneDrivePanel() {
+            console.log('🚪 Closing OneDrive modal...');
+            const panel = document.getElementById('onedrivePanel');
+            if (panel) {
+                panel.style.display = 'none';
+                document.body.style.overflow = ''; // Restore scrolling
             }
         }
         
