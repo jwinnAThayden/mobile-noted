@@ -11,7 +11,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Personal Notes (v2.2)</title>
+    <title>📝 Mobile Noted - Personal Notes (v2.3)</title>
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/static/manifest.json">
@@ -1950,62 +1950,9 @@
         }
 
         // Show/hide OneDrive panel
-        function showOneDrivePanel() {
-            try {
+        // Removed conflicting showOneDrivePanel function - using popup approach instead
 
-                const panel = document.getElementById('onedrivePanel');
-                if (!panel) {
-                    // OneDrive panel element not found - using popup instead
-                    return;
-                }
-                
-                // Make panel visible with forced styling
-                panel.style.display = 'block';
-                panel.style.position = 'fixed';
-                panel.style.top = '50%';
-                panel.style.left = '50%';
-                panel.style.transform = 'translate(-50%, -50%)';
-                panel.style.zIndex = '10000';
-                panel.style.background = 'white';
-                panel.style.borderRadius = '15px';
-                panel.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3)';
-                panel.style.maxWidth = '500px';
-                panel.style.width = '90vw';
-                panel.style.maxHeight = '70vh';
-                
-                // Add content with working close button
-                panel.innerHTML = `
-                    <div class="panel-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 15px 15px 0 0;">
-                        <h3 style="margin: 0; font-size: 1.2em;">OneDrive Integration</h3>
-                        <button onclick="hideOneDrivePanel()" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px;">×</button>
-                    </div>
-                    <div class="panel-content" style="padding: 20px;">
-                        <div id="onedriveStatus">Loading OneDrive status...</div>
-                        <div style="margin-top: 15px;">
-                            <button onclick="checkOneDriveStatus()" class="btn" style="background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">Refresh Status</button>
-                            <button onclick="startOneDriveAuth()" class="btn" style="background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Connect OneDrive</button>
-                        </div>
-                    </div>
-                `;
-                
-                // Load OneDrive status
-                checkOneDriveStatus();
-                
-            } catch (e) {
-                console.error('Error in showOneDrivePanel:', e);
-                // OneDrive panel error - using popup instead
-            }
-        }
-
-        function hideOneDrivePanel() {
-            document.getElementById('onedrivePanel').style.display = 'none';
-            
-            // Cancel any active auth flow
-            if (oneDriveAuthTimer) {
-                clearInterval(oneDriveAuthTimer);
-                oneDriveAuthTimer = null;
-            }
-        }
+        // Removed hideOneDrivePanel function - using popup approach instead
 
         // Start OneDrive authentication
         async function startOneDriveAuth() {
