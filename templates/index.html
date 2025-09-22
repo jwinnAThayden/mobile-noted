@@ -750,11 +750,11 @@
 
         <!-- OneDrive Integration Panel -->
         <div id="onedrivePanel" class="onedrive-panel dialog-always-visible moveable-dialog docked-top-right" style="display: none;">
-            <div class="panel-header dialog-header" style="cursor: move; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;">
-                <h3 style="pointer-events: none;">☁️ OneDrive Sync</h3>
-                <div class="dialog-controls">
-                    <button class="dock-btn" onclick="toggleDockPosition('onedrivePanel')" title="Change dock position">📌</button>
-                    <button class="dialog-close" onclick="hideOneDrivePanel()">✕</button>
+            <div class="panel-header dialog-header" style="cursor: move; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; background: #007bff; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="pointer-events: none; margin: 0; font-size: 1.1em;">☁️ OneDrive Sync</h3>
+                <div class="dialog-controls" style="display: flex; gap: 5px;">
+                    <button class="dock-btn" onclick="toggleDockPosition('onedrivePanel')" title="Change dock position" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 8px; border-radius: 3px; cursor: pointer;">📌</button>
+                    <button class="dialog-close" onclick="hideOneDrivePanel()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 8px; border-radius: 3px; cursor: pointer;">✕</button>
                 </div>
             </div>
             <div class="panel-content">
@@ -765,6 +765,11 @@
                     </div>
                     <div id="accountInfo" class="account-info" style="display: none;">
                         <small id="accountEmail"></small>
+                    </div>
+                    <div style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                        <small>💡 <strong>Tip:</strong> Click and drag the header above to move this dialog</small>
+                        <br>
+                        <button onclick="initOneDriveDrag(); alert('Drag re-initialized!');" style="margin-top: 5px; padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">🔄 Re-init Drag</button>
                     </div>
                 </div>
                 
@@ -880,6 +885,9 @@
                 panel.style.display = 'block';
                 console.log('Panel displayed');
                 
+                // Initialize drag for this specific panel
+                initOneDriveDrag();
+                
                 // Add basic content if needed
                 const statusDiv = document.getElementById('onedriveStatus');
                 if (statusDiv) {
@@ -901,6 +909,80 @@
                 console.error('showOneDrivePanel error:', e);
                 alert('Error showing OneDrive panel: ' + e.message);
             }
+        }
+        
+        // Dedicated OneDrive panel drag functionality
+        function initOneDriveDrag() {
+            const panel = document.getElementById('onedrivePanel');
+            const header = panel ? panel.querySelector('.dialog-header') : null;
+            
+            if (!panel || !header) {
+                console.log('OneDrive panel or header not found for drag init');
+                return;
+            }
+            
+            console.log('Initializing OneDrive drag for panel:', panel.id);
+            
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+            
+            // Remove any existing listeners to avoid duplicates
+            header.onmousedown = function(e) {
+                console.log('OneDrive header mousedown:', e.target);
+                
+                // Don't drag if clicking on buttons
+                if (e.target.closest('.dialog-close, .dock-btn')) {
+                    console.log('Clicked on button, not dragging');
+                    return;
+                }
+                
+                e.preventDefault();
+                isDragging = true;
+                
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = panel.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                
+                panel.style.position = 'fixed';
+                panel.style.zIndex = '10001';
+                document.body.style.cursor = 'move';
+                
+                console.log('OneDrive drag started at:', startX, startY);
+                
+                document.onmousemove = function(e) {
+                    if (!isDragging) return;
+                    
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+                    
+                    const newLeft = startLeft + deltaX;
+                    const newTop = startTop + deltaY;
+                    
+                    // Keep within viewport
+                    const maxLeft = window.innerWidth - panel.offsetWidth;
+                    const maxTop = window.innerHeight - panel.offsetHeight;
+                    
+                    const constrainedLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                    const constrainedTop = Math.max(0, Math.min(newTop, maxTop));
+                    
+                    panel.style.left = constrainedLeft + 'px';
+                    panel.style.top = constrainedTop + 'px';
+                    
+                    // Remove dock classes when manually moved
+                    panel.className = panel.className.replace(/\bdocked-\w+-\w+\b/g, '');
+                };
+                
+                document.onmouseup = function() {
+                    isDragging = false;
+                    document.body.style.cursor = '';
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                    console.log('OneDrive drag ended');
+                };
+            };
         }
         
         function hideOneDrivePanel() {
