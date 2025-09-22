@@ -878,6 +878,10 @@
         // OneDrive full-screen modal function
         function showOneDrivePanelProperly() {
             console.log('🚀 Opening OneDrive full-screen modal...');
+            
+            // First, disable ALL other elements to prevent interference
+            document.body.style.pointerEvents = 'none';
+            
             const panel = document.getElementById('onedrivePanel');
             if (!panel) {
                 console.error('OneDrive panel not found');
@@ -885,61 +889,64 @@
                 return;
             }
             
-            // DEBUG: Add explicit styles to ensure visibility - MAXIMUM Z-INDEX
-            panel.style.position = 'fixed';
-            panel.style.top = '0';
-            panel.style.left = '0';
-            panel.style.width = '100vw';
-            panel.style.height = '100vh';
-            panel.style.backgroundColor = 'rgba(0, 0, 0, 0.95)'; // More opaque
-            panel.style.zIndex = '2147483647'; // Maximum possible z-index
-            panel.style.display = 'flex';
-            panel.style.alignItems = 'center';
-            panel.style.justifyContent = 'center';
-            panel.style.pointerEvents = 'auto'; // Ensure it can be clicked
+            // Remove any existing content first
+            panel.innerHTML = '';
             
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
-            
-            console.log('✅ OneDrive full-screen modal shown with explicit styles');
-            
-            // Create completely new, guaranteed-visible content
-            console.log('🎯 Creating super-visible modal content...');
-            panel.innerHTML = `
-                <div style="
-                    background: white !important; 
-                    padding: 40px !important; 
-                    border: 10px solid #ff0000 !important; 
-                    border-radius: 15px !important; 
-                    text-align: center !important;
-                    box-shadow: 0 0 50px rgba(255,0,0,0.8) !important;
-                    z-index: 2147483647 !important;
-                    position: relative !important;
-                    width: 500px !important;
-                    height: 300px !important;
-                    pointer-events: auto !important;
-                    font-size: 18px !important;
-                ">
-                    <h2 style="color: red !important; font-size: 24px !important; margin-bottom: 20px !important;">
-                        🚨 OneDrive Modal Test 🚨
-                    </h2>
-                    <p style="color: black !important; font-size: 16px !important; margin-bottom: 30px !important;">
-                        If you can see this, the modal is working!
-                    </p>
-                    <button onclick="hideOneDrivePanel()" style="
-                        background: #ff0000 !important; 
-                        color: white !important; 
-                        padding: 15px 30px !important; 
-                        border: none !important; 
-                        cursor: pointer !important;
-                        font-size: 16px !important;
-                        border-radius: 5px !important;
-                        box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
-                    ">
-                        ✕ CLOSE MODAL
-                    </button>
-                </div>
+            // Set panel properties
+            panel.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(255, 0, 0, 0.9) !important;
+                z-index: 2147483647 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                pointer-events: auto !important;
             `;
-            console.log('✅ Super-visible modal content created');
+            
+            // Create the modal content
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: yellow !important;
+                border: 15px solid blue !important;
+                padding: 50px !important;
+                text-align: center !important;
+                font-size: 24px !important;
+                font-weight: bold !important;
+                color: black !important;
+                cursor: pointer !important;
+                pointer-events: auto !important;
+                position: relative !important;
+                z-index: 2147483647 !important;
+            `;
+            
+            modalContent.innerHTML = `
+                <h1 style="color: red !important; font-size: 48px !important;">CLICK HERE TO CLOSE</h1>
+                <p style="font-size: 24px !important;">OneDrive Modal Test</p>
+            `;
+            
+            // Add click handler directly to the content
+            modalContent.onclick = function(e) {
+                console.log('Modal content clicked!');
+                e.stopPropagation();
+                hideOneDrivePanel();
+            };
+            
+            panel.appendChild(modalContent);
+            
+            // Also add click handler to background
+            panel.onclick = function(e) {
+                if (e.target === panel) {
+                    console.log('Background clicked!');
+                    hideOneDrivePanel();
+                }
+            };
+            
+            document.body.style.overflow = 'hidden';
+            console.log('✅ EXTREME visibility modal created');
             
             // Check OneDrive status and show appropriate content
             const statusDiv = document.getElementById('onedriveStatus');
@@ -996,7 +1003,9 @@
             if (panel) {
                 panel.style.display = 'none';
                 document.body.style.overflow = ''; // Restore scrolling
+                document.body.style.pointerEvents = ''; // Restore pointer events
             }
+            console.log('✅ Modal closed and events restored');
         }
         
         // Legacy compatibility
