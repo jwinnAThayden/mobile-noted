@@ -1694,7 +1694,7 @@ def simple_check_onedrive_auth():
             })
         
         logger.info(f"🔍 Checking auth progress for session: {session_id}")
-        auth_result = onedrive_manager.check_device_flow_auth(session_id)
+        auth_result = onedrive_manager.check_device_flow_status(session_id)
         logger.info(f"🔍 Auth check result: {auth_result}")
         
         if auth_result:
