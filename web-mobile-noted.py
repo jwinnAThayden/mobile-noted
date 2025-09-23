@@ -633,6 +633,7 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'app': 'Web Mobile Noted',
+        'version': '1.1.0-onedrive-fix',
         'timestamp': datetime.now().isoformat(),
         'environment': 'production' if (os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT')) else 'development'
     })
