@@ -936,12 +936,65 @@
                 </div>
                 
                 <div id="onedriveControls">
-                    <div id="onedriveAuthSection" style="display: none;">
-                        <h4 style="margin: 15px 0 10px 0; color: #0078d4;">🔗 Connection</h4>
+                    <!-- Auth controls (aliased for compatibility) -->
+                    <div id="authControls" style="display: none;">
                         <button class="btn onedrive-btn" onclick="startOneDriveAuth()" style="background: #0078d4; margin: 5px;">🔗 Connect OneDrive</button>
                     </div>
                     
-                    <div id="onedriveSyncSection" style="display: none;">
+                    <!-- Device flow display -->
+                    <div id="deviceFlowDisplay" style="display: none; padding: 15px;">
+                        <div class="device-flow-info">
+                            <h4 style="color: #0078d4; margin-bottom: 15px;">🔗 OneDrive Authentication</h4>
+                            
+                            <div style="background: #fff; border: 2px solid #0078d4; border-radius: 8px; padding: 15px; margin: 10px 0;">
+                                <div style="margin-bottom: 10px;">
+                                    <strong>1. Visit this URL:</strong><br>
+                                    <a id="verificationUrl" href="#" target="_blank" style="color: #0078d4; font-weight: bold; font-size: 1.1em;">
+                                        Loading...
+                                    </a>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <strong>2. Enter this code:</strong><br>
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                                        <span id="deviceCode" style="font-family: monospace; font-size: 1.3em; font-weight: bold; color: #0078d4; background: #f0f8ff; padding: 8px 12px; border-radius: 4px; border: 1px solid #0078d4;">
+                                            Loading...
+                                        </span>
+                                        <button onclick="copyDeviceCode()" class="copy-btn" style="background: #0078d4; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">📋 Copy</button>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 10px;">
+                                    <strong>Time Remaining:</strong><br>
+                                    <div class="progress-bar" style="background: #f0f0f0; border-radius: 10px; height: 20px; margin: 5px 0; overflow: hidden;">
+                                        <div id="progressFill" class="progress-fill" style="background: linear-gradient(90deg, #0078d4, #106ebe); height: 100%; width: 100%; transition: width 1s ease;"></div>
+                                    </div>
+                                    <div id="authProgressText" style="font-size: 0.9em; color: #666;">Initializing...</div>
+                                </div>
+                            </div>
+                            
+                            <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                                <h5 style="margin: 0 0 10px 0; color: #0078d4;">📱 How to Complete Authentication</h5>
+                                <ol style="margin: 5px 0; padding-left: 20px; color: #333;">
+                                    <li>Click the link above to open Microsoft's device login page</li>
+                                    <li>Enter the code shown above</li>
+                                    <li>Sign in with your Microsoft account</li>
+                                    <li>Return here - connection will complete automatically</li>
+                                </ol>
+                                <p style="margin: 10px 0 0 0; font-size: 0.9em; color: #666;">
+                                    ⏰ You have 15 minutes to complete this process.
+                                </p>
+                            </div>
+                            
+                            <div class="button-group" style="text-align: center; margin-top: 20px;">
+                                <button class="btn onedrive-btn" onclick="checkAuthProgress()" style="background: #28a745; margin-right: 10px;">🔄 Check Status</button>
+                                <button class="btn delete" onclick="cancelOneDriveAuth()" style="background: #dc3545;">❌ Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sync controls (aliased for compatibility) -->
+                    <div id="syncControls" style="display: none;">
                         <h4 style="margin: 15px 0 10px 0; color: #0078d4;">☁️ Sync Operations</h4>
                         <button class="btn onedrive-btn" onclick="syncToOneDrive()" style="background: #0078d4; margin: 5px;">⬆️ Push to Cloud</button>
                         <button class="btn onedrive-btn" onclick="syncFromOneDrive()" style="background: #0078d4; margin: 5px;">⬇️ Pull from Cloud</button>
