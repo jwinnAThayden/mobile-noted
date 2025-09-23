@@ -793,20 +793,7 @@
                         </div>
                         
                         <!-- Device flow display -->
-                        <div id="deviceFlowDisplay" style="display: none;">
-                            <div class="device-flow-info">
-                                <h4>Device Authentication</h4>
-                                <p>Please visit: <strong id="verificationUrl"></strong></p>
-                                <p>Enter code: <strong id="deviceCode"></strong></p>
-                                <div class="progress-bar">
-                                    <div id="progressFill" class="progress-fill" style="width: 0%;"></div>
-                                </div>
-                                <div class="button-group">
-                                    <button class="btn onedrive-btn" onclick="checkAuthProgress()">🔄 Check Status</button>
-                                    <button class="btn delete" onclick="cancelOneDriveAuth()">❌ Cancel</button>
-                                </div>
-                            </div>
-                        </div>
+
                         
                         <!-- Sync controls -->
                         <div id="syncControls" style="display: none;">
@@ -2111,7 +2098,10 @@
             const verificationUrl = document.getElementById('verificationUrl');
             const deviceCode = document.getElementById('deviceCode');
             const progressFill = document.getElementById('progressFill');
+            const authProgressText = document.getElementById('authProgressText');
             
+            // Set up verification URL as clickable link
+            verificationUrl.href = authFlow.verification_uri;
             verificationUrl.textContent = authFlow.verification_uri;
             deviceCode.textContent = authFlow.user_code;
             
@@ -2121,14 +2111,33 @@
             const expiresIn = authFlow.expires_in || 1800; // 30 minutes default
             let elapsed = 0;
             
+            // Initial progress text
+            if (authProgressText) {
+                authProgressText.textContent = `Waiting for authentication... (${Math.round((expiresIn - elapsed) / 60)} minutes remaining)`;
+            }
+            
             oneDriveAuthTimer = setInterval(() => {
                 elapsed += 5;
                 const progress = (elapsed / expiresIn) * 100;
+                const remainingMinutes = Math.max(0, Math.round((expiresIn - elapsed) / 60));
+                
                 progressFill.style.width = Math.min(progress, 100) + '%';
+                
+                // Update progress text
+                if (authProgressText) {
+                    if (remainingMinutes > 0) {
+                        authProgressText.textContent = `Waiting for authentication... (${remainingMinutes} minutes remaining)`;
+                    } else {
+                        authProgressText.textContent = 'Time almost up! Please complete authentication now.';
+                    }
+                }
                 
                 if (elapsed >= expiresIn) {
                     clearInterval(oneDriveAuthTimer);
                     oneDriveAuthTimer = null;
+                    if (authProgressText) {
+                        authProgressText.textContent = 'Authentication expired';
+                    }
                     showStatus('Authentication expired. Please try again.', true);
                     checkOneDriveStatus();
                 }
