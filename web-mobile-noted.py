@@ -917,6 +917,19 @@ def delete_note(note_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # OneDrive Integration Endpoints
+@app.route('/api/csrf-token', methods=['GET'])
+def csrf_token():
+    """Get CSRF token - only available when authentication is enabled"""
+    if AUTH_ENABLED and csrf:
+        try:
+            token = generate_csrf()
+            return jsonify({'csrf_token': token})
+        except Exception as e:
+            logger.warning(f"Failed to generate CSRF token: {e}")
+            return jsonify({'error': 'Failed to generate CSRF token'}), 500
+    else:
+        return jsonify({'error': 'CSRF protection disabled'}), 404
+
 @app.route('/api/onedrive/status', methods=['GET'])
 @login_required
 def onedrive_status():

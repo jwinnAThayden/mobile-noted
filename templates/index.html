@@ -1273,17 +1273,46 @@
                         return csrfToken;
                     }
                     
-                    // Fallback: try to fetch from login page (older method)
-                    const response = await fetch('/login');
-                    const text = await response.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(text, 'text/html');
-                    const loginTokenInput = doc.querySelector('input[name="csrf_token"]');
-                    if (loginTokenInput) {
-                        csrfToken = loginTokenInput.value;
+                    // Check if we have a CSRF meta tag (common pattern)
+                    const metaTag = document.querySelector('meta[name="csrf-token"]');
+                    if (metaTag) {
+                        csrfToken = metaTag.getAttribute('content');
+                        return csrfToken;
                     }
+                    
+                    // Fallback: try to fetch CSRF token from a dedicated endpoint
+                    try {
+                        const response = await fetch('/api/csrf-token');
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.csrf_token) {
+                                csrfToken = data.csrf_token;
+                                return csrfToken;
+                            }
+                        }
+                    } catch (endpointError) {
+                        console.log('CSRF endpoint not available (likely disabled)');
+                    }
+                    
+                    // Last resort: try login page (may redirect if auth disabled)
+                    const loginResponse = await fetch('/login');
+                    if (loginResponse.ok && !loginResponse.redirected) {
+                        const text = await loginResponse.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(text, 'text/html');
+                        const loginTokenInput = doc.querySelector('input[name="csrf_token"]');
+                        if (loginTokenInput) {
+                            csrfToken = loginTokenInput.value;
+                            return csrfToken;
+                        }
+                    }
+                    
+                    // If we get here, CSRF is likely disabled
+                    console.log('CSRF token not found - authentication/CSRF may be disabled');
+                    return null;
+                    
                 } catch (error) {
-                    console.warn('Could not fetch CSRF token (may be disabled):', error);
+                    console.warn('Could not fetch CSRF token (likely disabled):', error);
                     // CSRF may be disabled, return null
                     return null;
                 }
