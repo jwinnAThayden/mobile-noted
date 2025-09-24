@@ -683,7 +683,14 @@ def index():
         except Exception as e:
             logger.warning(f"Could not generate CSRF token: {e}")
     
-    return render_template('index.html', csrf_token=csrf_token)
+    response = make_response(render_template('index.html', csrf_token=csrf_token))
+    
+    # Add cache-busting headers for Railway deployment to ensure fresh content
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    
+    return response
 
 @app.route('/api/notes', methods=['GET'])
 @login_required
@@ -1325,8 +1332,15 @@ def favicon():
 
 @app.route('/static/<path:filename>')
 def static_files(filename):
-    """Serve static files"""
-    return send_from_directory(os.path.join(app.root_path, 'static'), filename)
+    """Serve static files with cache-busting headers"""
+    response = send_from_directory(os.path.join(app.root_path, 'static'), filename)
+    
+    # Add cache-busting headers to ensure Railway serves updated files
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    
+    return response
 
 @app.route('/debug/onedrive')
 def debug_onedrive():
