@@ -760,7 +760,7 @@
             <button class="btn" onclick="addNewNote()">➕ New Note</button>
             <button class="btn" onclick="saveAllNotes()">💾 Save All</button>
             <button class="btn delete" onclick="deleteAllNotes()">🗑️ Clear All</button>
-            <button id="onedriveFloatBtn" class="btn" onclick="showOneDrivePanelProperly()" style="background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);">☁️ OneDrive</button>
+            <button id="onedriveFloatBtn" class="btn" onclick="console.log('OneDrive button clicked!'); showOneDrivePanelProperly()" style="background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);">☁️ OneDrive</button>
             <a href="/devices" class="btn" style="text-decoration: none; display: inline-block; text-align: center; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">🔒 Devices</a>
             <button class="btn" onclick="logout()" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">🚪 Logout</button>
         </div>
@@ -831,8 +831,12 @@
         
         // OneDrive modal dialog - stays within the main page for better UX
         function showOneDrivePanelProperly() {
+            console.log('🔧 showOneDrivePanelProperly function called');
+            
             // Update button state
             const originalBtn = document.getElementById('onedriveFloatBtn');
+            console.log('🔧 Found button element:', originalBtn);
+            
             if (originalBtn) {
                 originalBtn.textContent = '🔄 Loading...';
                 originalBtn.disabled = true;
@@ -1498,6 +1502,9 @@
         }
 
         function showMoveableDialog(title, content, buttons = []) {
+            console.log('🔧 showMoveableDialog called with title:', title);
+            console.log('🔧 Content length:', content.length);
+            
             const dialogId = 'dialog-' + Date.now();
             const dialog = document.createElement('div');
             dialog.id = dialogId;
@@ -1529,6 +1536,7 @@
             `;
             
             document.body.appendChild(dialog);
+            console.log('✅ Dialog created and added to DOM with ID:', dialogId);
             return dialogId;
         }
 
