@@ -911,6 +911,15 @@
                         <button class="btn" onclick="showOneDriveNotes()" style="background: #6c757d; color: white; margin: 5px;">📋 View Cloud Notes</button>
                         <button class="btn" onclick="cleanupOneDriveDuplicates()" style="background: #28a745; color: white; margin: 5px;">🧹 Clean Duplicates</button>
                         
+                        <h4 style="margin: 15px 0 10px 0; color: #0078d4;">⚙️ Auto-Sync</h4>
+                        <div style="background: #f0f8ff; padding: 10px; border-radius: 5px; margin: 5px; border: 1px solid #0078d4;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" id="autoSyncToggle" onclick="toggleAutoSync()" style="margin-right: 10px; transform: scale(1.2);"> 
+                                <span style="color: #0078d4; font-weight: bold;">🔄 Automatically sync changes to cloud</span>
+                            </label>
+                            <small style="color: #666; margin-left: 25px; display: block; margin-top: 5px;">When enabled, notes are automatically backed up when you make changes</small>
+                        </div>
+                        
                         <h4 style="margin: 15px 0 10px 0; color: #0078d4;">🔧 Management</h4>
                         <button class="btn delete" onclick="logoutOneDrive()" style="background: #dc3545; color: white; margin: 5px;">🚪 Disconnect</button>
                     </div>
@@ -1255,6 +1264,10 @@
                                 csrfToken = data.csrf_token;
                                 return csrfToken;
                             }
+                        } else if (response.status === 404) {
+                            // CSRF is disabled, return null to indicate no CSRF token needed
+                            console.log('CSRF protection disabled - no token required');
+                            return null;
                         }
                     } catch (endpointError) {
                         console.log('CSRF endpoint not available (likely disabled)');
@@ -2012,7 +2025,6 @@
         async function startOneDriveAuth() {
             console.log('🔍 🚀 CONNECT BUTTON CLICKED - Starting OneDrive authentication...');
             authTimeoutCount = 0;  // Reset timeout counter for new auth attempt
-            alert('Connect button clicked! Check console for details.');
             
             try {
                 // Try the simple endpoint first (more reliable)
@@ -2509,7 +2521,7 @@
 
         // Toggle auto-sync
         function toggleAutoSync() {
-            const checkbox = document.getElementById('autoSync');
+            const checkbox = document.getElementById('autoSyncToggle');
             autoSyncEnabled = checkbox.checked;
             
             // Save setting to localStorage
