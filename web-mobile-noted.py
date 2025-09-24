@@ -984,7 +984,13 @@ def onedrive_status():
 @limiter.limit("5 per minute")
 def start_onedrive_auth():
     """Start OneDrive device flow authentication"""
+    logger.info("🔧 DEBUG: OneDrive auth start endpoint called")
+    logger.info(f"🔧 DEBUG: ONEDRIVE_AVAILABLE = {ONEDRIVE_AVAILABLE}")
+    logger.info(f"🔧 DEBUG: onedrive_manager exists = {onedrive_manager is not None}")
+    logger.info(f"🔧 DEBUG: NOTED_CLIENT_ID set = {bool(os.environ.get('NOTED_CLIENT_ID'))}")
+    
     if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        logger.error("🔧 DEBUG: OneDrive not available - returning 503")
         return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
     
     try:
