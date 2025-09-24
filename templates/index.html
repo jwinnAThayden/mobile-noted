@@ -831,14 +831,10 @@
         let csrfToken = null;
         
         // OneDrive modal dialog - stays within the main page for better UX
-        console.log('🔧 Defining showOneDrivePanelProperly function...');
-        
         function showOneDrivePanelProperly() {
-            console.log('🔧 showOneDrivePanelProperly function called');
             
             // Update button state
             const originalBtn = document.getElementById('onedriveFloatBtn');
-            console.log('🔧 Found button element:', originalBtn);
             
             if (originalBtn) {
                 originalBtn.textContent = '🔄 Loading...';
@@ -963,7 +959,6 @@
         
         // Ensure function is globally accessible for Railway
         window.showOneDrivePanelProperly = showOneDrivePanelProperly;
-        console.log('🔧 showOneDrivePanelProperly assigned to window:', typeof window.showOneDrivePanelProperly);
         
         // Progress tracking functions
         function showOperationProgress(message, percentage = 0) {
@@ -1509,8 +1504,6 @@
         }
 
         function showMoveableDialog(title, content, buttons = []) {
-            console.log('🔧 showMoveableDialog called with title:', title);
-            console.log('🔧 Content length:', content.length);
             
             const dialogId = 'dialog-' + Date.now();
             const dialog = document.createElement('div');
@@ -1543,7 +1536,6 @@
             `;
             
             document.body.appendChild(dialog);
-            console.log('✅ Dialog created and added to DOM with ID:', dialogId);
             return dialogId;
         }
 
@@ -3155,8 +3147,11 @@
                 const originalLength = notes.length;
                 const cleanedNotes = [];
                 
+                // Get current note index safely
+                const currentIndex = (typeof currentNoteIndex !== 'undefined') ? currentNoteIndex : -1;
+                
                 for (let i = 0; i < notes.length; i++) {
-                    if (openTabIndices.includes(i) || i === currentNoteIndex) {
+                    if (openTabIndices.includes(i) || i === currentIndex) {
                         cleanedNotes.push(notes[i]);
                     }
                 }
