@@ -831,6 +831,8 @@
         let csrfToken = null;
         
         // OneDrive modal dialog - stays within the main page for better UX
+        console.log('🔧 Defining showOneDrivePanelProperly function...');
+        
         function showOneDrivePanelProperly() {
             console.log('🔧 showOneDrivePanelProperly function called');
             
@@ -958,6 +960,10 @@
                 originalBtn.disabled = false;
             }
         }
+        
+        // Ensure function is globally accessible for Railway
+        window.showOneDrivePanelProperly = showOneDrivePanelProperly;
+        console.log('🔧 showOneDrivePanelProperly assigned to window:', typeof window.showOneDrivePanelProperly);
         
         // Progress tracking functions
         function showOperationProgress(message, percentage = 0) {
@@ -2733,7 +2739,10 @@
                 
                 if (data.success) {
                     const stats = data.stats;
-                    updateProgressBar('onedrive-progress', 100, 'Cleanup completed successfully!');\n                    showStatus(`Cleanup completed: ${stats.duplicates_removed} duplicates removed from ${stats.groups_processed} groups`);\n                    \n                    setTimeout(() => hideProgressBar('onedrive-progress'), 2000);
+                    updateProgressBar('onedrive-progress', 100, 'Cleanup completed successfully!');
+                    showStatus(`Cleanup completed: ${stats.duplicates_removed} duplicates removed from ${stats.groups_processed} groups`);
+                    
+                    setTimeout(() => hideProgressBar('onedrive-progress'), 2000);
                 } else {
                     hideProgressBar('onedrive-progress');
                     showStatus('Cleanup failed: ' + data.error, true);
