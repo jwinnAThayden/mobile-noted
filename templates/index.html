@@ -906,6 +906,15 @@
                     <!-- Sync controls (aliased for compatibility) -->
                     <div id="syncControls" style="display: none;">
                         <h4 style="margin: 15px 0 10px 0; color: #0078d4;">☁️ Sync Operations</h4>
+                        
+                        <!-- Progress bar for OneDrive operations -->
+                        <div id="onedrive-progress" class="progress-container" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <div class="progress-text">Initializing...</div>
+                        </div>
+                        
                         <button class="btn onedrive-btn" onclick="syncToOneDrive()" style="background: #0078d4; margin: 5px;">⬆️ Push to Cloud</button>
                         <button class="btn onedrive-btn" onclick="syncFromOneDrive()" style="background: #0078d4; margin: 5px;">⬇️ Pull from Cloud</button>
                         <button class="btn" onclick="showOneDriveNotes()" style="background: #6c757d; color: white; margin: 5px;">📋 View Cloud Notes</button>
@@ -945,6 +954,92 @@
             }
         }
         
+        // Progress tracking functions
+        function showOperationProgress(message, percentage = 0) {
+            const container = document.getElementById('onedriveModalStatus') || document.getElementById('onedriveStatus');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="operation-status loading">
+                    <div class="spinner"></div>
+                    <div>
+                        <div>${message}</div>
+                        <div class="progress-container" style="margin-top: 8px; height: 20px;">
+                            <div class="progress-bar" style="width: ${percentage}%">
+                                <div class="progress-text">${percentage}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showOperationSuccess(message) {
+            const container = document.getElementById('onedriveModalStatus') || document.getElementById('onedriveStatus');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="operation-status success">
+                    <span>✅</span>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+        
+        function showOperationError(message) {
+            const container = document.getElementById('onedriveModalStatus') || document.getElementById('onedriveStatus');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="operation-status error">
+                    <span>❌</span>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+        
+        // Auto-load OneDrive notes on successful authentication
+        async function loadOneDriveNotesOnStartup() {
+            try {
+                console.log('🔄 Auto-loading OneDrive notes after authentication...');
+                showOperationProgress('Loading your notes from OneDrive...', 25);
+                
+                const response = await fetch('/api/simple/onedrive/sync/pull', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                showOperationProgress('Processing OneDrive notes...', 75);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showOperationSuccess(`Loaded ${result.notes_loaded || 0} notes from OneDrive`);
+                        // Refresh the notes display
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        showOperationError(`Failed to load notes: ${result.error}`);
+                    }
+                } else {
+                    showOperationError('Failed to connect to OneDrive');
+                }
+            } catch (error) {
+                console.error('Error loading OneDrive notes:', error);
+                showOperationError('Error loading notes from OneDrive');
+            }
+        }
+        
+        function hideDeviceFlowDisplay() {
+            const deviceFlowDisplay = document.getElementById('deviceFlowDisplay');
+            if (deviceFlowDisplay) {
+                deviceFlowDisplay.style.display = 'none';
+            }
+        }
+
         // Update OneDrive status within the modal
         function updateOneDriveModalStatus() {
             console.log('🔍 Updating OneDrive modal status...');
@@ -1354,6 +1449,52 @@
             setTimeout(() => {
                 status.classList.remove('show');
             }, 3000);
+        }
+
+        // Progress bar helper functions
+        function showProgressBar(progressId, message) {
+            const progressContainer = document.getElementById(progressId);
+            if (progressContainer) {
+                const progressText = progressContainer.querySelector('.progress-text');
+                const progressFill = progressContainer.querySelector('.progress-fill');
+                
+                if (progressText) progressText.textContent = message;
+                if (progressFill) {
+                    progressFill.style.width = '0%';
+                    progressFill.style.background = '#0078d4';
+                }
+                
+                progressContainer.style.display = 'block';
+            }
+        }
+
+        function updateProgressBar(progressId, percentage, message) {
+            const progressContainer = document.getElementById(progressId);
+            if (progressContainer) {
+                const progressText = progressContainer.querySelector('.progress-text');
+                const progressFill = progressContainer.querySelector('.progress-fill');
+                
+                if (progressText) progressText.textContent = message;
+                if (progressFill) {
+                    progressFill.style.width = percentage + '%';
+                    
+                    // Change color based on progress
+                    if (percentage >= 100) {
+                        progressFill.style.background = '#28a745'; // Success green
+                    } else if (percentage >= 75) {
+                        progressFill.style.background = '#17a2b8'; // Info blue
+                    } else {
+                        progressFill.style.background = '#0078d4'; // Primary blue
+                    }
+                }
+            }
+        }
+
+        function hideProgressBar(progressId) {
+            const progressContainer = document.getElementById(progressId);
+            if (progressContainer) {
+                progressContainer.style.display = 'none';
+            }
         }
 
         function showMoveableDialog(title, content, buttons = []) {
@@ -2179,8 +2320,31 @@
                             oneDriveAuthTimer = null;
                         }
                         authTimeoutCount = 0;  // Reset timeout counter on success
+                        
+                        // Enhanced success feedback
+                        const progressFill = document.getElementById('progressFill');
+                        if (progressFill) {
+                            progressFill.style.width = '100%';
+                            progressFill.style.background = '#28a745';
+                        }
+                        if (progressText) {
+                            progressText.textContent = '✅ Authentication successful! Connecting...';
+                            progressText.style.color = '#28a745';
+                        }
+                        
                         showStatus('OneDrive connected successfully! ✅');
-                        checkOneDriveStatus();
+                        
+                        // Update modal status and close device flow
+                        setTimeout(() => {
+                            updateOneDriveModalStatus();
+                            hideDeviceFlowDisplay();
+                        }, 1500);
+                        
+                        // Auto-load OneDrive notes after successful connection
+                        setTimeout(() => {
+                            loadOneDriveNotesOnStartup();
+                        }, 2000);
+                        
                         break;
                         
                     case 'pending':
@@ -2322,7 +2486,13 @@
         // Sync notes to OneDrive
         async function syncToOneDrive() {
             try {
+                // Show progress bar
+                showProgressBar('onedrive-progress', 'Preparing sync to OneDrive...');
+                
                 showStatus('Syncing to OneDrive...', false);
+                
+                // Update progress - connecting
+                updateProgressBar('onedrive-progress', 25, 'Connecting to OneDrive...');
                 
                 // Try authenticated endpoint first
                 let response = await authenticatedFetch('/api/onedrive/sync/push', {
@@ -2331,6 +2501,7 @@
                 
                 // If that fails, try the simple endpoint
                 if (!response) {
+                    updateProgressBar('onedrive-progress', 40, 'Retrying connection...');
                     response = await fetch('/api/simple/onedrive/sync/push', {
                         method: 'POST',
                         headers: {
@@ -2339,10 +2510,17 @@
                     });
                 }
                 
-                if (!response) return;
+                if (!response) {
+                    hideProgressBar('onedrive-progress');
+                    return;
+                }
+                
+                updateProgressBar('onedrive-progress', 60, 'Processing sync data...');
                 const data = await response.json();
                 
                 if (data.success) {
+                    updateProgressBar('onedrive-progress', 90, 'Finalizing sync...');
+                    
                     const stats = data.stats;
                     showStatus(`Synced to OneDrive: ${stats.created} created, ${stats.updated} updated`);
                     
@@ -2351,10 +2529,22 @@
                     
                     // Update modal status if it's open
                     setTimeout(() => updateOneDriveModalStatus(), 500);
+                    
+                    // Complete progress
+                    updateProgressBar('onedrive-progress', 100, 'Sync completed successfully!');
+                    setTimeout(() => hideProgressBar('onedrive-progress'), 2000);
+                    
+                    // Complete progress
+                    updateProgressBar('onedrive-progress', 100, 'Sync from OneDrive completed!');
+                    setTimeout(() => hideProgressBar('onedrive-progress'), 2000);
                 } else {
+                    hideProgressBar('onedrive-progress');
+                    hideProgressBar('onedrive-progress');
                     showStatus('Sync failed: ' + data.error, true);
                 }
             } catch (error) {
+                hideProgressBar('onedrive-progress');
+                hideProgressBar('onedrive-progress');
                 showStatus('Sync error: ' + error.message, true);
             }
         }
@@ -2368,7 +2558,13 @@
                     }
                 }
                 
+                // Show progress bar
+                showProgressBar('onedrive-progress', 'Preparing to sync from OneDrive...');
+                
                 showStatus('Syncing from OneDrive...', false);
+                
+                // Update progress - connecting
+                updateProgressBar('onedrive-progress', 20, 'Connecting to OneDrive...');
                 
                 // Try authenticated endpoint first
                 let response = await authenticatedFetch('/api/onedrive/sync/pull', {
@@ -2380,6 +2576,7 @@
                 
                 // If that fails, try the simple endpoint
                 if (!response) {
+                    updateProgressBar('onedrive-progress', 35, 'Retrying connection...');
                     response = await fetch('/api/simple/onedrive/sync/pull', {
                         method: 'POST',
                         headers: {
@@ -2391,14 +2588,22 @@
                     });
                 }
                 
-                if (!response) return;
+                if (!response) {
+                    hideProgressBar('onedrive-progress');
+                    return;
+                }
+                
+                updateProgressBar('onedrive-progress', 60, 'Downloading notes from cloud...');
                 const data = await response.json();
                 
                 if (data.success) {
+                    updateProgressBar('onedrive-progress', 80, 'Processing downloaded notes...');
+                    
                     const stats = data.stats;
                     showStatus(`Synced from OneDrive: ${stats.loaded} notes loaded`);
                     
                     // Reload notes with cloud data
+                    updateProgressBar('onedrive-progress', 95, 'Loading notes into interface...');
                     loadNotes();
                     
                     // Update modal status if it's open
@@ -2498,23 +2703,35 @@
             }
             
             try {
+                // Show progress bar
+                showProgressBar('onedrive-progress', 'Scanning OneDrive for duplicates...');
+                
                 showStatus('Cleaning up OneDrive duplicates...', false);
+                
+                updateProgressBar('onedrive-progress', 30, 'Analyzing duplicate files...');
                 
                 const response = await authenticatedFetch('/api/onedrive/cleanup-duplicates', {
                     method: 'POST'
                 });
                 
-                if (!response) return;
+                if (!response) {
+                    hideProgressBar('onedrive-progress');
+                    return;
+                }
+                
+                updateProgressBar('onedrive-progress', 70, 'Removing duplicate files...');
                 const data = await response.json();
                 
                 if (data.success) {
                     const stats = data.stats;
-                    showStatus(`Cleanup completed: ${stats.duplicates_removed} duplicates removed from ${stats.groups_processed} groups`);
+                    updateProgressBar('onedrive-progress', 100, 'Cleanup completed successfully!');\n                    showStatus(`Cleanup completed: ${stats.duplicates_removed} duplicates removed from ${stats.groups_processed} groups`);\n                    \n                    setTimeout(() => hideProgressBar('onedrive-progress'), 2000);
                 } else {
+                    hideProgressBar('onedrive-progress');
                     showStatus('Cleanup failed: ' + data.error, true);
                 }
             } catch (error) {
                 console.error('OneDrive cleanup error:', error);
+                hideProgressBar('onedrive-progress');
                 showStatus('Cleanup error: ' + error.message, true);
             }
         }
