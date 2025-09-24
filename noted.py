@@ -76,6 +76,17 @@ class EditableBoxApp:
         self.prev_geometry = None
         self._geometry_debounce_job = None
         self._last_geometry = None
+        
+        # Tab drag-and-drop state
+        self._drag_data = {
+            "dragging": False,
+            "start_tab": None,
+            "start_x": 0,
+            "start_y": 0
+        }
+        
+        # Startup state flag to prevent auto-sorting during initial load
+        self._app_startup_complete = False
 
         # Early restore of last geometry (before building UI to reduce flicker)
         try:
@@ -294,6 +305,9 @@ class EditableBoxApp:
         """Initialize tabbed mode and close progress dialog."""
         try:
             self._initialize_tabbed_mode()
+            # Mark app startup as complete to enable auto-sorting for new tabs
+            self._app_startup_complete = True
+            print("DEBUG: App startup completed - auto-sorting enabled for new tabs")
         finally:
             progress.close()
 
@@ -624,6 +638,7 @@ class EditableBoxApp:
                             # Show first line of content as progress
                             first_line = content.split('\n')[0][:30] if content else "Empty note"
                             print(f"DEBUG: Loading note {i+1}/{len(boxes)}: {first_line}")
+                            print(f"DEBUG: Raw title from layout.json: '{title}'")
                             
                             # For OneDrive notes, prioritize stored title (for renamed files) over cache
                             onedrive_name = None
@@ -640,6 +655,7 @@ class EditableBoxApp:
                                         onedrive_name = original_filename
                                         print(f"DEBUG: Restoring OneDrive note with cached filename: '{original_filename}'")
                             
+                            print(f"DEBUG: Calling add_text_box with onedrive_name='{onedrive_name}', file_path='{file_path}'")
                             self.add_text_box(content=content, file_path=file_path or "", font_size=font_size, onedrive_name=onedrive_name)
                         except Exception:
                             pass
@@ -1089,8 +1105,8 @@ class EditableBoxApp:
     def _update_onedrive_button_status(self, status="normal", text="OneDrive Sync"):
         """Update OneDrive button appearance to show status"""
         try:
-            # Find the OneDrive Sync button (index 9 in toolbar_buttons)
-            onedrive_button_index = 9  # "OneDrive Sync" is at index 9
+            # Find the OneDrive Sync button (index 6 in toolbar_buttons)
+            onedrive_button_index = 6  # "OneDrive Sync" is at index 6
             if len(self.toolbar_main_buttons) > onedrive_button_index:
                 btn = self.toolbar_main_buttons[onedrive_button_index]
                 
@@ -2509,12 +2525,23 @@ class EditableBoxApp:
             if self.current_view_mode == "tabbed":
                 if getattr(self, 'notebook', None) is None:
                     # Prepare queued entry and build notebook on first add
+                    # Determine title the same way as the regular flow
+                    if onedrive_name:
+                        queued_title = onedrive_name
+                    elif file_path and not file_path.startswith("onedrive:"):
+                        queued_title = os.path.basename(file_path)
+                    else:
+                        queued_title = "Untitled"
+                    
+                    print(f"DEBUG: Queueing first tab with title: '{queued_title}'")
+                    
                     self.text_boxes.append({
                         "content": content,
                         "file_path": file_path,
                         "text_box": None,
                         "file_title": None,
                         "outer_frame": None,
+                        "title": queued_title,  # Add the missing title field!
                     })
                     self._switch_to_tabbed_view()
                     self._schedule_status_update()
@@ -2582,12 +2609,16 @@ class EditableBoxApp:
 
                 # Track the new tab
                 # Use onedrive_name if provided, otherwise derive from file_path
+                print(f"DEBUG: add_text_box title logic: onedrive_name='{onedrive_name}', file_path='{file_path}'")
                 if onedrive_name:
                     title = onedrive_name
+                    print(f"DEBUG: Using onedrive_name as title: '{title}'")
                 elif file_path and not file_path.startswith("onedrive:"):
                     title = os.path.basename(file_path)
+                    print(f"DEBUG: Using file basename as title: '{title}'")
                 else:
                     title = "Untitled"
+                    print(f"DEBUG: Using default Untitled as title")
                 
                 self.text_boxes.append({
                     "text_box": text_widget,
@@ -2638,6 +2669,16 @@ class EditableBoxApp:
                 except Exception:
                     pass
                 self._schedule_status_update()
+                
+                # Auto-sort tabs to maintain alphabetical order (only for new tabs, not during app startup)
+                if hasattr(self, '_app_startup_complete') and self._app_startup_complete:
+                    try:
+                        self.root.after_idle(self.sort_tabs_by_name)
+                        print("DEBUG: Auto-sort scheduled after adding new tab")
+                    except Exception as e:
+                        print(f"DEBUG: Error scheduling auto-sort: {e}")
+                else:
+                    print("DEBUG: Skipping auto-sort during app startup")
                 return
                 
             else:
@@ -2737,7 +2778,10 @@ class EditableBoxApp:
             # Add Ctrl+W binding to notebook for tab closing
             self.notebook.bind("<Control-w>", lambda e: self._close_focused_tab() or "break")
             self.notebook.bind("<Control-W>", lambda e: self._close_focused_tab() or "break")
-            print("DEBUG: Added Ctrl+W binding to notebook widget")
+            
+            # Add drag-and-drop bindings for tab reordering
+            self._setup_tab_drag_bindings()
+            print("DEBUG: Added Ctrl+W binding and drag-drop bindings to notebook widget")
 
             # Clear text_boxes and recreate as tabs
             self.text_boxes = []
@@ -2812,24 +2856,26 @@ class EditableBoxApp:
                         text_widget.insert("1.0", data["content"])
                         print(f"DEBUG: Inserted {len(data['content'])} chars into tab {i+1}")
 
-                    # Generate simple tab title - prioritize stored title (for renamed files) over OneDrive cache
+                    # Generate simple tab title - ALWAYS prioritize stored title for all files
                     file_path = data.get("file_path", "")
-                    if file_path.startswith("onedrive:"):
-                        # For OneDrive files, prioritize stored title (updated during rename) over cache
-                        stored_title = data.get("title", "")
-                        if stored_title and stored_title not in ["Untitled", ""]:
-                            tab_title = stored_title
-                            print(f"DEBUG: Using stored title for tab {i+1}: '{stored_title}'")
+                    stored_title = data.get("title", "")
+                    
+                    # Always use stored title if it exists and is not a default/empty value
+                    print(f"DEBUG: Checking stored_title for tab {i+1}: repr='{repr(stored_title)}', bool={bool(stored_title)}, strip={bool(stored_title.strip()) if stored_title else 'N/A'}")
+                    print(f"DEBUG: Excluded values: {['Untitled', f'Untitled {i+1}', f'OneDrive Note {i+1}']}")
+                    if stored_title and stored_title.strip() and stored_title not in ["Untitled", f"Untitled {i+1}", f"OneDrive Note {i+1}"]:
+                        tab_title = stored_title
+                        print(f"DEBUG: Using stored title (priority override) for tab {i+1}: '{stored_title}'")
+                    elif file_path.startswith("onedrive:"):
+                        # Only use OneDrive filename mapping if no custom stored title exists
+                        item_id = file_path.replace("onedrive:", "")
+                        original_filename = self._get_onedrive_filename_from_id(item_id)
+                        if original_filename:
+                            tab_title = original_filename
+                            print(f"DEBUG: Using OneDrive filename mapping for tab {i+1}: '{original_filename}'")
                         else:
-                            # Fallback: get the original filename from OneDrive cache
-                            item_id = file_path.replace("onedrive:", "")
-                            original_filename = self._get_onedrive_filename_from_id(item_id)
-                            if original_filename:
-                                tab_title = original_filename
-                                print(f"DEBUG: Using OneDrive filename mapping for tab {i+1}: '{original_filename}'")
-                            else:
-                                tab_title = f"OneDrive Note {i+1}"
-                                print(f"DEBUG: Using fallback OneDrive title for tab {i+1}")
+                            tab_title = f"OneDrive Note {i+1}"
+                            print(f"DEBUG: Using fallback OneDrive title for tab {i+1}")
                     else:
                         # For local files, use "Tab X: filename" format
                         if file_path:
@@ -2839,8 +2885,16 @@ class EditableBoxApp:
                             tab_title = f"Untitled {i+1}"
 
                     # Store tab data in text_boxes array for proper tracking
-                    # Use the mapped OneDrive filename if available
-                    final_title = tab_title if file_path.startswith("onedrive:") else data.get("title", "Untitled")
+                    # Prioritize stored title from text_boxes array (set by add_text_box) over OneDrive filename mapping
+                    stored_title = data.get("title", "")
+                    if stored_title and stored_title != "Untitled":
+                        final_title = stored_title
+                        # Also use stored title for tab display
+                        tab_title = stored_title
+                        print(f"DEBUG: Using stored title from text_boxes: '{stored_title}'")
+                    else:
+                        final_title = tab_title
+                        print(f"DEBUG: Using generated title: '{tab_title}'")
                     self.text_boxes.append({
                         "text_box": text_widget,
                         "file_path": data.get("file_path", ""),
@@ -2859,14 +2913,17 @@ class EditableBoxApp:
                     try:
                         normal_icon, dirty_icon = self._get_or_create_tab_icons(i)
                         icon_to_use = normal_icon if self.text_boxes[i]["saved"] else dirty_icon
-                        self.notebook.add(tab_frame, text=tab_title, image=icon_to_use, compound="left")
-                        print(f"DEBUG: Successfully added tab {i+1} with icon and title: '{tab_title}'")
+                        # Use the final_title (which prioritizes stored title) for display
+                        display_title = final_title
+                        self.notebook.add(tab_frame, text=display_title, image=icon_to_use, compound="left")
+                        print(f"DEBUG: Successfully added tab {i+1} with icon and title: '{display_title}'")
                     except Exception as e:
                         print(f"DEBUG: Icon creation failed for tab {i+1}, trying without icon: {e}")
                         try:
                             # Fallback without image if PhotoImage fails
-                            self.notebook.add(tab_frame, text=tab_title)
-                            print(f"DEBUG: Successfully added tab {i+1} without icon, title: '{tab_title}'")
+                            display_title = final_title
+                            self.notebook.add(tab_frame, text=display_title)
+                            print(f"DEBUG: Successfully added tab {i+1} without icon, title: '{display_title}'")
                         except Exception as e2:
                             print(f"DEBUG: Failed to add tab {i+1} even without icon: {e2}")
                             raise
@@ -3129,7 +3186,7 @@ class EditableBoxApp:
                 "view_mode": "tabbed",  # Only tabbed mode is supported
                 "boxes": []
             }            # Save data for each text box (persist content to restore unsaved notes; file_path if present)
-            for box_data in self.text_boxes:
+            for i, box_data in enumerate(self.text_boxes):
                 text_widget = box_data.get("text_box")
                 content = ""
                 try:
@@ -3137,9 +3194,13 @@ class EditableBoxApp:
                         content = text_widget.get("1.0", tk.END)
                 except Exception:
                     content = ""
+                
+                box_title = box_data.get("title", "Untitled")
+                print(f"DEBUG: Saving layout - box {i+1} title: '{box_title}'")
+                
                 layout_data["boxes"].append({
                     "file_path": box_data.get("file_path", "") or "",
-                    "title": box_data.get("title", "Untitled"),
+                    "title": box_title,
                     "saved": box_data.get("saved", True),
                     "content": content,
                     "font_size": int(box_data.get("font_size", 11))
@@ -3639,9 +3700,28 @@ class EditableBoxApp:
             print(f"DEBUG: Error updating dirty indicator: {e}")
 
     def _sort_tab_data_by_name(self, data_list):
-        """Sort tab data by file name."""
+        """Sort tab data by title or file name."""
         try:
-            return sorted(data_list, key=lambda x: os.path.basename(x.get("file_path", "")).lower())
+            def get_sort_key(data):
+                # Use title if available, otherwise extract from file_path
+                title = data.get("title", "")
+                if title and title != "Untitled":
+                    return title.lower().strip()
+                
+                file_path = data.get("file_path", "")
+                if file_path:
+                    if file_path.startswith("onedrive:"):
+                        # For OneDrive files, try to get the original filename
+                        item_id = file_path.replace("onedrive:", "")
+                        original_name = self._get_onedrive_filename_from_id(item_id)
+                        return (original_name or "Untitled").lower().strip()
+                    else:
+                        # For local files, use basename
+                        return os.path.basename(file_path).lower().strip()
+                
+                return "untitled"
+            
+            return sorted(data_list, key=get_sort_key)
         except Exception as e:
             print(f"DEBUG: Error sorting tab data: {e}")
             return data_list
@@ -4090,6 +4170,13 @@ class EditableBoxApp:
             ai_menu.add_command(label="Proofread", command=lambda: self._apply_ai_action_to_tab(tab_index, action="proofread"))
             ai_menu.add_command(label="Research", command=lambda: self._apply_ai_action_to_tab(tab_index, action="research"))
             context_menu.add_cascade(label="AI", menu=ai_menu)
+            
+            # Add tab organization options
+            context_menu.add_separator()
+            context_menu.add_command(
+                label="Sort All Tabs by Name",
+                command=self.sort_tabs_by_name
+            )
             
             # Show menu at cursor position
             context_menu.post(event.x_root, event.y_root)
@@ -4646,6 +4733,355 @@ class EditableBoxApp:
                            f"OneDrive loading. Use OneDrive Sync button for cloud sync.")
         except Exception as e:
             messagebox.showerror("Error", f"Could not show configuration location: {e}")
+
+    def _setup_tab_drag_bindings(self):
+        """Set up drag-and-drop bindings for tab reordering."""
+        try:
+            if not self.notebook:
+                print("DEBUG: Cannot setup bindings - no notebook")
+                return
+            
+            # Check if bindings already exist
+            existing_button = self.notebook.bind("<Button-1>")
+            existing_motion = self.notebook.bind("<B1-Motion>") 
+            existing_release = self.notebook.bind("<ButtonRelease-1>")
+            
+            print(f"DEBUG: Existing bindings - Button: {bool(existing_button)}, Motion: {bool(existing_motion)}, Release: {bool(existing_release)}")
+            
+            # Clear any existing drag bindings first to prevent conflicts
+            try:
+                self.notebook.unbind("<Button-1>")
+                self.notebook.unbind("<B1-Motion>")  
+                self.notebook.unbind("<ButtonRelease-1>")
+            except:
+                pass  # Ignore if no bindings exist
+            
+            # Bind mouse events to the notebook widget
+            self.notebook.bind("<Button-1>", self._on_tab_click)
+            self.notebook.bind("<B1-Motion>", self._on_tab_drag)
+            self.notebook.bind("<ButtonRelease-1>", self._on_tab_release)
+            print("DEBUG: Tab drag-drop bindings set up successfully")
+        except Exception as e:
+            print(f"DEBUG: Error setting up tab drag bindings: {e}")
+
+    def _on_tab_click(self, event):
+        """Handle initial tab click for drag operation."""
+        try:
+            if not self.notebook:
+                print("DEBUG: Tab click - no notebook available")
+                return
+                
+            # Reset any previous drag state
+            self._reset_drag_state()
+            print(f"DEBUG: Tab click at ({event.x}, {event.y})")
+                
+            # Find which tab was clicked
+            tab_id = self.notebook.tk.call(self.notebook._w, "identify", "tab", event.x, event.y)
+            if tab_id != "":
+                self._drag_data["dragging"] = False  # Will be set to True on drag
+                self._drag_data["start_tab"] = int(tab_id)
+                self._drag_data["start_x"] = event.x
+                self._drag_data["start_y"] = event.y
+                print(f"DEBUG: Tab click registered for tab {tab_id} - ready for drag")
+            else:
+                print(f"DEBUG: Tab click did not hit a tab at ({event.x}, {event.y})")
+        except Exception as e:
+            print(f"DEBUG: Error in tab click: {e}")
+            self._reset_drag_state()
+
+    def _on_tab_drag(self, event):
+        """Handle tab drag motion."""
+        try:
+            if not self.notebook or self._drag_data["start_tab"] is None:
+                return
+                
+            # Check if we've moved far enough to start dragging
+            dx = abs(event.x - self._drag_data["start_x"])
+            dy = abs(event.y - self._drag_data["start_y"])
+            
+            if not self._drag_data["dragging"] and (dx > 5 or dy > 5):
+                self._drag_data["dragging"] = True
+                print(f"DEBUG: Started dragging tab {self._drag_data['start_tab']} (moved {dx},{dy} pixels)")
+                
+            if self._drag_data["dragging"]:
+                # Change cursor to indicate dragging
+                self.notebook.config(cursor="hand2")
+                
+        except Exception as e:
+            print(f"DEBUG: Error in tab drag: {e}")
+
+    def _on_tab_release(self, event):
+        """Handle tab release to complete drag operation."""
+        try:
+            if not self.notebook:
+                print("DEBUG: Tab release - no notebook available")
+                self._reset_drag_state()
+                return
+                
+            print(f"DEBUG: Tab release at ({event.x}, {event.y}), dragging: {self._drag_data.get('dragging', False)}")
+                
+            # Only proceed if we're actually dragging
+            if not self._drag_data.get("dragging", False):
+                print("DEBUG: Tab release - not in dragging state")
+                self._reset_drag_state()
+                return
+                
+            # Find target tab position
+            try:
+                target_tab = self.notebook.tk.call(self.notebook._w, "identify", "tab", event.x, event.y)
+                print(f"DEBUG: Target tab identified: {target_tab}")
+                
+                if target_tab != "" and target_tab != self._drag_data["start_tab"]:
+                    target_index = int(target_tab)
+                    source_index = self._drag_data["start_tab"]
+                    
+                    if source_index is not None and 0 <= source_index < len(self.text_boxes):
+                        print(f"DEBUG: Attempting to move tab from {source_index} to {target_index}")
+                        self._move_tab(source_index, target_index)
+                    else:
+                        print(f"DEBUG: Invalid source index: {source_index} (text_boxes length: {len(self.text_boxes)})")
+                else:
+                    print(f"DEBUG: No valid target tab or same tab - target: {target_tab}, source: {self._drag_data['start_tab']}")
+            except Exception as inner_e:
+                print(f"DEBUG: Error identifying target tab: {inner_e}")
+                
+        except Exception as e:
+            print(f"DEBUG: Error in tab release: {e}")
+        finally:
+            print("DEBUG: Resetting drag state after release")
+            self._reset_drag_state()
+
+    def _reset_drag_state(self):
+        """Reset drag state and cursor."""
+        try:
+            self._drag_data = {
+                "dragging": False,
+                "start_tab": None,
+                "start_x": 0,
+                "start_y": 0
+            }
+            if self.notebook:
+                self.notebook.config(cursor="")
+        except Exception:
+            pass
+
+    def _move_tab(self, from_index, to_index):
+        """Move a tab from one position to another."""
+        try:
+            if not self.notebook or from_index == to_index:
+                return
+                
+            if from_index < 0 or from_index >= len(self.text_boxes):
+                return
+                
+            if to_index < 0 or to_index >= len(self.text_boxes):
+                return
+            
+            print(f"DEBUG: Moving tab from index {from_index} to {to_index}")
+            
+            # Get the tab frame and data BEFORE any manipulation
+            tab_frame = self.text_boxes[from_index]["tab_frame"]
+            tab_data = self.text_boxes[from_index].copy()
+            
+            # Generate proper tab title from stored data (more reliable than reading from widget)
+            stored_title = tab_data.get("title", "")
+            file_path = tab_data.get("file_path", "")
+            
+            if stored_title and stored_title != "Untitled":
+                tab_text = stored_title
+            elif file_path:
+                if file_path.startswith("onedrive:"):
+                    item_id = file_path.replace("onedrive:", "")
+                    original_name = self._get_onedrive_filename_from_id(item_id)
+                    tab_text = original_name or "OneDrive Note"
+                else:
+                    tab_text = os.path.basename(file_path)
+            else:
+                tab_text = f"Tab {from_index + 1}"
+            
+            # Try to get the image, but don't fail if it doesn't work
+            try:
+                tab_image = self.notebook.tab(from_index, "image")
+            except:
+                tab_image = ""
+                
+            print(f"DEBUG: Using tab title: '{tab_text}' for move operation")
+            
+            # Remove the tab from notebook and text_boxes
+            self.notebook.forget(from_index)
+            self.text_boxes.pop(from_index)
+            
+            # Adjust target index if needed (when moving left, target shifts)
+            if from_index < to_index:
+                to_index -= 1
+            
+            # Insert at new position
+            if tab_image:
+                self.notebook.insert(to_index, tab_frame, text=tab_text, image=tab_image)
+            else:
+                self.notebook.insert(to_index, tab_frame, text=tab_text)
+                
+            self.text_boxes.insert(to_index, tab_data)
+            
+            # Update tab indices in text_boxes
+            for i, box in enumerate(self.text_boxes):
+                box["tab_index"] = i
+            
+            # Select the moved tab
+            self.notebook.select(to_index)
+            
+            # Re-establish drag bindings after tab manipulation with a slight delay
+            # This ensures the notebook widget has fully processed the tab changes
+            print("DEBUG: Scheduling binding re-establishment after tab move")
+            self.root.after(10, self._setup_tab_drag_bindings)
+            
+            # Save layout to preserve new order
+            self.root.after_idle(self.save_layout_to_file)
+            
+            print(f"DEBUG: Successfully moved tab to position {to_index}")
+            
+        except Exception as e:
+            print(f"DEBUG: Error moving tab: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def sort_tabs_by_name(self):
+        """Manually sort all tabs by name/title."""
+        try:
+            if not self.notebook or len(self.text_boxes) <= 1:
+                return
+                
+            print("DEBUG: Manually sorting tabs by name")
+            
+            # Create list of (index, sort_key, data) tuples
+            tab_data_with_keys = []
+            for i, box_data in enumerate(self.text_boxes):
+                title = box_data.get("title", "")
+                if title and title != "Untitled":
+                    sort_key = title.lower().strip()
+                else:
+                    file_path = box_data.get("file_path", "")
+                    if file_path:
+                        if file_path.startswith("onedrive:"):
+                            item_id = file_path.replace("onedrive:", "")
+                            original_name = self._get_onedrive_filename_from_id(item_id)
+                            sort_key = (original_name or "untitled").lower().strip()
+                        else:
+                            sort_key = os.path.basename(file_path).lower().strip()
+                    else:
+                        sort_key = "untitled"
+                
+                tab_data_with_keys.append((i, sort_key, box_data.copy()))
+            
+            # Sort by the sort keys
+            tab_data_with_keys.sort(key=lambda x: x[1])
+            
+            # Check if reordering is needed
+            current_order = [x[0] for x in tab_data_with_keys]
+            if current_order == list(range(len(current_order))):
+                print("DEBUG: Tabs already in correct order")
+                return
+            
+            # Rebuild tabs in sorted order
+            print(f"DEBUG: Reordering tabs: {current_order}")
+            
+            # Store current selection
+            try:
+                current_selection = self.notebook.index("current")
+            except:
+                current_selection = 0
+            
+            # Collect all tab frames and their info
+            tab_info = []
+            for original_index, sort_key, box_data in tab_data_with_keys:
+                try:
+                    tab_frame = box_data["tab_frame"]
+                    
+                    # Generate proper tab title from stored data instead of trying to read from notebook
+                    file_path = box_data.get("file_path", "")
+                    title = box_data.get("title", "")
+                    
+                    print(f"DEBUG: Sort processing tab {original_index}: title='{title}', file_path='{file_path}', sort_key='{sort_key}'")
+                    
+                    if title and title != "Untitled":
+                        tab_text = title
+                        print(f"DEBUG: Using stored title: '{tab_text}'")
+                    elif file_path.startswith("onedrive:"):
+                        item_id = file_path.replace("onedrive:", "")
+                        original_name = self._get_onedrive_filename_from_id(item_id)
+                        tab_text = original_name if original_name else "OneDrive Note"
+                        print(f"DEBUG: Using OneDrive filename: '{tab_text}'")
+                    elif file_path:
+                        tab_text = os.path.basename(file_path)
+                        print(f"DEBUG: Using file basename: '{tab_text}'")
+                    else:
+                        tab_text = f"Untitled {original_index + 1}"
+                        print(f"DEBUG: Using fallback title: '{tab_text}'")
+                    
+                    # Try to get the image, but don't fail if it doesn't work
+                    try:
+                        tab_image = self.notebook.tab(original_index, "image")
+                    except:
+                        tab_image = ""
+                    
+                    tab_info.append((tab_frame, tab_text, tab_image, box_data))
+                except Exception as e:
+                    print(f"DEBUG: Error collecting tab {original_index}: {e}")
+            
+            # Remove all tabs from notebook
+            for i in reversed(range(len(self.notebook.tabs()))):
+                self.notebook.forget(i)
+            
+            # Clear and rebuild text_boxes
+            self.text_boxes = []
+            
+            # Add tabs back in sorted order
+            for i, (tab_frame, tab_text, tab_image, box_data) in enumerate(tab_info):
+                try:
+                    print(f"DEBUG: Re-adding tab {i} with text='{tab_text}', image={bool(tab_image)}")
+                    if tab_image:
+                        self.notebook.add(tab_frame, text=tab_text, image=tab_image)
+                    else:
+                        self.notebook.add(tab_frame, text=tab_text)
+                    
+                    box_data["tab_index"] = i
+                    self.text_boxes.append(box_data)
+                    print(f"DEBUG: Successfully added tab {i} to position {len(self.text_boxes)-1}")
+                except Exception as e:
+                    print(f"DEBUG: Error re-adding tab {i}: {e}")
+            
+            # Try to maintain selection
+            try:
+                if current_selection < len(self.text_boxes):
+                    self.notebook.select(current_selection)
+            except:
+                pass
+            
+            # Force a visual refresh of the notebook
+            self.root.update_idletasks()
+            
+            # Refresh all tab titles explicitly
+            for i in range(len(self.text_boxes)):
+                try:
+                    title = self.text_boxes[i].get("title", "")
+                    if title:
+                        print(f"DEBUG: Force refreshing tab {i} title to: '{title}'")
+                        self.notebook.tab(i, text=title)
+                except Exception as e:
+                    print(f"DEBUG: Error refreshing tab {i} title: {e}")
+            
+            # Force another visual update
+            self.notebook.update_idletasks()
+            self.root.update()
+            
+            # Save layout
+            self.root.after_idle(self.save_layout_to_file)
+            print("DEBUG: Tab sorting completed with forced refresh")
+            
+        except Exception as e:
+            print(f"DEBUG: Error sorting tabs: {e}")
+            import traceback
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

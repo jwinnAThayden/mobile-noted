@@ -105,10 +105,24 @@ else:
     onedrive_error_message = "OneDrive dependencies not installed"
 
 # Create session directory in a Railway-compatible location (after logger is defined)
-session_dir = os.path.join(os.path.dirname(__file__), 'flask_session')
+# Railway containers are ephemeral, but we can try to use /app for better persistence
+is_railway = os.environ.get('RAILWAY_ENVIRONMENT') is not None
+
+if is_railway:
+    session_dir = '/app/flask_session'
+    logger.info("🚂 Railway deployment detected - using /app/flask_session for better persistence")
+else:
+    session_dir = os.path.join(os.path.dirname(__file__), 'flask_session')
+
 try:
     os.makedirs(session_dir, exist_ok=True)
     app.config['SESSION_FILE_DIR'] = session_dir
+    
+    # Extend session lifetime on Railway for OneDrive persistence
+    if is_railway:
+        app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 7  # 7 days on Railway
+        logger.info("🔒 Extended session lifetime to 7 days for Railway deployment")
+    
     logger.info(f"Session directory created: {session_dir}")
 except Exception as e:
     logger.warning(f"Could not create session directory, using default: {e}")
@@ -1057,6 +1071,24 @@ def cancel_onedrive_auth():
         logger.error(f"Error canceling OneDrive auth: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/onedrive/auth/clear', methods=['POST'])
+def clear_onedrive_auth():
+    """Clear OneDrive authentication from session - useful for Railway debugging"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        # Don't require CSRF for this debug endpoint
+        success = onedrive_manager.clear_session_auth()
+        return jsonify({
+            'success': success,
+            'message': 'OneDrive authentication cleared from session' if success else 'Failed to clear authentication'
+        })
+            
+    except Exception as e:
+        logger.error(f"Error clearing OneDrive auth: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/onedrive/debug/flow-status', methods=['GET'])
 @limiter.limit("20 per minute")
 def debug_device_flow():
@@ -1300,11 +1332,39 @@ def static_files(filename):
 def debug_onedrive():
     """Debug OneDrive integration status - no auth required"""
     import sys
+    
+    # Check OneDrive authentication status
+    onedrive_auth_status = False
+    onedrive_session_info = {}
+    
+    if onedrive_manager:
+        try:
+            onedrive_auth_status = onedrive_manager.is_authenticated()
+            
+            # Check session storage for OneDrive data
+            onedrive_session_info = {
+                'has_token_cache': 'onedrive_token_cache' in session,
+                'has_account_info': 'onedrive_account' in session,
+                'session_id': session.get('session_id', 'None'),
+                'session_permanent': session.permanent
+            }
+            
+            if 'onedrive_account' in session:
+                account_info = session['onedrive_account']
+                onedrive_session_info['account_username'] = account_info.get('username', 'Unknown')
+                onedrive_session_info['authenticated_at'] = account_info.get('authenticated_at', 'Unknown')
+                
+        except Exception as e:
+            onedrive_session_info['error'] = str(e)
+    
     debug_info = {
         'onedrive_available': ONEDRIVE_AVAILABLE,
         'onedrive_manager_exists': onedrive_manager is not None,
+        'onedrive_authenticated': onedrive_auth_status,
         'onedrive_error': onedrive_error_message,
+        'session_info': onedrive_session_info,
         'auth_enabled': AUTH_ENABLED,
+        'is_railway': is_railway,
         'environment_vars': {
             'NOTED_CLIENT_ID': bool(os.environ.get('NOTED_CLIENT_ID')),
             'NOTED_CLIENT_ID_length': len(os.environ.get('NOTED_CLIENT_ID', '')),

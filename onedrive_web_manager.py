@@ -13,6 +13,7 @@ import hashlib
 import logging
 from threading import Thread, Lock
 from datetime import datetime
+from flask import session as flask_session
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -74,6 +75,11 @@ class WebOneDriveManager:
             self.account = None
             self.access_token = None
             self._auth_flows = {}  # Store active auth flows by session ID
+            self._use_session_storage = IS_RAILWAY  # Use Flask session storage on Railway
+            
+            # Try to restore authentication state from Flask session
+            if self._use_session_storage:
+                self._restore_from_session()
             
             logger.info("WebOneDriveManager initialization completed successfully")
             
@@ -86,7 +92,15 @@ class WebOneDriveManager:
     def _load_token_cache(self):
         """Load token cache from persistent storage."""
         try:
-            # First try environment variable (for Railway persistence)
+            # On Railway, try Flask session first
+            if self._use_session_storage and 'onedrive_token_cache' in flask_session:
+                token_data = flask_session['onedrive_token_cache']
+                if token_data:
+                    self._token_cache.deserialize(token_data)
+                    logger.info("✅ Token cache loaded from Flask session")
+                    return
+            
+            # Try environment variable (for Railway persistence)
             token_data = os.environ.get('ONEDRIVE_TOKEN_CACHE')
             if token_data:
                 self._token_cache.deserialize(token_data)
@@ -111,22 +125,69 @@ class WebOneDriveManager:
                 with self._cache_lock:
                     token_data = self._token_cache.serialize()
                     
-                    # Always try to save to file (for session persistence)
-                    os.makedirs(os.path.dirname(TOKEN_CACHE_FILE), exist_ok=True)
-                    with open(TOKEN_CACHE_FILE, "w") as f:
-                        f.write(token_data)
+                    # On Railway, save to Flask session for better persistence
+                    if self._use_session_storage and token_data:
+                        flask_session['onedrive_token_cache'] = token_data
+                        flask_session.permanent = True  # Make session persist longer
+                        logger.info("✅ Token cache saved to Flask session")
                     
-                    # Log token for Railway environment variable setup
+                    # Always try to save to file (for local development)
+                    try:
+                        os.makedirs(os.path.dirname(TOKEN_CACHE_FILE), exist_ok=True)
+                        with open(TOKEN_CACHE_FILE, "w") as f:
+                            f.write(token_data)
+                        logger.info("✅ Token cache saved to file")
+                    except Exception as e:
+                        logger.warning(f"File save failed (expected on Railway): {e}")
+                    
+                    # Log token for Railway environment variable setup as backup
                     if IS_RAILWAY and token_data and len(token_data) > 10:
-                        logger.info("🔑 FOR RAILWAY PERSISTENCE:")
-                        logger.info("Copy the token below and set it as ONEDRIVE_TOKEN_CACHE environment variable in Railway:")
+                        logger.info("🔑 FOR RAILWAY PERSISTENCE (BACKUP):")
+                        logger.info("If session storage fails, copy the token below and set it as ONEDRIVE_TOKEN_CACHE environment variable:")
                         logger.info(f"TOKEN: {token_data}")
-                        logger.info("This will preserve your OneDrive connection across deployments!")
-                    
-                    logger.info("✅ Token cache saved successfully")
                     
             except Exception as e:
                 logger.error(f"OneDrive: Failed to save token cache: {e}")
+
+    def _restore_from_session(self):
+        """Restore authentication state from Flask session."""
+        try:
+            # Restore account info if available
+            if 'onedrive_account' in flask_session:
+                account_data = flask_session['onedrive_account']
+                # The account will be restored from token cache when needed
+                logger.info("📱 OneDrive account data found in session")
+            
+            # Check if we have valid tokens in session
+            if 'onedrive_token_cache' in flask_session:
+                logger.info("🔐 OneDrive token cache found in session - authentication should be restored")
+                
+        except Exception as e:
+            logger.warning(f"Failed to restore OneDrive session: {e}")
+
+    def clear_session_auth(self):
+        """Clear OneDrive authentication from Flask session."""
+        try:
+            if self._use_session_storage:
+                flask_session.pop('onedrive_token_cache', None)
+                flask_session.pop('onedrive_account', None)
+                logger.info("🧹 Cleared OneDrive authentication from session")
+                
+                # Also clear local state
+                self.account = None
+                self.access_token = None
+                
+                # Clear token cache
+                if hasattr(self._token_cache, 'add'):
+                    # Clear the token cache
+                    accounts = self.app.get_accounts()
+                    for account in accounts:
+                        self.app.remove_account(account)
+                
+                return True
+        except Exception as e:
+            logger.error(f"Failed to clear session auth: {e}")
+        return False
 
     def get_account(self):
         """Get the first available account from the cache."""
@@ -287,6 +348,19 @@ class WebOneDriveManager:
                 self.access_token = result["access_token"]
                 self.account = self.get_account()
                 self._save_cache()
+                
+                # Save account info to Flask session for persistence
+                if self._use_session_storage and self.account:
+                    try:
+                        flask_session['onedrive_account'] = {
+                            'username': self.account.get('username', ''),
+                            'home_account_id': self.account.get('home_account_id', ''),
+                            'authenticated_at': time.time()
+                        }
+                        flask_session.permanent = True
+                        logger.info("💾 OneDrive account info saved to session")
+                    except Exception as e:
+                        logger.warning(f"Failed to save account to session: {e}")
                 
                 # Mark as completed
                 flow_data["completed"] = True
