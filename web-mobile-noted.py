@@ -1808,12 +1808,14 @@ def simple_check_onedrive_auth():
 
 # Add new session variables for note state
 def initialize_session():
+    """Initialize session variables"""
     if 'notes' not in session:
         session['notes'] = []
     if 'current_note_index' not in session:
         session['current_note_index'] = 0
+    # Add new session variables for note management
     if 'pinned_notes' not in session:
-        session['pinned_notes'] = set()
+        session['pinned_notes'] = []
     if 'fullscreen_note' not in session:
         session['fullscreen_note'] = None
     if 'interface_minimized' not in session:
@@ -1831,15 +1833,15 @@ def pin_note():
             return jsonify({'success': False, 'error': 'Invalid note index'})
         
         if 'pinned_notes' not in session:
-            session['pinned_notes'] = set()
+            session['pinned_notes'] = []
         
-        pinned_notes = set(session['pinned_notes'])
+        pinned_notes = list(session['pinned_notes'])
         
         if note_index in pinned_notes:
-            pinned_notes.discard(note_index)
+            pinned_notes.remove(note_index)
             pinned = False
         else:
-            pinned_notes.add(note_index)
+            pinned_notes.append(note_index)
             pinned = True
         
         session['pinned_notes'] = pinned_notes
@@ -1848,7 +1850,7 @@ def pin_note():
         return jsonify({
             'success': True,
             'pinned': pinned,
-            'pinnedNotes': list(pinned_notes)
+            'pinnedNotes': pinned_notes
         })
         
     except Exception as e:
@@ -1900,6 +1902,20 @@ def toggle_interface():
         
     except Exception as e:
         logger.error(f"Error toggling interface: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/get-ui-state', methods=['GET'])
+def get_ui_state():
+    """Get current UI state (pinned notes, fullscreen, interface state)"""
+    try:
+        return jsonify({
+            'success': True,
+            'pinnedNotes': session.get('pinned_notes', []),
+            'fullscreenNote': session.get('fullscreen_note'),
+            'interfaceMinimized': session.get('interface_minimized', False)
+        })
+    except Exception as e:
+        logger.error(f"Error getting UI state: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
