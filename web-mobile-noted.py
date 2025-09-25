@@ -1806,6 +1806,102 @@ def simple_check_onedrive_auth():
             'message': f'Auth check error: {str(e)}'
         })
 
+# Add new session variables for note state
+def initialize_session():
+    if 'notes' not in session:
+        session['notes'] = []
+    if 'current_note_index' not in session:
+        session['current_note_index'] = 0
+    if 'pinned_notes' not in session:
+        session['pinned_notes'] = set()
+    if 'fullscreen_note' not in session:
+        session['fullscreen_note'] = None
+    if 'interface_minimized' not in session:
+        session['interface_minimized'] = False
+
+# Add new API endpoints for note management
+@app.route('/api/pin-note', methods=['POST'])
+def pin_note():
+    """Pin or unpin a note"""
+    try:
+        data = request.get_json()
+        note_index = data.get('noteIndex')
+        
+        if note_index is None or note_index < 0 or note_index >= len(session.get('notes', [])):
+            return jsonify({'success': False, 'error': 'Invalid note index'})
+        
+        if 'pinned_notes' not in session:
+            session['pinned_notes'] = set()
+        
+        pinned_notes = set(session['pinned_notes'])
+        
+        if note_index in pinned_notes:
+            pinned_notes.discard(note_index)
+            pinned = False
+        else:
+            pinned_notes.add(note_index)
+            pinned = True
+        
+        session['pinned_notes'] = pinned_notes
+        session.modified = True
+        
+        return jsonify({
+            'success': True,
+            'pinned': pinned,
+            'pinnedNotes': list(pinned_notes)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error pinning note: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/fullscreen-note', methods=['POST'])
+def fullscreen_note():
+    """Toggle fullscreen mode for a note"""
+    try:
+        data = request.get_json()
+        note_index = data.get('noteIndex')
+        
+        if note_index is None:
+            # Clear fullscreen
+            session['fullscreen_note'] = None
+        else:
+            if note_index < 0 or note_index >= len(session.get('notes', [])):
+                return jsonify({'success': False, 'error': 'Invalid note index'})
+            
+            # Toggle fullscreen
+            if session.get('fullscreen_note') == note_index:
+                session['fullscreen_note'] = None
+            else:
+                session['fullscreen_note'] = note_index
+        
+        session.modified = True
+        
+        return jsonify({
+            'success': True,
+            'fullscreenNote': session.get('fullscreen_note')
+        })
+        
+    except Exception as e:
+        logger.error(f"Error toggling fullscreen: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/toggle-interface', methods=['POST'])
+def toggle_interface():
+    """Toggle interface minimized state"""
+    try:
+        session['interface_minimized'] = not session.get('interface_minimized', False)
+        session.modified = True
+        
+        return jsonify({
+            'success': True,
+            'minimized': session['interface_minimized']
+        })
+        
+    except Exception as e:
+        logger.error(f"Error toggling interface: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
 if __name__ == '__main__':
     # Only run development server if not in production
     is_production = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT')
