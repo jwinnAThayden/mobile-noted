@@ -791,7 +791,7 @@ def update_note(note_id):
         logger.error(f"Error updating note: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/offline/save', methods=['POST])
+@app.route('/api/offline/save', methods=['POST'])
 @login_required
 @limiter.limit("50 per minute")
 def save_offline_notes():
