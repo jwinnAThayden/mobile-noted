@@ -791,7 +791,7 @@ def update_note(note_id):
         logger.error(f"Error updating note: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/offline/save', methods=['POST'])
+@app.route('/api/offline/save', methods=['POST])
 @login_required
 @limiter.limit("50 per minute")
 def save_offline_notes():
@@ -1129,8 +1129,6 @@ def debug_device_flow():
                 'timeout_seconds': timeout,
                 'elapsed_minutes': elapsed / 60,
                 'timeout_minutes': timeout / 60,
-                'time_remaining_seconds': max(0, timeout - elapsed),
-                'time_remaining_minutes': max(0, timeout - elapsed) / 60,
                 'completed': flow_data.get("completed", False),
                 'original_timeout': flow_data.get("original_expires_in", "unknown"),
                 'extended_timeout': flow_data.get("extended_expires_in", "unknown")
