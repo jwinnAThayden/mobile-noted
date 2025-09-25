@@ -746,8 +746,200 @@
         .notes-container::-webkit-scrollbar-thumb:hover, .panel-content::-webkit-scrollbar-thumb:hover, .cloud-notes-list::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
+
+        /* Interface controls */
+        .interface-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 10000;
+            display: flex;
+            gap: 5px;
+        }
+
+        .control-btn {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        /* Note controls */
+        .note-controls {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .note:hover .note-controls {
+            opacity: 1;
+        }
+
+        .note-control-btn {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(3px);
+        }
+
+        .note-control-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
+        }
+
+        .note-control-btn.pinned {
+            background: #ff6b6b;
+        }
+
+        .note-control-btn.fullscreen-active {
+            background: #4ecdc4;
+        }
+
+        /* Pinned note styling */
+        .note.pinned {
+            border: 2px solid #ff6b6b;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .note.pinned::before {
+            content: "📌";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* Fullscreen mode */
+        .note.fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            border-radius: 0 !important;
+            background: white;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .note.fullscreen textarea {
+            height: calc(100vh - 40px) !important;
+            border: none !important;
+            border-radius: 0 !important;
+            font-size: 16px !important;
+            line-height: 1.6 !important;
+            padding: 20px !important;
+            resize: none !important;
+        }
+
+        .note.fullscreen .note-controls {
+            opacity: 1 !important;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        /* Interface minimized state */
+        .interface-minimized .controls,
+        .interface-minimized .tab-controls,
+        .interface-minimized .onedrive-controls {
+            display: none !important;
+        }
+
+        .interface-minimized .notes-container {
+            top: 50px !important;
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+            .note-controls {
+                opacity: 1; /* Always show on mobile */
+            }
+            
+            .interface-controls {
+                top: 5px;
+                right: 5px;
+            }
+            
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+            
+            .note-control-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+        }
+
+        /* Notification styling */
+        .notification {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            z-index: 10001;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .notification.success {
+            background: rgba(76, 175, 80, 0.9);
+        }
+
+        .notification.error {
+            background: rgba(244, 67, 54, 0.9);
+        }
     </style>
 </head>
+
 <body>
     <!-- Auto-hide status indicator -->
     <div id="autoHideStatus" class="auto-hide-status">Interface hidden - Move mouse to show</div>
@@ -1415,7 +1607,7 @@
             try {
                 const response = await fetch(url, defaultOptions);
                 
-                if (response.status === 401) {
+                if response.status === 401) {
                     // Redirect to login on authentication failure
                     window.location.href = '/login';
                     return;
@@ -1918,7 +2110,7 @@
 
         function showInstallButton() {
             if (installButton) return; // Already showing
-            
+                        
             const installBanner = document.createElement('div');
             installBanner.id = 'install-banner';
             installBanner.innerHTML = `
@@ -1936,6 +2128,7 @@
             // Add event listeners
             document.getElementById('install-app-btn').addEventListener('click', installApp);
             document.getElementById('dismiss-install').addEventListener('click', () => {
+               
                 installBanner.remove();
                 installButton = null;
             });
