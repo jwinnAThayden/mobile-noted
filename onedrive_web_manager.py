@@ -55,6 +55,7 @@ class WebOneDriveManager:
             self._token_cache = msal.SerializableTokenCache()
             self._cache_lock = Lock()
             self._use_session_storage = IS_RAILWAY  # Use Flask session storage on Railway
+            self._sync_progress = {"status": "idle", "current": 0, "total": 0, "start_time": None}
             
             # Ensure cache directory exists
             os.makedirs(os.path.dirname(TOKEN_CACHE_FILE), exist_ok=True)
@@ -450,9 +451,17 @@ class WebOneDriveManager:
 
     def list_notes(self):
         """List all note files in OneDrive app folder."""
+        import time
+        start_time = time.time()
+        logger.info("OneDrive: Starting list_notes request...")
+        
         try:
+            logger.info("OneDrive: Making graph request to list files...")
             response = self._make_graph_request("GET", "/me/drive/special/approot/children")
+            logger.info(f"OneDrive: List request completed in {time.time() - start_time:.1f}s")
+            
             files = response.json().get("value", [])
+            logger.info(f"OneDrive: Found {len(files)} total files")
             
             # Filter for .json files (our note format)
             notes = []
@@ -465,21 +474,34 @@ class WebOneDriveManager:
                         "size": file["size"],
                         "download_url": file.get("@microsoft.graph.downloadUrl")
                     })
-                    
-            return sorted(notes, key=lambda x: x["modified"], reverse=True)
+            
+            logger.info(f"OneDrive: Filtered to {len(notes)} JSON note files")
+            sorted_notes = sorted(notes, key=lambda x: x["modified"], reverse=True)
+            logger.info(f"OneDrive: list_notes completed in {time.time() - start_time:.1f}s")
+            return sorted_notes
             
         except Exception as e:
-            logger.error(f"OneDrive: Failed to list notes: {e}")
+            elapsed = time.time() - start_time
+            logger.error(f"OneDrive: Failed to list notes after {elapsed:.1f}s: {e}")
             return []
 
     def get_note(self, note_id):
         """Download a note by its OneDrive ID."""
+        import time
+        start_time = time.time()
+        
         try:
+            logger.debug(f"OneDrive: Requesting content for note {note_id}")
             response = self._make_graph_request("GET", f"/me/drive/items/{note_id}/content")
-            return json.loads(response.text)
+            elapsed = time.time() - start_time
+            
+            content = json.loads(response.text)
+            logger.debug(f"OneDrive: Retrieved note {note_id} in {elapsed:.1f}s ({len(response.text)} chars)")
+            return content
             
         except Exception as e:
-            logger.error(f"OneDrive: Failed to get note {note_id}: {e}")
+            elapsed = time.time() - start_time
+            logger.error(f"OneDrive: Failed to get note {note_id} after {elapsed:.1f}s: {e}")
             return None
 
     def get_note_content(self, item_id):
@@ -750,15 +772,46 @@ class WebOneDriveManager:
             notes_to_process = onedrive_notes
             logger.info(f"Processing all {len(notes_to_process)} notes to match desktop app")
             
+            # Update progress tracking
+            self._sync_progress = {
+                "status": "syncing", 
+                "current": 0, 
+                "total": len(notes_to_process), 
+                "start_time": start_time
+            }
+            
             for i, note_info in enumerate(notes_to_process):
                 try:
+                    # Circuit breaker: check total elapsed time
+                    elapsed = time.time() - start_time
+                    if elapsed > 90:  # Hard stop at 90 seconds
+                        logger.warning(f"Circuit breaker: Hard timeout after {elapsed:.1f}s - stopping at note {i+1}")
+                        break
+                    
                     # Progress logging every 10 notes for large collections
                     if i > 0 and i % 10 == 0:
-                        elapsed = time.time() - start_time
                         logger.info(f"OneDrive progress: {i}/{len(notes_to_process)} notes loaded in {elapsed:.1f}s")
                     
+                    # Early exit if we're moving too slowly
+                    if i > 0 and elapsed > 0:
+                        avg_time_per_note = elapsed / i
+                        if avg_time_per_note > 5:  # More than 5 seconds per note
+                            logger.warning(f"Performance circuit breaker: {avg_time_per_note:.1f}s/note is too slow - stopping at note {i+1}")
+                            break
+                    
                     logger.info(f"OneDrive: Loading note {i+1}/{len(notes_to_process)}: {note_info['name']}")
+                    note_start = time.time()
                     note_data = self.get_note(note_info["id"])
+                    note_elapsed = time.time() - note_start
+                    
+                    # Individual note timeout check
+                    if note_elapsed > 10:
+                        logger.warning(f"Slow note detected: {note_info['name']} took {note_elapsed:.1f}s")
+                    
+                    if not note_data:
+                        logger.warning(f"OneDrive: Empty data for note {note_info['id']}, skipping")
+                        load_stats["errors"] += 1
+                        continue
                     if note_data:
                         # Use web_note_id if available, otherwise generate one
                         note_id = note_data.get("web_note_id", str(int(time.time() * 1000)))
@@ -795,6 +848,10 @@ class WebOneDriveManager:
                         loaded_notes[note_id] = web_note_data
                         load_stats["loaded"] += 1
                         elapsed = time.time() - start_time
+                        
+                        # Update progress
+                        self._sync_progress["current"] = i + 1
+                        
                         logger.info(f"OneDrive: Loaded note {note_id} ({len(note_text)} chars) - {elapsed:.1f}s total")
                         
                 except Exception as e:

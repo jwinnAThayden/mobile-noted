@@ -1297,17 +1297,17 @@ def sync_from_onedrive():
             except Exception as e:
                 error = e
         
-        # Use threading to implement timeout - extended for full note collections
+        # Use threading with aggressive timeout for Railway reliability
         load_thread = threading.Thread(target=load_with_timeout)
         load_thread.daemon = True
         load_thread.start()
-        load_thread.join(timeout=120)  # 2 minute timeout for large note collections
+        load_thread.join(timeout=95)  # 95 second timeout with circuit breakers at 90s
         
         if load_thread.is_alive():
             logger.error("OneDrive sync operation timed out")
             return jsonify({
                 'success': False, 
-                'error': 'OneDrive sync timed out. Large note collections may take longer to sync.'
+                'error': 'OneDrive sync timed out. Circuit breakers engaged to prevent hanging. Try smaller batches.'
             }), 504
         
         if error:
@@ -1740,17 +1740,17 @@ def simple_sync_from_onedrive():
             except Exception as e:
                 error = e
         
-        # Use threading to implement timeout - extended for full note collections
+        # Use threading with aggressive timeout for Railway reliability
         load_thread = threading.Thread(target=load_with_timeout)
         load_thread.daemon = True
         load_thread.start()
-        load_thread.join(timeout=120)  # 2 minute timeout for large note collections
+        load_thread.join(timeout=95)  # 95 second timeout with circuit breakers at 90s
         
         if load_thread.is_alive():
             logger.error("OneDrive simple sync operation timed out")
             return jsonify({
                 'success': False, 
-                'error': 'OneDrive sync timed out. Large note collections may take longer to sync.'
+                'error': 'OneDrive sync timed out. Circuit breakers engaged to prevent hanging. Try smaller batches.'
             }), 504
         
         if error:
