@@ -1607,7 +1607,7 @@
             try {
                 const response = await fetch(url, defaultOptions);
                 
-                if response.status === 401) {
+                if (response.status === 401) {
                     // Redirect to login on authentication failure
                     window.location.href = '/login';
                     return;
