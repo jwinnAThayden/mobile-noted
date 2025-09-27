@@ -940,41 +940,324 @@
         .notification.error {
             background: rgba(244, 67, 54, 0.9);
         }
+
+        /* Mobile-Friendly Interface Styles */
+        .mobile-interface {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .main-controls {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .main-controls .btn {
+            padding: 12px 8px;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .main-controls .btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .cloud-section {
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-header:hover {
+            background: #e9ecef;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .cloud-controls {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .cloud-controls.expanded {
+            max-height: 400px;
+        }
+
+        .sync-status {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .account-info {
+            margin-top: 5px;
+            color: #6c757d;
+        }
+
+        .auth-section, .sync-section {
+            padding: 15px 20px;
+        }
+
+        .sync-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .cloud-btn {
+            padding: 10px 6px;
+            font-size: 13px;
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .cloud-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 120, 212, 0.3);
+        }
+
+        .progress-container {
+            padding: 15px 20px;
+            background: #f8f9fa;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0078d4, #106ebe);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #6c757d;
+            text-align: center;
+        }
+
+        .device-section {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .device-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        .device-link:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .link-arrow {
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .device-link:hover .link-arrow {
+            opacity: 1;
+        }
+
+        .settings-section {
+            padding: 15px 20px;
+        }
+
+        .logout {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        /* Authentication Modal Styles */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 90%;
+            width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .copy-btn {
+            margin-left: 8px;
+            padding: 4px 8px;
+            background: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .auth-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e9ecef;
+            border-left: 2px solid #0078d4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive Improvements */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                border-radius: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.6em;
+            }
+
+            .main-controls {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .sync-buttons {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .modal-content {
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <div class="dockable-interface maximized" id="dockableSection">
-            <div class="header" id="headerSection">
+        <!-- Mobile-Friendly Integrated Interface -->
+        <div class="mobile-interface" id="mobileInterface">
+            <div class="header">
                 <h1>📝 Mobile Noted</h1>
                 <p class="subtitle">Personal Notes (v2.5)</p>
             </div>
             
-            <div class="controls" id="controlsSection">
-            <button class="btn" onclick="addNewNote()">➕ New Note</button>
-            <button class="btn" onclick="saveAllNotes()">💾 Save All</button>
-            <button class="btn delete" onclick="deleteAllNotes()">🗑️ Clear All</button>
-            <button id="onedriveFloatBtn" class="btn" onclick="console.log('OneDrive button clicked!'); showOneDrivePanelProperly()" style="background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);">☁️ OneDrive</button>
-            <a href="/devices" class="btn" style="text-decoration: none; display: inline-block; text-align: center; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">🔒 Devices</a>
-            <button class="btn" onclick="logout()" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">🚪 Logout</button>
+            <!-- Main Controls -->
+            <div class="main-controls">
+                <button class="btn primary" onclick="addNewNote()">➕ New Note</button>
+                <button class="btn" onclick="saveAllNotes()">💾 Save</button>
+                <button class="btn delete" onclick="deleteAllNotes()">🗑️ Clear</button>
             </div>
             
-            <button class="interface-toggle" id="interfaceToggle" onclick="toggleInterface()">▲ Minimize</button>
-        </div>
-
-        <!-- OneDrive Integration Panel -->
-        <div id="onedrivePanel" class="onedrive-panel" style="display: none;">
-            <div class="onedrive-content">
-                <!-- Header -->
-                <div class="panel-header">
-                    <h3>☁️ OneDrive Integration</h3>
-                    <button onclick="hideOneDrivePanel()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 50%; cursor: pointer; font-size: 16px;">✕</button>
+            <!-- Cloud Section -->
+            <div class="cloud-section">
+                <div class="section-header" onclick="toggleCloudSection()">
+                    <span>☁️ Cloud Sync</span>
+                    <span id="cloudToggleIcon" class="toggle-icon">▼</span>
                 </div>
-                
-                <!-- Content -->
-                <div class="panel-content" style="padding: 20px; max-height: calc(80vh - 80px); overflow-y: auto;">
-                    <div id="onedriveStatus" class="onedrive-status">
+                <div id="cloudControls" class="cloud-controls">
+                    <!-- OneDrive Status -->
+                    <div id="onedriveStatus" class="sync-status">
                         <div class="status-indicator">
                             <span id="statusIcon">⚡</span>
                             <span id="statusText">Checking connection...</span>
@@ -983,10 +1266,68 @@
                             <small id="accountEmail"></small>
                         </div>
                     </div>
-
+                    
+                    <!-- OneDrive Controls -->
+                    <div id="authSection" class="auth-section" style="display: none;">
+                        <button class="btn cloud-btn" onclick="startOneDriveAuth()">🔗 Connect OneDrive</button>
+                    </div>
+                    
+                    <div id="syncSection" class="sync-section" style="display: none;">
+                        <div class="sync-buttons">
+                            <button class="btn cloud-btn" onclick="syncFromOneDrive()">📥 Pull Notes</button>
+                            <button class="btn cloud-btn" onclick="syncToOneDrive()">� Push Notes</button>
+                            <button class="btn cloud-btn" onclick="showOneDriveNotes()">📂 Browse</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div id="onedrive-progress" class="progress-container" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%;"></div>
+                        </div>
+                        <div class="progress-text">Syncing...</div>
+                    </div>
                 </div>
-                
+            </div>
+            
+            <!-- Device Management -->
+            <div class="device-section">
+                <a href="/devices" class="device-link">
+                    🔒 Device Management
+                    <span class="link-arrow">→</span>
+                </a>
+            </div>
+            
+            <!-- Settings -->
+            <div class="settings-section">
+                <button class="btn logout" onclick="logout()">🚪 Logout</button>
+            </div>
+        </div>
 
+        <!-- Authentication Modal for Device Flow -->
+        <div id="authModal" class="auth-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🔗 Connect OneDrive</h3>
+                    <button onclick="hideAuthModal()" class="close-btn">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div id="deviceAuthInstructions" style="display: none;">
+                        <p><strong>Follow these steps:</strong></p>
+                        <ol>
+                            <li>Copy the code below: <strong id="deviceCode"></strong>
+                                <button class="copy-btn" onclick="copyDeviceCode()">📋 Copy</button>
+                            </li>
+                            <li>Visit: <a id="verificationUrl" href="" target="_blank">Microsoft Device Login</a></li>
+                            <li>Enter the code and sign in</li>
+                            <li>Return here - connection will complete automatically</li>
+                        </ol>
+                        <div class="auth-progress">
+                            <div class="spinner"></div>
+                            <span>Waiting for authentication...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1027,6 +1368,59 @@
         let saveTimeout = null;
         let csrfToken = null;
         let currentNoteIndex = 0;
+
+        // Mobile Interface Functions
+        function toggleCloudSection() {
+            const controls = document.getElementById('cloudControls');
+            const icon = document.getElementById('cloudToggleIcon');
+            
+            if (controls.classList.contains('expanded')) {
+                controls.classList.remove('expanded');
+                icon.textContent = '▼';
+                icon.classList.remove('rotated');
+            } else {
+                controls.classList.add('expanded');
+                icon.textContent = '▲';
+                icon.classList.add('rotated');
+            }
+        }
+
+        // Authentication Modal Functions
+        function showAuthModal() {
+            document.getElementById('authModal').style.display = 'flex';
+        }
+
+        function hideAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        // Copy device code to clipboard
+        function copyDeviceCode() {
+            const deviceCode = document.getElementById('deviceCode');
+            if (deviceCode) {
+                navigator.clipboard.writeText(deviceCode.textContent).then(() => {
+                    showStatus('Device code copied to clipboard!', false);
+                }).catch(err => {
+                    console.error('Failed to copy device code:', err);
+                    showStatus('Failed to copy device code', true);
+                });
+            }
+        }
+
+        // Initialize cloud section as expanded by default
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-expand cloud section
+            const controls = document.getElementById('cloudControls');
+            const icon = document.getElementById('cloudToggleIcon');
+            if (controls && icon) {
+                controls.classList.add('expanded');
+                icon.textContent = '▲';
+                icon.classList.add('rotated');
+            }
+            
+            // Initialize OneDrive status
+            updateOneDriveModalStatus();
+        });
         
         // OneDrive modal dialog - stays within the main page for better UX
         function showOneDrivePanelProperly() {
@@ -2433,15 +2827,28 @@
 
         // Display device flow authentication UI
         function displayDeviceFlow(authFlow) {
+            // Show the authentication modal
+            showAuthModal();
+            
+            // Populate device flow information
             const verificationUrl = document.getElementById('verificationUrl');
             const deviceCode = document.getElementById('deviceCode');
-            const progressFill = document.getElementById('progressFill');
-            const authProgressText = document.getElementById('authProgressText');
+            const deviceAuthInstructions = document.getElementById('deviceAuthInstructions');
             
             // Set up verification URL as clickable link
-            verificationUrl.href = authFlow.verification_uri;
-            verificationUrl.textContent = authFlow.verification_uri;
-            deviceCode.textContent = authFlow.user_code;
+            if (verificationUrl) {
+                verificationUrl.href = authFlow.verification_uri;
+                verificationUrl.textContent = authFlow.verification_uri;
+            }
+            
+            if (deviceCode) {
+                deviceCode.textContent = authFlow.user_code;
+            }
+            
+            // Show the instructions
+            if (deviceAuthInstructions) {
+                deviceAuthInstructions.style.display = 'block';
+            }
             
             showOneDriveControls('authenticating');
             
