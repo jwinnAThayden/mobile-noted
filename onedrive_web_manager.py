@@ -434,19 +434,22 @@ class WebOneDriveManager:
         url = f"https://graph.microsoft.com/v1.0{endpoint}"
         
         try:
+            # Use shorter timeout for Railway deployment to prevent worker timeouts
+            request_timeout = 15 if IS_RAILWAY else 30
+            
             if method.upper() == "GET":
-                response = requests.get(url, headers=request_headers, timeout=30)
+                response = requests.get(url, headers=request_headers, timeout=request_timeout)
             elif method.upper() == "POST":
-                response = requests.post(url, headers=request_headers, json=data, timeout=30)
+                response = requests.post(url, headers=request_headers, json=data, timeout=request_timeout)
             elif method.upper() == "PUT":
                 if isinstance(data, str):
                     # For content uploads
                     request_headers["Content-Type"] = "application/json"
-                    response = requests.put(url, headers=request_headers, data=data, timeout=30)
+                    response = requests.put(url, headers=request_headers, data=data, timeout=request_timeout)
                 else:
-                    response = requests.put(url, headers=request_headers, json=data, timeout=30)
+                    response = requests.put(url, headers=request_headers, json=data, timeout=request_timeout)
             elif method.upper() == "DELETE":
-                response = requests.delete(url, headers=request_headers, timeout=30)
+                response = requests.delete(url, headers=request_headers, timeout=request_timeout)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
 
@@ -733,9 +736,9 @@ class WebOneDriveManager:
                 "error": str(e)
             }
 
-    def load_notes_from_cloud(self):
+    def load_notes_from_cloud(self, max_notes=50):
         """
-        Load all notes from OneDrive.
+        Load notes from OneDrive with Railway deployment optimizations.
         Returns dict with notes formatted for web application.
         Handles both desktop format ('content') and web format ('text') fields.
         """
@@ -747,12 +750,28 @@ class WebOneDriveManager:
             }
 
         try:
+            # On Railway, limit the number of notes to prevent timeouts
+            if IS_RAILWAY:
+                max_notes = min(max_notes, 25)  # Limit to 25 notes on Railway
+                logger.info(f"Railway mode: limiting to {max_notes} notes to prevent timeouts")
+            
             onedrive_notes = self.list_notes()
             loaded_notes = {}
-            load_stats = {"loaded": 0, "errors": 0}
+            load_stats = {"loaded": 0, "errors": 0, "skipped": 0}
             
-            for note_info in onedrive_notes:
+            # Process notes with a limit to prevent timeout
+            notes_to_process = onedrive_notes[:max_notes] if max_notes else onedrive_notes
+            
+            if len(onedrive_notes) > len(notes_to_process):
+                logger.info(f"Processing {len(notes_to_process)} of {len(onedrive_notes)} notes (limited for Railway)")
+            
+            for i, note_info in enumerate(notes_to_process):
                 try:
+                    # Early timeout check for Railway deployment
+                    if IS_RAILWAY and i > 0 and i % 5 == 0:
+                        # Quick break to prevent worker timeout
+                        time.sleep(0.1)
+                    
                     note_data = self.get_note(note_info["id"])
                     if note_data:
                         # Use web_note_id if available, otherwise generate one
@@ -794,12 +813,22 @@ class WebOneDriveManager:
                 except Exception as e:
                     logger.error(f"OneDrive: Failed to load note {note_info['id']}: {e}")
                     load_stats["errors"] += 1
+                    
+                    # On Railway, if we get too many errors, stop to prevent timeout
+                    if IS_RAILWAY and load_stats["errors"] > 3:
+                        logger.warning("Railway mode: too many errors, stopping note loading to prevent timeout")
+                        break
             
-            logger.info(f"OneDrive: Loaded {load_stats['loaded']} notes from cloud")
+            # Add info about skipped notes
+            if len(onedrive_notes) > len(notes_to_process):
+                load_stats["skipped"] = len(onedrive_notes) - len(notes_to_process)
+            
+            logger.info(f"OneDrive: Loaded {load_stats['loaded']} notes from cloud (stats: {load_stats})")
             return {
                 "success": True,
                 "stats": load_stats,
-                "notes": loaded_notes
+                "notes": loaded_notes,
+                "total_available": len(onedrive_notes)
             }
             
         except Exception as e:

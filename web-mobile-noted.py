@@ -1282,9 +1282,39 @@ def sync_from_onedrive():
         # Get merge strategy from request (default: 'replace')
         data = request.get_json() or {}
         merge_strategy = data.get('merge_strategy', 'replace')
+        max_notes = data.get('max_notes', 25)  # Default limit for Railway
         
-        # Load from OneDrive
-        result = onedrive_manager.load_notes_from_cloud()
+        # Load from OneDrive with Railway timeout protection
+        import threading
+        
+        result = None
+        error = None
+        
+        def load_with_timeout():
+            nonlocal result, error
+            try:
+                result = onedrive_manager.load_notes_from_cloud(max_notes=max_notes)
+            except Exception as e:
+                error = e
+        
+        # Use threading to implement timeout
+        load_thread = threading.Thread(target=load_with_timeout)
+        load_thread.daemon = True
+        load_thread.start()
+        load_thread.join(timeout=45)  # 45 second timeout
+        
+        if load_thread.is_alive():
+            logger.error("OneDrive sync operation timed out")
+            return jsonify({
+                'success': False, 
+                'error': 'OneDrive sync timed out. Try reducing the number of notes or try again later.'
+            }), 504
+        
+        if error:
+            raise error
+        
+        if not result:
+            return jsonify({'success': False, 'error': 'OneDrive sync failed unexpectedly'}), 500
         
         if result['success']:
             if merge_strategy == 'replace':
@@ -1695,9 +1725,39 @@ def simple_sync_from_onedrive():
         # Get merge strategy from request (default: 'replace')
         data = request.get_json() or {}
         merge_strategy = data.get('merge_strategy', 'replace')
+        max_notes = data.get('max_notes', 25)  # Default limit for Railway
         
-        # Load from OneDrive
-        result = onedrive_manager.load_notes_from_cloud()
+        # Load from OneDrive with Railway timeout protection
+        import threading
+        
+        result = None
+        error = None
+        
+        def load_with_timeout():
+            nonlocal result, error
+            try:
+                result = onedrive_manager.load_notes_from_cloud(max_notes=max_notes)
+            except Exception as e:
+                error = e
+        
+        # Use threading to implement timeout
+        load_thread = threading.Thread(target=load_with_timeout)
+        load_thread.daemon = True
+        load_thread.start()
+        load_thread.join(timeout=45)  # 45 second timeout
+        
+        if load_thread.is_alive():
+            logger.error("OneDrive simple sync operation timed out")
+            return jsonify({
+                'success': False, 
+                'error': 'OneDrive sync timed out. Try reducing the number of notes or try again later.'
+            }), 504
+        
+        if error:
+            raise error
+        
+        if not result:
+            return jsonify({'success': False, 'error': 'OneDrive sync failed unexpectedly'}), 500
         
         if result['success']:
             if merge_strategy == 'replace':
