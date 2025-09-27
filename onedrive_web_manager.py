@@ -54,6 +54,7 @@ class WebOneDriveManager:
         try:
             self._token_cache = msal.SerializableTokenCache()
             self._cache_lock = Lock()
+            self._use_session_storage = IS_RAILWAY  # Use Flask session storage on Railway
             
             # Ensure cache directory exists
             os.makedirs(os.path.dirname(TOKEN_CACHE_FILE), exist_ok=True)
@@ -75,7 +76,6 @@ class WebOneDriveManager:
             self.account = None
             self.access_token = None
             self._auth_flows = {}  # Store active auth flows by session ID
-            self._use_session_storage = IS_RAILWAY  # Use Flask session storage on Railway
             
             # Try to restore authentication state from Flask session
             if self._use_session_storage:
