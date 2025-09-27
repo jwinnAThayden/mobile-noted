@@ -727,6 +727,9 @@ class WebOneDriveManager:
         Returns dict with notes formatted for web application.
         Handles both desktop format ('content') and web format ('text') fields.
         """
+        import time
+        start_time = time.time()
+        
         if not self.is_authenticated():
             return {
                 "success": False,
@@ -735,12 +738,15 @@ class WebOneDriveManager:
             }
 
         try:
-            # On Railway, limit the number of notes to prevent timeouts
+            # On Railway, be very conservative with limits to prevent timeouts
             if IS_RAILWAY:
-                max_notes = min(max_notes, 25)  # Limit to 25 notes on Railway
+                max_notes = min(max_notes, 10)  # Even more conservative: 10 notes on Railway
                 logger.info(f"Railway mode: limiting to {max_notes} notes to prevent timeouts")
             
+            logger.info("OneDrive: Starting to list notes...")
             onedrive_notes = self.list_notes()
+            logger.info(f"OneDrive: Found {len(onedrive_notes)} notes, time elapsed: {time.time() - start_time:.1f}s")
+            
             loaded_notes = {}
             load_stats = {"loaded": 0, "errors": 0, "skipped": 0}
             
@@ -752,11 +758,18 @@ class WebOneDriveManager:
             
             for i, note_info in enumerate(notes_to_process):
                 try:
-                    # Early timeout check for Railway deployment
-                    if IS_RAILWAY and i > 0 and i % 5 == 0:
-                        # Quick break to prevent worker timeout
-                        time.sleep(0.1)
+                    # Aggressive timeout check for Railway deployment
+                    elapsed = time.time() - start_time
+                    if IS_RAILWAY:
+                        # Stop if we've taken more than 30 seconds total
+                        if elapsed > 30:
+                            logger.warning(f"Railway timeout: stopping after {elapsed:.1f}s with {i} notes processed")
+                            break
+                        # Brief pause every few notes
+                        if i > 0 and i % 3 == 0:
+                            time.sleep(0.05)
                     
+                    logger.info(f"OneDrive: Loading note {i+1}/{len(notes_to_process)}: {note_info['name']}")
                     note_data = self.get_note(note_info["id"])
                     if note_data:
                         # Use web_note_id if available, otherwise generate one
@@ -793,27 +806,31 @@ class WebOneDriveManager:
                         
                         loaded_notes[note_id] = web_note_data
                         load_stats["loaded"] += 1
-                        logger.info(f"OneDrive: Loaded note {note_id} with content length: {len(note_text)}")
+                        elapsed = time.time() - start_time
+                        logger.info(f"OneDrive: Loaded note {note_id} ({len(note_text)} chars) - {elapsed:.1f}s total")
                         
                 except Exception as e:
                     logger.error(f"OneDrive: Failed to load note {note_info['id']}: {e}")
                     load_stats["errors"] += 1
                     
-                    # On Railway, if we get too many errors, stop to prevent timeout
-                    if IS_RAILWAY and load_stats["errors"] > 3:
-                        logger.warning("Railway mode: too many errors, stopping note loading to prevent timeout")
+                    # On Railway, if we get any errors, stop to prevent timeout
+                    if IS_RAILWAY and load_stats["errors"] > 1:
+                        logger.warning(f"Railway mode: stopping after {load_stats['errors']} errors to prevent timeout")
                         break
             
             # Add info about skipped notes
             if len(onedrive_notes) > len(notes_to_process):
                 load_stats["skipped"] = len(onedrive_notes) - len(notes_to_process)
             
-            logger.info(f"OneDrive: Loaded {load_stats['loaded']} notes from cloud (stats: {load_stats})")
+            total_time = time.time() - start_time
+            logger.info(f"OneDrive: Completed in {total_time:.1f}s - loaded {load_stats['loaded']} notes (stats: {load_stats})")
+            
             return {
                 "success": True,
                 "stats": load_stats,
                 "notes": loaded_notes,
-                "total_available": len(onedrive_notes)
+                "total_available": len(onedrive_notes),
+                "load_time": total_time
             }
             
         except Exception as e:

@@ -1297,17 +1297,17 @@ def sync_from_onedrive():
             except Exception as e:
                 error = e
         
-        # Use threading to implement timeout
+        # Use threading to implement timeout - shorter for Railway
         load_thread = threading.Thread(target=load_with_timeout)
         load_thread.daemon = True
         load_thread.start()
-        load_thread.join(timeout=45)  # 45 second timeout
+        load_thread.join(timeout=35)  # 35 second timeout (Railway manager stops at 30s)
         
         if load_thread.is_alive():
             logger.error("OneDrive sync operation timed out")
             return jsonify({
                 'success': False, 
-                'error': 'OneDrive sync timed out. Try reducing the number of notes or try again later.'
+                'error': 'OneDrive sync timed out. Railway deployment limits to 10 notes per sync.'
             }), 504
         
         if error:
@@ -1740,17 +1740,17 @@ def simple_sync_from_onedrive():
             except Exception as e:
                 error = e
         
-        # Use threading to implement timeout
+        # Use threading to implement timeout - shorter for Railway
         load_thread = threading.Thread(target=load_with_timeout)
         load_thread.daemon = True
         load_thread.start()
-        load_thread.join(timeout=45)  # 45 second timeout
+        load_thread.join(timeout=35)  # 35 second timeout (Railway manager stops at 30s)
         
         if load_thread.is_alive():
             logger.error("OneDrive simple sync operation timed out")
             return jsonify({
                 'success': False, 
-                'error': 'OneDrive sync timed out. Try reducing the number of notes or try again later.'
+                'error': 'OneDrive sync timed out. Railway deployment limits to 10 notes per sync.'
             }), 504
         
         if error:
