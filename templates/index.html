@@ -1424,129 +1424,19 @@
         
         // OneDrive modal dialog - stays within the main page for better UX
         function showOneDrivePanelProperly() {
+            // For backward compatibility - just ensure cloud section is expanded
+            const controls = document.getElementById('cloudControls');
+            const icon = document.getElementById('cloudToggleIcon');
             
-            // Update button state
-            const originalBtn = document.getElementById('onedriveFloatBtn');
-            
-            if (originalBtn) {
-                originalBtn.textContent = '🔄 Loading...';
-                originalBtn.disabled = true;
+            if (controls && !controls.classList.contains('expanded')) {
+                controls.classList.add('expanded');
+                icon.textContent = '▲';
+                icon.classList.add('rotated');
             }
             
-            // Create modal content with OneDrive controls
-            const modalContent = `
-                <div id="onedriveModalStatus" class="status" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid #0078d4;">
-                    <div><span id="onedriveStatusIcon">⚡</span> <span id="onedriveStatusText">Checking connection...</span></div>
-                    <div id="onedriveAccountInfo" style="display: none; margin-top: 8px;"><small id="onedriveAccountEmail" style="color: #666;"></small></div>
-                </div>
-                
-                <div id="onedriveControls">
-                    <!-- Auth controls (aliased for compatibility) -->
-                    <div id="authControls" style="display: none;">
-                        <button class="btn onedrive-btn" onclick="startOneDriveAuth()" style="background: #0078d4; margin: 5px;">🔗 Connect OneDrive</button>
-                    </div>
-                    
-                    <!-- Device flow display -->
-                    <div id="deviceFlowDisplay" style="display: none; padding: 15px;">
-                        <div class="device-flow-info">
-                            <h4 style="color: #0078d4; margin-bottom: 15px;">🔗 OneDrive Authentication</h4>
-                            
-                            <div style="background: #fff; border: 2px solid #0078d4; border-radius: 8px; padding: 15px; margin: 10px 0;">
-                                <div style="margin-bottom: 10px;">
-                                    <strong>1. Visit this URL:</strong><br>
-                                    <a id="verificationUrl" href="#" target="_blank" style="color: #0078d4; font-weight: bold; font-size: 1.1em;">
-                                        Loading...
-                                    </a>
-                                </div>
-                                
-                                <div style="margin-bottom: 15px;">
-                                    <strong>2. Enter this code:</strong><br>
-                                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
-                                        <span id="deviceCode" style="font-family: monospace; font-size: 1.3em; font-weight: bold; color: #0078d4; background: #f0f8ff; padding: 8px 12px; border-radius: 4px; border: 1px solid #0078d4;">
-                                            Loading...
-                                        </span>
-                                        <button onclick="copyDeviceCode()" class="copy-btn" style="background: #0078d4; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">📋 Copy</button>
-                                    </div>
-                                </div>
-                                
-                                <div style="margin-bottom: 10px;">
-                                    <strong>Time Remaining:</strong><br>
-                                    <div class="progress-bar" style="background: #f0f0f0; border-radius: 10px; height: 20px; margin: 5px 0; overflow: hidden;">
-                                        <div id="progressFill" class="progress-fill" style="background: linear-gradient(90deg, #0078d4, #106ebe); height: 100%; width: 100%; transition: width 1s ease;"></div>
-                                    </div>
-                                    <div id="authProgressText" style="font-size: 0.9em; color: #666;">Initializing...</div>
-                                </div>
-                            </div>
-                            
-                            <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                                <h5 style="margin: 0 0 10px 0; color: #0078d4;">📱 How to Complete Authentication</h5>
-                                <ol style="margin: 5px 0; padding-left: 20px; color: #333;">
-                                    <li>Click the link above to open Microsoft's device login page</li>
-                                    <li>Enter the code shown above</li>
-                                    <li>Sign in with your Microsoft account</li>
-                                    <li>Return here - connection will complete automatically</li>
-                                </ol>
-                                <p style="margin: 10px 0 0 0; font-size: 0.9em; color: #666;">
-                                    ⏰ You have 15 minutes to complete this process.
-                                </p>
-                            </div>
-                            
-                            <div class="button-group" style="text-align: center; margin-top: 20px;">
-                                <button class="btn onedrive-btn" onclick="checkAuthProgress()" style="background: #28a745; margin-right: 10px;">🔄 Check Status</button>
-                                <button class="btn delete" onclick="cancelOneDriveAuth()" style="background: #dc3545;">❌ Cancel</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Sync controls (aliased for compatibility) -->
-                    <div id="syncControls" style="display: none;">
-                        <h4 style="margin: 15px 0 10px 0; color: #0078d4;">☁️ Sync Operations</h4>
-                        
-                        <!-- Progress bar for OneDrive operations -->
-                        <div id="onedrive-progress" class="progress-container" style="display: none;">
-                            <div class="progress-bar">
-                                <div class="progress-fill"></div>
-                            </div>
-                            <div class="progress-text">Initializing...</div>
-                        </div>
-                        
-                        <button class="btn onedrive-btn" onclick="syncToOneDrive()" style="background: #0078d4; margin: 5px;">⬆️ Push to Cloud</button>
-                        <button class="btn onedrive-btn" onclick="syncFromOneDrive()" style="background: #0078d4; margin: 5px;">⬇️ Pull from Cloud</button>
-                        <button class="btn" onclick="showOneDriveNotes()" style="background: #6c757d; color: white; margin: 5px;">📋 View Cloud Notes</button>
-                        <button class="btn" onclick="cleanupOneDriveDuplicates()" style="background: #28a745; color: white; margin: 5px;">🧹 Clean Duplicates</button>
-                        
-                        <h4 style="margin: 15px 0 10px 0; color: #0078d4;">⚙️ Auto-Sync</h4>
-                        <div style="background: #f0f8ff; padding: 10px; border-radius: 5px; margin: 5px; border: 1px solid #0078d4;">
-                            <label style="display: flex; align-items: center; cursor: pointer;">
-                                <input type="checkbox" id="autoSyncToggle" onclick="toggleAutoSync()" style="margin-right: 10px; transform: scale(1.2);"> 
-                                <span style="color: #0078d4; font-weight: bold;">🔄 Automatically sync changes to cloud</span>
-                            </label>
-                            <small style="color: #666; margin-left: 25px; display: block; margin-top: 5px;">When enabled, notes are automatically backed up when you make changes</small>
-                        </div>
-                        
-                        <h4 style="margin: 15px 0 10px 0; color: #0078d4;">🔧 Management</h4>
-                        <button class="btn delete" onclick="logoutOneDrive()" style="background: #dc3545; color: white; margin: 5px;">🚪 Disconnect</button>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 20px; font-size: 12px; color: #666; text-align: center;">
-                    💡 OneDrive integration requires Microsoft account authentication
-                </div>
-            `;
-            
-            // Create modal dialog
-            const dialogId = showMoveableDialog('☁️ OneDrive Integration', modalContent, []);
-            
-            // Update OneDrive status immediately
-            setTimeout(() => {
-                updateOneDriveModalStatus();
-            }, 100);
-            
-            // Restore button state
-            if (originalBtn) {
-                originalBtn.textContent = '☁️ OneDrive';
-                originalBtn.disabled = false;
-            }
+            // Update OneDrive status for integrated interface
+            updateOneDriveModalStatus();
+
         }
         
         // Ensure function is globally accessible for Railway
@@ -1640,13 +1530,13 @@
 
         // Update OneDrive status within the modal
         function updateOneDriveModalStatus() {
-            console.log('🔍 Updating OneDrive modal status...');
-            const statusIcon = document.getElementById('onedriveStatusIcon');
-            const statusText = document.getElementById('onedriveStatusText');
-            const accountInfo = document.getElementById('onedriveAccountInfo');
-            const accountEmail = document.getElementById('onedriveAccountEmail');
-            const authSection = document.getElementById('authControls');
-            const syncSection = document.getElementById('syncControls');
+            console.log('🔍 Updating OneDrive status...');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            const accountInfo = document.getElementById('accountInfo');
+            const accountEmail = document.getElementById('accountEmail');
+            const authSection = document.getElementById('authSection');
+            const syncSection = document.getElementById('syncSection');
             
             console.log('🔍 Modal elements found:', {
                 statusIcon: !!statusIcon,
@@ -1656,8 +1546,8 @@
             });
             
             if (!statusIcon || !statusText) {
-                console.log('🔍 Modal not open - status elements not found');
-                return; // Modal not open
+                console.log('🔍 Status elements not found - interface may not be loaded');
+                return;
             }
             
             console.log('🔍 Fetching OneDrive status...');
@@ -2701,22 +2591,22 @@
 
         // Show appropriate OneDrive controls
         function showOneDriveControls(state, statusData = null) {
-            const authControls = document.getElementById('authControls');
+            const authSection = document.getElementById('authSection');
             const deviceFlowDisplay = document.getElementById('deviceFlowDisplay');
-            const syncControls = document.getElementById('syncControls');
+            const syncSection = document.getElementById('syncSection');
             
-            if (!authControls) return; // Panel not shown yet
+            if (!authSection) return; // Panel not shown yet
             
             // Hide all first
-            authControls.style.display = 'none';
-            deviceFlowDisplay.style.display = 'none';
-            syncControls.style.display = 'none';
+            authSection.style.display = 'none';
+            if (deviceFlowDisplay) deviceFlowDisplay.style.display = 'none';
+            if (syncSection) syncSection.style.display = 'none';
             
             switch (state) {
                 case 'unavailable':
                     // Show setup instructions if needed
                     if (statusData && statusData.setup_required) {
-                        authControls.innerHTML = `
+                        authSection.innerHTML = `
                             <div class="setup-instructions">
                                 <h4>🔧 OneDrive Setup Required</h4>
                                 <p>To enable OneDrive synchronization, your Railway deployment needs the <code>NOTED_CLIENT_ID</code> environment variable.</p>
@@ -2733,26 +2623,26 @@
                                 <p><small>See <strong>ONEDRIVE_RAILWAY_DEPLOYMENT.md</strong> for detailed instructions.</small></p>
                             </div>
                         `;
-                        authControls.style.display = 'block';
+                        authSection.style.display = 'block';
                     } else {
-                        authControls.innerHTML = `
+                        authSection.innerHTML = `
                             <div class="error-message">
                                 <h4>❌ OneDrive Unavailable</h4>
                                 <p>${statusData ? statusData.error : 'OneDrive integration is not available.'}</p>
                             </div>
                         `;
-                        authControls.style.display = 'block';
+                        authSection.style.display = 'block';
                     }
                     break;
                 case 'unauthenticated':
-                    authControls.innerHTML = '<button class="btn onedrive-btn" onclick="startOneDriveAuth()">🔗 Connect OneDrive</button>';
-                    authControls.style.display = 'block';
+                    authSection.innerHTML = '<button class="btn onedrive-btn" onclick="startOneDriveAuth()">🔗 Connect OneDrive</button>';
+                    authSection.style.display = 'block';
                     break;
                 case 'authenticating':
-                    deviceFlowDisplay.style.display = 'block';
+                    if (deviceFlowDisplay) deviceFlowDisplay.style.display = 'block';
                     break;
                 case 'authenticated':
-                    syncControls.style.display = 'block';
+                    if (syncSection) syncSection.style.display = 'block';
                     break;
             }
         }
