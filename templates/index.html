@@ -565,21 +565,38 @@
             background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
         }
 
-        /* Auto-hide interface styles */
-        .auto-hide {
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        /* Dockable interface styles */
+        .dockable-interface {
+            transition: transform 0.3s ease-in-out;
+            position: relative;
         }
 
-        .auto-hide.hidden {
-            opacity: 0;
-            transform: translateY(-10px);
-            pointer-events: none;
+        .dockable-interface.minimized {
+            transform: translateY(-90%);
         }
 
-        .auto-hide.visible {
-            opacity: 1;
+        .dockable-interface.maximized {
             transform: translateY(0);
-            pointer-events: auto;
+        }
+
+        .interface-toggle {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 0 0 8px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .interface-toggle:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
         }
 
         /* Always visible dialogs and modals */
@@ -709,23 +726,9 @@
             box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
         }
 
-        /* Auto-hide status indicator */
-        .auto-hide-status {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            z-index: 1001;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .auto-hide-status.show {
-            opacity: 1;
+        /* Interface state indicator */
+        .interface-state-indicator {
+            display: none; /* Hidden by default since we have visible toggle */
         }
 
         /* Scrollbar styling */
@@ -941,15 +944,14 @@
 </head>
 
 <body>
-    <!-- Auto-hide status indicator -->
-    <div id="autoHideStatus" class="auto-hide-status">Interface hidden - Move mouse to show</div>
-
     <div class="container">
-        <div class="header auto-hide visible" id="headerSection">
-            <h1>📝 Mobile Noted</h1>
-        </div>
-
-        <div class="controls auto-hide visible" id="controlsSection">
+        <div class="dockable-interface maximized" id="dockableSection">
+            <div class="header" id="headerSection">
+                <h1>📝 Mobile Noted</h1>
+                <p class="subtitle">Personal Notes (v2.5)</p>
+            </div>
+            
+            <div class="controls" id="controlsSection">
             <button class="btn" onclick="addNewNote()">➕ New Note</button>
             <button class="btn" onclick="saveAllNotes()">💾 Save All</button>
             <button class="btn delete" onclick="deleteAllNotes()">🗑️ Clear All</button>
@@ -995,6 +997,8 @@
                 <div id="cloudNotesStatus">Loading cloud notes...</div>
                 <div id="cloudNotesList" class="cloud-notes-list"></div>
             </div>
+            
+            <button class="interface-toggle" id="interfaceToggle" onclick="toggleInterface()">▲ Minimize</button>
         </div>
 
         <div id="status" class="status"></div>
@@ -2973,41 +2977,25 @@
             return result;
         };
 
-        // Auto-hide interface functionality
-        let autoHideTimer = null;
-        let interfaceVisible = true;
+        // Dockable interface functionality
+        let interfaceMinimized = false;
 
-        function showInterface() {
-            if (!interfaceVisible) {
-                const autoHideElements = document.querySelectorAll('.auto-hide');
-                autoHideElements.forEach(el => {
-                    el.classList.remove('hidden');
-                    el.classList.add('visible');
-                });
-                
-                const statusIndicator = document.getElementById('autoHideStatus');
-                statusIndicator.classList.remove('show');
-                
-                interfaceVisible = true;
-            }
+        function toggleInterface() {
+            const dockableSection = document.getElementById('dockableSection');
+            const toggleBtn = document.getElementById('interfaceToggle');
             
-            // Reset the hide timer
-            clearTimeout(autoHideTimer);
-            autoHideTimer = setTimeout(hideInterface, 3000); // Hide after 3 seconds of inactivity
-        }
-
-        function hideInterface() {
-            if (interfaceVisible) {
-                const autoHideElements = document.querySelectorAll('.auto-hide');
-                autoHideElements.forEach(el => {
-                    el.classList.remove('visible');
-                    el.classList.add('hidden');
-                });
-                
-                const statusIndicator = document.getElementById('autoHideStatus');
-                statusIndicator.classList.add('show');
-                
-                interfaceVisible = false;
+            if (!dockableSection || !toggleBtn) return;
+            
+            interfaceMinimized = !interfaceMinimized;
+            
+            if (interfaceMinimized) {
+                dockableSection.classList.remove('maximized');
+                dockableSection.classList.add('minimized');
+                toggleBtn.innerHTML = '▼ Show Interface';
+            } else {
+                dockableSection.classList.remove('minimized');
+                dockableSection.classList.add('maximized');
+                toggleBtn.innerHTML = '▲ Minimize';
             }
         }
 
@@ -3125,40 +3113,9 @@
             }
         }
 
-        function initAutoHide() {
-            // Show interface on mouse movement
-            document.addEventListener('mousemove', showInterface);
-            
-            // Show interface on touch (mobile)
-            document.addEventListener('touchstart', showInterface);
-            
-            // Show interface when interacting with notes
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.note-card')) {
-                    showInterface();
-                }
-            });
-            
-            // Keep interface visible when hovering over auto-hide elements
-            document.querySelectorAll('.auto-hide').forEach(el => {
-                el.addEventListener('mouseenter', function() {
-                    clearTimeout(autoHideTimer);
-                });
-                
-                el.addEventListener('mouseleave', function() {
-                    autoHideTimer = setTimeout(hideInterface, 1000);
-                });
-            });
-            
-            // Keep interface visible when interacting with dialogs
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.dialog-always-visible, .modal-always-visible')) {
-                    showInterface();
-                }
-            });
-            
-            // Initial hide timer
-            autoHideTimer = setTimeout(hideInterface, 5000); // Hide after 5 seconds initially
+        function initInterface() {
+            // Interface is now always visible and manually controllable
+            // No auto-hide functionality - user has explicit control
         }
 
         // Offline storage functionality
@@ -3291,9 +3248,9 @@
 
         // Note: saveNote override is now handled above with combined auto-sync and offline storage
 
-        // Initialize auto-hide when page loads
+        // Initialize interface when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            initAutoHide();
+            initInterface();
             initDialogMovement();
             
             // Initialize offline functionality
