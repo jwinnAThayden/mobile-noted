@@ -1026,6 +1026,7 @@
         let notes = [];
         let saveTimeout = null;
         let csrfToken = null;
+        let currentNoteIndex = 0;
         
         // OneDrive modal dialog - stays within the main page for better UX
         function showOneDrivePanelProperly() {
@@ -2782,15 +2783,30 @@
                 // If that fails, try the simple endpoint
                 if (!response) {
                     updateProgressBar('onedrive-progress', 35, 'Retrying connection...');
-                    response = await fetch('/api/simple/onedrive/sync/pull', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            merge_strategy: mergeStrategy
-                        })
-                    });
+                    
+                    // Add timeout to prevent hanging
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 100000); // 100 second timeout
+                    
+                    try {
+                        response = await fetch('/api/simple/onedrive/sync/pull', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                merge_strategy: mergeStrategy
+                            }),
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeoutId);
+                    } catch (fetchError) {
+                        clearTimeout(timeoutId);
+                        if (fetchError.name === 'AbortError') {
+                            throw new Error('OneDrive sync timed out after 100 seconds. Please try again or contact support if this persists.');
+                        }
+                        throw fetchError;
+                    }
                 }
                 
                 if (!response) {
@@ -2811,13 +2827,19 @@
                     updateProgressBar('onedrive-progress', 95, 'Loading notes into interface...');
                     loadNotes();
                     
+                    // Complete progress and hide after brief delay
+                    updateProgressBar('onedrive-progress', 100, 'Sync completed!');
+                    setTimeout(() => hideProgressBar('onedrive-progress'), 1000);
+                    
                     // Update modal status if it's open
                     setTimeout(() => updateOneDriveModalStatus(), 500);
                 } else {
                     showStatus('Sync failed: ' + data.error, true);
+                    hideProgressBar('onedrive-progress');
                 }
             } catch (error) {
                 console.error('OneDrive sync error:', error);
+                hideProgressBar('onedrive-progress');
                 if (error.name === 'NetworkError' || error.message.includes('NetworkError')) {
                     showStatus('Network error: Please check your connection and try again. If the issue persists, try using the simple sync endpoint.', true);
                 } else {
