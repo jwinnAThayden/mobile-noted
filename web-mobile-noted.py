@@ -1282,9 +1282,9 @@ def sync_from_onedrive():
         # Get merge strategy from request (default: 'replace')
         data = request.get_json() or {}
         merge_strategy = data.get('merge_strategy', 'replace')
-        max_notes = data.get('max_notes', 25)  # Default limit for Railway
+        max_notes = data.get('max_notes')  # No default limit - load all notes to match desktop
         
-        # Load from OneDrive with Railway timeout protection
+        # Load from OneDrive with timeout protection for large collections
         import threading
         
         result = None
@@ -1297,17 +1297,17 @@ def sync_from_onedrive():
             except Exception as e:
                 error = e
         
-        # Use threading to implement timeout - shorter for Railway
+        # Use threading to implement timeout - extended for full note collections
         load_thread = threading.Thread(target=load_with_timeout)
         load_thread.daemon = True
         load_thread.start()
-        load_thread.join(timeout=35)  # 35 second timeout (Railway manager stops at 30s)
+        load_thread.join(timeout=120)  # 2 minute timeout for large note collections
         
         if load_thread.is_alive():
             logger.error("OneDrive sync operation timed out")
             return jsonify({
                 'success': False, 
-                'error': 'OneDrive sync timed out. Railway deployment limits to 10 notes per sync.'
+                'error': 'OneDrive sync timed out. Large note collections may take longer to sync.'
             }), 504
         
         if error:
@@ -1725,7 +1725,7 @@ def simple_sync_from_onedrive():
         # Get merge strategy from request (default: 'replace')
         data = request.get_json() or {}
         merge_strategy = data.get('merge_strategy', 'replace')
-        max_notes = data.get('max_notes', 25)  # Default limit for Railway
+        max_notes = data.get('max_notes')  # No default limit - load all notes to match desktop
         
         # Load from OneDrive with Railway timeout protection
         import threading
@@ -1740,17 +1740,17 @@ def simple_sync_from_onedrive():
             except Exception as e:
                 error = e
         
-        # Use threading to implement timeout - shorter for Railway
+        # Use threading to implement timeout - extended for full note collections
         load_thread = threading.Thread(target=load_with_timeout)
         load_thread.daemon = True
         load_thread.start()
-        load_thread.join(timeout=35)  # 35 second timeout (Railway manager stops at 30s)
+        load_thread.join(timeout=120)  # 2 minute timeout for large note collections
         
         if load_thread.is_alive():
             logger.error("OneDrive simple sync operation timed out")
             return jsonify({
                 'success': False, 
-                'error': 'OneDrive sync timed out. Railway deployment limits to 10 notes per sync.'
+                'error': 'OneDrive sync timed out. Large note collections may take longer to sync.'
             }), 504
         
         if error:

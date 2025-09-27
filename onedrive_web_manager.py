@@ -721,7 +721,7 @@ class WebOneDriveManager:
                 "error": str(e)
             }
 
-    def load_notes_from_cloud(self, max_notes=50):
+    def load_notes_from_cloud(self, max_notes=None):
         """
         Load notes from OneDrive with Railway deployment optimizations.
         Returns dict with notes formatted for web application.
@@ -738,11 +738,7 @@ class WebOneDriveManager:
             }
 
         try:
-            # On Railway, be very conservative with limits to prevent timeouts
-            if IS_RAILWAY:
-                max_notes = min(max_notes, 10)  # Even more conservative: 10 notes on Railway
-                logger.info(f"Railway mode: limiting to {max_notes} notes to prevent timeouts")
-            
+            # No artificial limits - load ALL notes to match desktop app
             logger.info("OneDrive: Starting to list notes...")
             onedrive_notes = self.list_notes()
             logger.info(f"OneDrive: Found {len(onedrive_notes)} notes, time elapsed: {time.time() - start_time:.1f}s")
@@ -750,24 +746,16 @@ class WebOneDriveManager:
             loaded_notes = {}
             load_stats = {"loaded": 0, "errors": 0, "skipped": 0}
             
-            # Process notes with a limit to prevent timeout
-            notes_to_process = onedrive_notes[:max_notes] if max_notes else onedrive_notes
-            
-            if len(onedrive_notes) > len(notes_to_process):
-                logger.info(f"Processing {len(notes_to_process)} of {len(onedrive_notes)} notes (limited for Railway)")
+            # Process ALL notes - no limits to ensure desktop app compatibility
+            notes_to_process = onedrive_notes
+            logger.info(f"Processing all {len(notes_to_process)} notes to match desktop app")
             
             for i, note_info in enumerate(notes_to_process):
                 try:
-                    # Aggressive timeout check for Railway deployment
-                    elapsed = time.time() - start_time
-                    if IS_RAILWAY:
-                        # Stop if we've taken more than 30 seconds total
-                        if elapsed > 30:
-                            logger.warning(f"Railway timeout: stopping after {elapsed:.1f}s with {i} notes processed")
-                            break
-                        # Brief pause every few notes
-                        if i > 0 and i % 3 == 0:
-                            time.sleep(0.05)
+                    # Progress logging every 10 notes for large collections
+                    if i > 0 and i % 10 == 0:
+                        elapsed = time.time() - start_time
+                        logger.info(f"OneDrive progress: {i}/{len(notes_to_process)} notes loaded in {elapsed:.1f}s")
                     
                     logger.info(f"OneDrive: Loading note {i+1}/{len(notes_to_process)}: {note_info['name']}")
                     note_data = self.get_note(note_info["id"])
@@ -813,9 +801,10 @@ class WebOneDriveManager:
                     logger.error(f"OneDrive: Failed to load note {note_info['id']}: {e}")
                     load_stats["errors"] += 1
                     
-                    # On Railway, if we get any errors, stop to prevent timeout
-                    if IS_RAILWAY and load_stats["errors"] > 1:
-                        logger.warning(f"Railway mode: stopping after {load_stats['errors']} errors to prevent timeout")
+                    # Continue processing other notes even on errors (desktop app compatibility)
+                    # Only stop if we get too many consecutive errors (indicates serious issue)
+                    if load_stats["errors"] > 5:
+                        logger.warning(f"Stopping after {load_stats['errors']} errors to prevent cascade failure")
                         break
             
             # Add info about skipped notes
