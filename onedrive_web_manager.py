@@ -313,36 +313,21 @@ class WebOneDriveManager:
                 del self._auth_flows[session_id]
                 return {"status": "expired", "message": f"Authentication flow expired after {timeout/60:.1f} minutes"}
             
-            # Add timeout protection to prevent worker timeout
-            import signal
-            import threading
-            
-            def timeout_handler():
-                raise TimeoutError("Authentication check timed out")
-            
-            # Use a threading timer for timeout (works on all platforms)
-            timeout_timer = threading.Timer(8.0, timeout_handler)  # 8 second timeout
-            result = None
-            
+            # Try to complete the device flow (auth should not be rushed)
             try:
-                timeout_timer.start()
-                
-                # Try to complete the device flow with timeout protection
                 result = self.app.acquire_token_by_device_flow(flow_data["flow"])
                 
-            except TimeoutError:
-                logger.info(f"OneDrive: Device flow check timed out for session {session_id}")
-                return {"status": "pending", "message": "Authentication check in progress..."}
-            
             except Exception as e:
-                # Handle specific MSAL timeout/network issues
+                # Handle specific MSAL timeout/network issues gracefully
                 if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'network']):
                     logger.info(f"OneDrive: Network/timeout issue during auth check: {e}")
                     return {"status": "pending", "message": "Authentication check in progress..."}
+                
+                # For other MSAL errors that indicate still pending
+                if "authorization_pending" in str(e).lower() or "slow_down" in str(e).lower():
+                    return {"status": "pending", "message": "Waiting for user to complete authentication..."}
+                    
                 raise e
-            
-            finally:
-                timeout_timer.cancel()
             
             if "access_token" in result:
                 self.access_token = result["access_token"]
