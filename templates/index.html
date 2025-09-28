@@ -12,8 +12,8 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Samsung + Auth Fix (v2.7)</title>
-    <!-- Cache buster: 2025-09-28-integrated-auth -->
+    <title>📝 Mobile Noted - Samsung + Sync Fix (v2.8)</title>
+    <!-- Cache buster: 2025-09-28-sync-auth-check -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -1909,12 +1909,15 @@
                         if (statusDiv) {
                             if (data.available) {
                                 if (data.authenticated) {
-                                    statusDiv.innerHTML = '✅ OneDrive connected and authenticated';
+                                    statusDiv.innerHTML = '✅ OneDrive connected and ready for sync';
+                                    document.getElementById('authSection').style.display = 'none';
                                 } else {
-                                    statusDiv.innerHTML = '⚠️ OneDrive available but not authenticated';
+                                    statusDiv.innerHTML = '🔐 OneDrive available - Click \"Connect OneDrive\" to authenticate';
+                                    document.getElementById('authSection').style.display = 'block';
                                 }
                             } else {
-                                statusDiv.innerHTML = '❌ OneDrive not available: ' + (data.error || 'Unknown error');
+                                statusDiv.innerHTML = '❌ OneDrive not configured: ' + (data.error || 'Unknown error');
+                                document.getElementById('authSection').style.display = 'none';
                             }
                         }
                         return;
@@ -3163,6 +3166,20 @@
         // Sync notes to OneDrive
         async function syncToOneDrive() {
             try {
+                // Check authentication status first
+                const statusCheck = await fetch('/api/simple/onedrive/status');
+                if (statusCheck.ok) {
+                    const statusData = await statusCheck.json();
+                    if (!statusData.available) {
+                        showStatus('❌ OneDrive not configured. Please set up OneDrive in Settings.', true);
+                        return;
+                    }
+                    if (!statusData.authenticated) {
+                        showStatus('🔐 Please authenticate with OneDrive first. Click "Cloud Sync" to sign in.', true);
+                        return;
+                    }
+                }
+                
                 // Show progress bar
                 showProgressBar('onedrive-progress', 'Preparing sync to OneDrive...');
                 
@@ -3229,6 +3246,20 @@
         // Sync notes from OneDrive
         async function syncFromOneDrive(mergeStrategy = 'merge') {
             try {
+                // Check authentication status first
+                const statusCheck = await fetch('/api/simple/onedrive/status');
+                if (statusCheck.ok) {
+                    const statusData = await statusCheck.json();
+                    if (!statusData.available) {
+                        showStatus('❌ OneDrive not configured. Please set up OneDrive in Settings.', true);
+                        return;
+                    }
+                    if (!statusData.authenticated) {
+                        showStatus('🔐 Please authenticate with OneDrive first. Click "Cloud Sync" to sign in.', true);
+                        return;
+                    }
+                }
+                
                 if (mergeStrategy === 'replace') {
                     if (!confirm('This will replace all your local notes with cloud notes. Continue?')) {
                         return;
