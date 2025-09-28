@@ -12,8 +12,8 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Samsung Optimized (v2.6)</title>
-    <!-- Cache buster: 2025-09-28-samsung-optimized -->
+    <title>📝 Mobile Noted - Samsung + Auth Fix (v2.7)</title>
+    <!-- Cache buster: 2025-09-28-integrated-auth -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -1418,6 +1418,44 @@
                     <!-- OneDrive Controls -->
                     <div id="authSection" class="auth-section" style="display: none;">
                         <button class="btn cloud-btn" onclick="startOneDriveAuth()">🔗 Connect OneDrive</button>
+                        
+                        <!-- Integrated Device Flow -->
+                        <div id="deviceFlowSection" style="display: none; margin-top: 15px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 2px solid #0078d4;">
+                            <h4 style="color: #0078d4; margin-bottom: 15px; text-align: center;">🔗 OneDrive Authentication</h4>
+                            
+                            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                <div style="margin-bottom: 10px;">
+                                    <strong>1. Visit this URL:</strong><br>
+                                    <a id="verificationUrl" href="#" target="_blank" style="color: #0078d4; font-weight: bold; word-break: break-all;">
+                                        Loading...
+                                    </a>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <strong>2. Enter this code:</strong><br>
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
+                                        <span id="deviceCode" style="font-family: monospace; font-size: 1.3em; font-weight: bold; color: #0078d4; background: #f0f8ff; padding: 8px 12px; border-radius: 4px; border: 1px solid #0078d4;">
+                                            Loading...
+                                        </span>
+                                        <button onclick="copyDeviceCode()" class="btn" style="background: #0078d4; color: white; padding: 8px 12px; font-size: 14px;">📋 Copy</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="auth-progress-section">
+                                    <div class="progress-container" style="margin: 10px 0;">
+                                        <div class="progress-bar">
+                                            <div id="authProgressFill" class="progress-fill" style="width: 100%;"></div>
+                                        </div>
+                                        <div id="authProgressText" class="progress-text">Initializing...</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="text-align: center; margin-top: 15px;">
+                                <button class="btn" onclick="checkAuthProgress()" style="background: #28a745; color: white; margin-right: 10px;">🔄 Check Status</button>
+                                <button class="btn" onclick="cancelOneDriveAuth()" style="background: #dc3545; color: white;">❌ Cancel</button>
+                            </div>
+                        </div>
                     </div>
                     
                     <div id="syncSection" class="sync-section" style="display: none;">
@@ -1452,32 +1490,7 @@
             </div>
         </div>
 
-        <!-- Authentication Modal for Device Flow -->
-        <div id="authModal" class="auth-modal" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>🔗 Connect OneDrive</h3>
-                    <button onclick="hideAuthModal()" class="close-btn">✕</button>
-                </div>
-                <div class="modal-body">
-                    <div id="deviceAuthInstructions" style="display: none;">
-                        <p><strong>Follow these steps:</strong></p>
-                        <ol>
-                            <li>Copy the code below: <strong id="deviceCode"></strong>
-                                <button class="copy-btn" onclick="copyDeviceCode()">📋 Copy</button>
-                            </li>
-                            <li>Visit: <a id="verificationUrl" href="" target="_blank">Microsoft Device Login</a></li>
-                            <li>Enter the code and sign in</li>
-                            <li>Return here - connection will complete automatically</li>
-                        </ol>
-                        <div class="auth-progress">
-                            <div class="spinner"></div>
-                            <span>Waiting for authentication...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Old authentication modal removed - now integrated into main cloud section -->
 
         <!-- OneDrive Notes Browser -->
         <div id="cloudNotesBrowser" class="cloud-notes-browser" style="display: none;">
@@ -2870,13 +2883,15 @@
 
         // Display device flow authentication UI
         function displayDeviceFlow(authFlow) {
-            // Show the authentication modal
-            showAuthModal();
+            // Show the integrated device flow section
+            const deviceFlowSection = document.getElementById('deviceFlowSection');
+            if (deviceFlowSection) {
+                deviceFlowSection.style.display = 'block';
+            }
             
             // Populate device flow information
             const verificationUrl = document.getElementById('verificationUrl');
             const deviceCode = document.getElementById('deviceCode');
-            const deviceAuthInstructions = document.getElementById('deviceAuthInstructions');
             
             // Set up verification URL as clickable link
             if (verificationUrl) {
@@ -2888,11 +2903,6 @@
                 deviceCode.textContent = authFlow.user_code;
             }
             
-            // Show the instructions
-            if (deviceAuthInstructions) {
-                deviceAuthInstructions.style.display = 'block';
-            }
-            
             showOneDriveControls('authenticating');
             
             // Start checking auth status
@@ -2900,6 +2910,9 @@
             let elapsed = 0;
             
             // Initial progress text
+            const authProgressText = document.getElementById('authProgressText');
+            const authProgressFill = document.getElementById('authProgressFill');
+            
             if (authProgressText) {
                 authProgressText.textContent = `Waiting for authentication... (${Math.round((expiresIn - elapsed) / 60)} minutes remaining)`;
             }
@@ -2909,9 +2922,12 @@
                 const progress = (elapsed / expiresIn) * 100;
                 const remainingMinutes = Math.max(0, Math.round((expiresIn - elapsed) / 60));
                 
-                progressFill.style.width = Math.min(progress, 100) + '%';
+                if (authProgressFill) {
+                    authProgressFill.style.width = Math.min(progress, 100) + '%';
+                }
                 
                 // Update progress text
+                const authProgressText = document.getElementById('authProgressText');
                 if (authProgressText) {
                     if (remainingMinutes > 0) {
                         authProgressText.textContent = `Waiting for authentication... (${remainingMinutes} minutes remaining)`;
@@ -2978,22 +2994,27 @@
                         authTimeoutCount = 0;  // Reset timeout counter on success
                         
                         // Enhanced success feedback
-                        const progressFill = document.getElementById('progressFill');
-                        if (progressFill) {
-                            progressFill.style.width = '100%';
-                            progressFill.style.background = '#28a745';
+                        const authProgressFill = document.getElementById('authProgressFill');
+                        const authProgressText = document.getElementById('authProgressText');
+                        
+                        if (authProgressFill) {
+                            authProgressFill.style.width = '100%';
+                            authProgressFill.style.background = '#28a745';
                         }
-                        if (progressText) {
-                            progressText.textContent = '✅ Authentication successful! Connecting...';
-                            progressText.style.color = '#28a745';
+                        if (authProgressText) {
+                            authProgressText.textContent = '✅ Authentication successful! Connecting...';
+                            authProgressText.style.color = '#28a745';
                         }
                         
                         showStatus('OneDrive connected successfully! ✅');
                         
-                        // Update modal status and close device flow
+                        // Update status and hide device flow section
                         setTimeout(() => {
                             updateOneDriveModalStatus();
-                            hideDeviceFlowDisplay();
+                            const deviceFlowSection = document.getElementById('deviceFlowSection');
+                            if (deviceFlowSection) {
+                                deviceFlowSection.style.display = 'none';
+                            }
                         }, 1500);
                         
                         // Auto-load OneDrive notes after successful connection
@@ -3296,6 +3317,38 @@
                     showStatus('Sync error: ' + error.message, true);
                 }
             }
+        }
+
+        // Cancel OneDrive authentication
+        function cancelOneDriveAuth() {
+            if (oneDriveAuthTimer) {
+                clearInterval(oneDriveAuthTimer);
+                oneDriveAuthTimer = null;
+            }
+            
+            const deviceFlowSection = document.getElementById('deviceFlowSection');
+            if (deviceFlowSection) {
+                deviceFlowSection.style.display = 'none';
+            }
+            
+            showStatus('Authentication cancelled', false);
+            updateOneDriveModalStatus();
+        }
+
+        // Cancel OneDrive authentication
+        function cancelOneDriveAuth() {
+            if (oneDriveAuthTimer) {
+                clearInterval(oneDriveAuthTimer);
+                oneDriveAuthTimer = null;
+            }
+            
+            const deviceFlowSection = document.getElementById('deviceFlowSection');
+            if (deviceFlowSection) {
+                deviceFlowSection.style.display = 'none';
+            }
+            
+            showStatus('Authentication cancelled', false);
+            updateOneDriveModalStatus();
         }
 
         // Enhanced cloud sync handler with better feedback
