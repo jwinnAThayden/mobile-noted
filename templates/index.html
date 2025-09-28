@@ -2825,7 +2825,13 @@
         async function startOneDriveAuth() {
             console.log('🔍 🚀 CONNECT BUTTON CLICKED - Starting OneDrive authentication...');
             authTimeoutCount = 0;  // Reset timeout counter for new auth attempt
-            
+
+            // Always show authSection and deviceFlowSection for user feedback
+            const authSection = document.getElementById('authSection');
+            const deviceFlowSection = document.getElementById('deviceFlowSection');
+            if (authSection) authSection.style.display = 'block';
+            if (deviceFlowSection) deviceFlowSection.style.display = 'block';
+
             try {
                 // Try the simple endpoint first (more reliable)
                 console.log('🔍 Trying simple auth endpoint...');
@@ -2835,50 +2841,53 @@
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 console.log('🔍 Simple auth response status:', response ? response.status : 'null');
                 console.log('🔍 Simple auth response ok:', response ? response.ok : 'null');
-                
+
                 if (!response || !response.ok) {
                     console.error('🔍 Simple auth endpoint failed, trying authenticated endpoint...');
                     response = await authenticatedFetch('/api/onedrive/auth/start', {
                         method: 'POST'
                     });
                 }
-                
+
                 if (!response) {
                     console.error('🔍 Both auth endpoints failed - no response');
                     showStatus('OneDrive authentication endpoints unavailable', true);
+                    if (deviceFlowSection) deviceFlowSection.style.display = 'none';
                     return;
                 }
-                
+
                 // Check if response is JSON
                 const contentType = response.headers.get('content-type');
                 console.log('🔍 Response content-type:', contentType);
-                
+
                 if (!contentType || !contentType.includes('application/json')) {
                     console.error('🔍 Response is not JSON, content-type:', contentType);
                     const responseText = await response.text();
                     console.error('🔍 Response text:', responseText.substring(0, 200));
                     showStatus('OneDrive authentication endpoint returned invalid response', true);
+                    if (deviceFlowSection) deviceFlowSection.style.display = 'none';
                     return;
                 }
-                
+
                 const data = await response.json();
                 console.log('🔍 Auth response data:', data);
-                
+
                 if (data.success) {
                     displayDeviceFlow(data.auth_flow);
                     // Update modal status if it's open
                     setTimeout(() => updateOneDriveModalStatus(), 500);
                 } else {
                     showStatus('Failed to start OneDrive authentication: ' + data.error, true);
+                    if (deviceFlowSection) deviceFlowSection.style.display = 'none';
                 }
             } catch (error) {
                 console.error('🔍 OneDrive auth error:', error);
                 console.error('🔍 Error details:', error.message, error.stack);
                 showStatus('OneDrive authentication failed: ' + error.message, true);
-                
+                if (deviceFlowSection) deviceFlowSection.style.display = 'none';
                 // Update modal status to reflect error
                 setTimeout(() => updateOneDriveModalStatus(), 500);
             }

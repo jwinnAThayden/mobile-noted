@@ -314,9 +314,35 @@ class WebOneDriveManager:
                 del self._auth_flows[session_id]
                 return {"status": "expired", "message": f"Authentication flow expired after {timeout/60:.1f} minutes"}
             
-            # Try to complete the device flow (auth should not be rushed)
+            # Try to complete the device flow with timeout protection
+            # Use threading timeout to prevent gunicorn worker crashes
+            import threading
+            from queue import Queue, Empty
+            
+            def auth_check_worker(q, flow):
+                """Worker function to check auth in separate thread"""
+                try:
+                    result = self.app.acquire_token_by_device_flow(flow)
+                    q.put(('success', result))
+                except Exception as e:
+                    q.put(('error', e))
+            
+            # Use queue to get result from worker thread with timeout
+            result_queue = Queue()
+            worker_thread = threading.Thread(target=auth_check_worker, args=(result_queue, flow_data["flow"]))
+            worker_thread.daemon = True  # Die with main thread
+            worker_thread.start()
+            
             try:
-                result = self.app.acquire_token_by_device_flow(flow_data["flow"])
+                # Wait max 60 seconds to prevent gunicorn worker timeout (120s default)
+                status, result = result_queue.get(timeout=60)
+                
+                if status == 'error':
+                    raise result
+                    
+            except Empty:
+                logger.warning(f"🕐 Auth check timeout after 60s - preventing gunicorn worker crash")
+                return {"status": "pending", "message": "Authentication check timed out - still in progress..."}
                 
             except Exception as e:
                 # Handle specific MSAL timeout/network issues gracefully
