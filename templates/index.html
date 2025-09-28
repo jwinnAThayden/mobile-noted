@@ -12,7 +12,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Debug Enhanced (v3.3)</title>
+    <title>📝 Mobile Noted - Display Protected (v3.4)</title>
     <!-- Cache buster: 2025-09-28-debug-enhanced -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -2920,6 +2920,26 @@
             if (deviceFlowSection) {
                 deviceFlowSection.style.display = 'block';
                 console.log('🔍 Device flow section shown');
+                
+                // CRITICAL: Override style.display to prevent hiding during device flow
+                const originalStyleDescriptor = Object.getOwnPropertyDescriptor(deviceFlowSection.style, 'display') || 
+                    Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype, 'display');
+                
+                Object.defineProperty(deviceFlowSection.style, 'display', {
+                    get: function() {
+                        return deviceFlowInProgress ? 'block' : (this._realDisplay || 'block');
+                    },
+                    set: function(value) {
+                        if (deviceFlowInProgress && value === 'none') {
+                            console.warn('🔍 BLOCKED attempt to hide deviceFlowSection during device flow!');
+                            return; // Ignore attempts to hide during device flow
+                        }
+                        this._realDisplay = value;
+                        if (originalStyleDescriptor && originalStyleDescriptor.set) {
+                            originalStyleDescriptor.set.call(this, value);
+                        }
+                    }
+                });
             } else {
                 console.error('🔍 Device flow section not found!');
             }
@@ -3057,6 +3077,8 @@
                             updateOneDriveModalStatus();
                             const deviceFlowSection = document.getElementById('deviceFlowSection');
                             if (deviceFlowSection) {
+                                // Clear the display override and hide the authentication UI
+                                delete deviceFlowSection.style.display;
                                 deviceFlowSection.style.display = 'none';
                             }
                         }, 1500);
@@ -3396,6 +3418,9 @@
 
         // Cancel OneDrive authentication
         function cancelOneDriveAuth() {
+            deviceFlowInProgress = false;
+            console.log('🔍 deviceFlowInProgress cleared to false (cancelled)');
+            
             if (oneDriveAuthTimer) {
                 clearInterval(oneDriveAuthTimer);
                 oneDriveAuthTimer = null;
@@ -3403,6 +3428,8 @@
             
             const deviceFlowSection = document.getElementById('deviceFlowSection');
             if (deviceFlowSection) {
+                // Clear the display override and hide the authentication UI
+                delete deviceFlowSection.style.display;
                 deviceFlowSection.style.display = 'none';
             }
             
