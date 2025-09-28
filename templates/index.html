@@ -12,8 +12,8 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Flow Protection (v3.1)</title>
-    <!-- Cache buster: 2025-09-28-flow-protection -->
+    <title>📝 Mobile Noted - Auth Timing (v3.2)</title>
+    <!-- Cache buster: 2025-09-28-auth-timing -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -2936,7 +2936,7 @@
             const authProgressFill = document.getElementById('authProgressFill');
             
             if (authProgressText) {
-                authProgressText.textContent = `Waiting for authentication... (${Math.round((expiresIn - elapsed) / 60)} minutes remaining)`;
+                authProgressText.textContent = `📋 Visit the URL above, enter the code, then click "Check Status" (auto-check in 30s)`;
             }
             
             oneDriveAuthTimer = setInterval(() => {
@@ -2969,8 +2969,14 @@
                 }
             }, 5000);
             
-            // Check status immediately
-            checkAuthProgress();
+            // Don't check immediately - give user time to visit URL and enter code
+            // User can click "Check Status" button when ready, or it will auto-check after 30 seconds
+            setTimeout(() => {
+                if (deviceFlowInProgress) {
+                    console.log('🔍 Auto-checking auth progress after 30 seconds...');
+                    checkAuthProgress();
+                }
+            }, 30000); // Give user 30 seconds to visit URL and enter code
         }
 
         // Check authentication progress
