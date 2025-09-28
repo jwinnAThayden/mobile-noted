@@ -12,8 +12,8 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Device Flow Fix (v2.9)</title>
-    <!-- Cache buster: 2025-09-28-dialog-header-fix -->
+    <title>📝 Mobile Noted - Auth Flow Fix (v3.0)</title>
+    <!-- Cache buster: 2025-09-28-auth-status-fix -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -2879,8 +2879,8 @@
 
                 if (data.success) {
                     displayDeviceFlow(data.auth_flow);
-                    // Update modal status if it's open
-                    setTimeout(() => updateOneDriveModalStatus(), 500);
+                    // Don't call updateOneDriveModalStatus here - it would hide the device flow
+                    // The status will be updated when authentication completes via checkAuthProgress
                 } else {
                     showStatus('Failed to start OneDrive authentication: ' + data.error, true);
                     if (deviceFlowSection) deviceFlowSection.style.display = 'none';
