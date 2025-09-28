@@ -12,8 +12,8 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Auth Timing (v3.2)</title>
-    <!-- Cache buster: 2025-09-28-auth-timing -->
+    <title>📝 Mobile Noted - Debug Enhanced (v3.3)</title>
+    <!-- Cache buster: 2025-09-28-debug-enhanced -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -1693,7 +1693,14 @@
 
         // Update OneDrive status within the modal
         function updateOneDriveModalStatus() {
-            console.log('🔍 Updating OneDrive status...');
+            console.log('🔍 Updating OneDrive status...', 'deviceFlowInProgress:', deviceFlowInProgress);
+            
+            // CRITICAL: Don't interfere with device flow authentication
+            if (deviceFlowInProgress) {
+                console.log('🔍 BLOCKING updateOneDriveModalStatus - device flow in progress');
+                return;
+            }
+            
             const statusIcon = document.getElementById('statusIcon');
             const statusText = document.getElementById('statusText');
             const accountInfo = document.getElementById('accountInfo');
@@ -2886,6 +2893,7 @@
 
                 if (data.success) {
                     deviceFlowInProgress = true; // Prevent status checks from interfering
+                    console.log('🔍 Setting deviceFlowInProgress = true');
                     displayDeviceFlow(data.auth_flow);
                     // Don't call updateOneDriveModalStatus here - it would hide the device flow
                     // The status will be updated when authentication completes via checkAuthProgress
@@ -2905,10 +2913,15 @@
 
         // Display device flow authentication UI
         function displayDeviceFlow(authFlow) {
+            console.log('🔍 displayDeviceFlow called, deviceFlowInProgress:', deviceFlowInProgress);
+            
             // Show the integrated device flow section
             const deviceFlowSection = document.getElementById('deviceFlowSection');
             if (deviceFlowSection) {
                 deviceFlowSection.style.display = 'block';
+                console.log('🔍 Device flow section shown');
+            } else {
+                console.error('🔍 Device flow section not found!');
             }
             
             // Populate device flow information
@@ -3037,6 +3050,7 @@
                         showStatus('OneDrive connected successfully! ✅');
                         
                         deviceFlowInProgress = false; // Clear flag when authentication succeeds
+                        console.log('🔍 Setting deviceFlowInProgress = false (success)');
                         
                         // Update status and hide device flow section
                         setTimeout(() => {
@@ -3140,6 +3154,7 @@
         async function cancelOneDriveAuth() {
             try {
                 deviceFlowInProgress = false; // Clear flag when cancelling
+                console.log('🔍 Setting deviceFlowInProgress = false (cancelled)');
                 
                 if (oneDriveAuthTimer) {
                     clearInterval(oneDriveAuthTimer);
