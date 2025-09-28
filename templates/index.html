@@ -12,8 +12,8 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Auth Flow Fix (v3.0)</title>
-    <!-- Cache buster: 2025-09-28-auth-status-fix -->
+    <title>📝 Mobile Noted - Flow Protection (v3.1)</title>
+    <!-- Cache buster: 2025-09-28-flow-protection -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -1880,6 +1880,12 @@
         
         // Simple and robust OneDrive status check with Railway-friendly timeout
         async function checkOneDriveStatus() {
+            // Don't interfere with device flow authentication in progress
+            if (deviceFlowInProgress) {
+                console.log('🔍 Skipping status check - device flow in progress');
+                return;
+            }
+            
             const statusDiv = document.getElementById('onedriveStatus');
             
             try {
@@ -2678,6 +2684,7 @@
         
         let oneDriveAuthTimer = null;
         let authTimeoutCount = 0;  // Track timeout retries
+        let deviceFlowInProgress = false;  // Track when device flow authentication is active
         let autoSyncEnabled = false;
         
         // Load OneDrive status on page load
@@ -2878,6 +2885,7 @@
                 console.log('🔍 Auth response data:', data);
 
                 if (data.success) {
+                    deviceFlowInProgress = true; // Prevent status checks from interfering
                     displayDeviceFlow(data.auth_flow);
                     // Don't call updateOneDriveModalStatus here - it would hide the device flow
                     // The status will be updated when authentication completes via checkAuthProgress
@@ -3022,6 +3030,8 @@
                         
                         showStatus('OneDrive connected successfully! ✅');
                         
+                        deviceFlowInProgress = false; // Clear flag when authentication succeeds
+                        
                         // Update status and hide device flow section
                         setTimeout(() => {
                             updateOneDriveModalStatus();
@@ -3123,6 +3133,8 @@
         // Cancel OneDrive authentication
         async function cancelOneDriveAuth() {
             try {
+                deviceFlowInProgress = false; // Clear flag when cancelling
+                
                 if (oneDriveAuthTimer) {
                     clearInterval(oneDriveAuthTimer);
                     oneDriveAuthTimer = null;
