@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover, maximum-scale=2.0">
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -12,8 +12,8 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Personal Notes (v2.5)</title>
-    <!-- Cache buster: 2025-09-22-15:00 -->
+    <title>📝 Mobile Noted - Samsung Optimized (v2.6)</title>
+    <!-- Cache buster: 2025-09-28-samsung-optimized -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -37,66 +37,142 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-family: 'Samsung Sharp Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 10px;
+            padding: 5px;
+            font-size: 18px;
         }
 
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(10px);
             overflow: hidden;
+            min-height: calc(100vh - 10px);
         }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            padding: 15px;
             text-align: center;
             color: white;
         }
 
         .header h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
+            font-size: 1.8em;
+            margin-bottom: 8px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
         }
 
         .subtitle {
             opacity: 0.9;
-            font-size: 1.1em;
+            font-size: 1.0em;
+            margin-bottom: 5px;
         }
 
         .controls {
-            padding: 20px;
+            padding: 15px 12px;
             border-bottom: 1px solid #eee;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
 
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
+            padding: 16px 24px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
+            font-size: 18px;
+            font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
-            flex: 1;
-            min-width: 120px;
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.35);
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 18px rgba(102, 126, 234, 0.45);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .cloud-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            font-size: 17px !important;
+            padding: 18px 20px !important;
+            margin: 8px 0 !important;
+            width: 100% !important;
+            box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3) !important;
+        }
+
+        .cloud-btn:hover {
+            box-shadow: 0 8px 18px rgba(40, 167, 69, 0.45) !important;
+        }
+
+        .progress-container {
+            padding: 15px !important;
+            background: white !important;
+            border: 2px solid #0078d4 !important;
+            border-radius: 10px !important;
+            margin: 10px !important;
+        }
+
+        .progress-bar {
+            width: 100% !important;
+            height: 12px !important;
+            background: #e9ecef !important;
+            border-radius: 6px !important;
+            overflow: hidden !important;
+            margin-bottom: 10px !important;
+        }
+
+        .progress-fill {
+            height: 100% !important;
+            background: linear-gradient(90deg, #0078d4, #106ebe) !important;
+            transition: width 0.5s ease !important;
+            border-radius: 6px !important;
+        }
+
+        .progress-text {
+            text-align: center !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            color: #0078d4 !important;
+        }
+
+        .sync-buttons {
+            padding: 15px !important;
+            display: grid !important;
+            gap: 12px !important;
+        }
+
+        .cloud-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            font-size: 17px;
+            padding: 18px 20px;
+            margin: 8px 0;
+            width: 100%;
+            box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .cloud-btn:hover {
+            box-shadow: 0 8px 18px rgba(40, 167, 69, 0.45);
         }
 
         .btn:active {
@@ -113,9 +189,10 @@
         }
 
         .notes-container {
-            padding: 20px;
-            max-height: 60vh;
+            padding: 15px 10px;
+            max-height: calc(100vh - 280px);
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .note-card {
@@ -228,6 +305,35 @@
         .status.error {
             background: #ffe8e8;
             color: #5a2d2d;
+        }
+
+        /* Enhanced status for mobile */
+        #status {
+            position: fixed !important;
+            bottom: 25px !important;
+            left: 10px !important;
+            right: 10px !important;
+            background: #333 !important;
+            color: white !important;
+            padding: 16px 20px !important;
+            border-radius: 10px !important;
+            z-index: 1000 !important;
+            opacity: 0 !important;
+            transition: opacity 0.4s ease !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        #status.error {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            border-left: 4px solid #a71e2a !important;
+        }
+
+        #status.success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            border-left: 4px solid #1e7e34 !important;
         }
 
         /* Mobile optimizations */
@@ -970,19 +1076,58 @@
             font-weight: 600;
         }
 
+        .progress-container {
+            padding: 15px;
+            background: white;
+            border: 2px solid #0078d4;
+            border-radius: 10px;
+            margin: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0078d4, #106ebe);
+            transition: width 0.5s ease;
+            border-radius: 6px;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #0078d4;
+        }
+
+        .sync-buttons {
+            padding: 15px;
+            display: grid;
+            gap: 12px;
+        }
+
         .cloud-section {
             border-bottom: 1px solid #eee;
         }
 
         .section-header {
-            padding: 15px 20px;
-            background: #f8f9fa;
+            padding: 18px 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-weight: 500;
-            border-bottom: 1px solid #eee;
+            font-weight: 600;
+            font-size: 1.1em;
+            border-bottom: 2px solid #dee2e6;
+            min-height: 60px;
         }
 
         .section-header:hover {
@@ -1001,23 +1146,26 @@
         .cloud-controls {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: max-height 0.4s ease;
+            background: #fafbfc;
         }
 
         .cloud-controls.expanded {
-            max-height: 400px;
+            max-height: 600px;
         }
 
         .sync-status {
-            padding: 15px 20px;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 18px 15px;
+            border-bottom: 1px solid #e9ecef;
+            background: white;
         }
 
         .status-indicator {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 14px;
+            gap: 12px;
+            font-size: 16px;
+            min-height: 48px;
         }
 
         .account-info {
@@ -1932,11 +2080,16 @@
         function showStatus(message, isError = false) {
             const status = document.getElementById('status');
             status.textContent = message;
-            status.className = `status show ${isError ? 'error' : ''}`;
+            status.className = `status show ${isError ? 'error' : 'success'}`;
+            
+            // Vibrate on Samsung phones for feedback
+            if (navigator.vibrate) {
+                navigator.vibrate(isError ? [200, 100, 200] : [100]);
+            }
             
             setTimeout(() => {
                 status.classList.remove('show');
-            }, 3000);
+            }, isError ? 5000 : 3000); // Show errors longer
         }
 
         // Progress bar helper functions
@@ -3141,6 +3294,42 @@
                     showStatus('Network error: Please check your connection and try again. If the issue persists, try using the simple sync endpoint.', true);
                 } else {
                     showStatus('Sync error: ' + error.message, true);
+                }
+            }
+        }
+
+        // Enhanced cloud sync handler with better feedback
+        async function handleCloudSync(operation) {
+            const btn = document.getElementById(operation === 'pull' ? 'pullBtn' : 'pushBtn');
+            
+            if (btn) {
+                const originalText = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = operation === 'pull' ? '⏳ Pulling...' : '⏳ Pushing...';
+                btn.style.background = '#6c757d';
+                
+                try {
+                    if (operation === 'pull') {
+                        await syncFromOneDrive();
+                    } else {
+                        await syncToOneDrive();
+                    }
+                } catch (error) {
+                    console.error('Cloud sync error:', error);
+                    showStatus(`${operation === 'pull' ? 'Pull' : 'Push'} failed: ${error.message}`, true);
+                } finally {
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                        btn.style.background = '';
+                    }, 2000);
+                }
+            } else {
+                // Fallback to original functions
+                if (operation === 'pull') {
+                    await syncFromOneDrive();
+                } else {
+                    await syncToOneDrive();
                 }
             }
         }
