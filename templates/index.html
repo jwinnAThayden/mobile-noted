@@ -4822,7 +4822,7 @@
                 console.log('🔍 Loading OneDrive notes...');
                 
                 // Check authentication first
-                const authStatus = await fetch('/onedrive/status');
+                const authStatus = await fetch('/api/onedrive/status');
                 const authData = await authStatus.json();
                 
                 if (!authData.authenticated) {
