@@ -5324,58 +5324,15 @@
             window.addEventListener('beforeunload', () => {
                 clearInterval(pollInterval);
             });
-        }            let notesHtml = '';
-            if (notes.length === 0) {
-                notesHtml = '<div style="text-align: center; padding: 40px; color: #666;"><div style="font-size: 48px; margin-bottom: 20px;">📔</div><div style="font-size: 18px;">No notes found in your OneDrive</div></div>';
-            } else {
-                notesHtml = '<div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px;">';
-                notes.forEach((note, index) => {
-                    const truncatedContent = note.content ? note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '') : 'Empty note';
-                    notesHtml += `
-                        <div style="
-                            padding: 15px;
-                            border-bottom: 1px solid #eee;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            background: ${index % 2 === 0 ? '#f9f9f9' : 'white'};
-                        ">
-                            <div style="flex: 1; text-align: left;">
-                                <div style="font-weight: bold; color: #333; margin-bottom: 5px;">${note.name}</div>
-                                <div style="color: #666; font-size: 14px;">Modified: ${new Date(note.modified).toLocaleString()}</div>
-                                <div style="color: #999; font-size: 12px; margin-top: 5px;">Size: ${(note.size / 1024).toFixed(1)} KB</div>
-                            </div>
-                            <div style="display: flex; gap: 10px; margin-left: 15px;">
-                                <button onclick="loadCloudNoteFullScreen('${note.id}', '${note.name.replace(/'/g, "\\'")}')"
-                                        style="background: #0078d4; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">📄 Load</button>
-                                <button onclick="renameCloudNoteFullScreen('${note.id}', '${note.name.replace(/'/g, "\\'")}')"
-                                        style="background: #ffc107; color: black; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">✏️ Rename</button>
-                                <button onclick="deleteCloudNoteFullScreen('${note.id}', '${note.name.replace(/'/g, "\\'")}')"
-                                        style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">🗑️ Delete</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                notesHtml += '</div>';
-            }
-            
-            showFullScreenDialog(
-                '☁️ Cloud Notes',
-                notesHtml,
-                [{text: '🔄 Refresh', onclick: 'showOneDriveNotes()', color: '#28a745'}, {text: '❌ Close', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
-            );
         }
-        
-        async function loadCloudNoteFullScreen(noteId, noteName) {
+
+        // New single-page compatible functions
+        async function loadCloudNote(noteId, noteName) {
             try {
                 console.log('🔍 Loading cloud note:', noteId, noteName);
                 
-                // Show loading
-                showFullScreenDialog(
-                    '📄 Loading Note',
-                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Loading "${noteName}"...</div></div>`,
-                    [{text: '❌ Cancel', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
-                );
+                // Show loading page
+                showOneDrivePage('loading', `Loading "${noteName}"...`);
                 
                 const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
                 if (!response.ok) {
@@ -5384,8 +5341,8 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    // Close dialog and add note to local notes
-                    closeFullScreenDialog();
+                    // Hide OneDrive page and add note to local notes
+                    hideOneDrivePage();
                     
                     const newNote = {
                         id: Date.now(),
@@ -5398,34 +5355,28 @@
                     renderNotes();
                     selectNote(notes.length - 1);
                     
-                    showStatus(`Note "${noteName}" loaded from OneDrive`, 'success');
+                    showStatus(`Note "${noteName}" loaded from OneDrive ✅`, 'success');
                 } else {
                     throw new Error(data.error || 'Failed to load note');
                 }
             } catch (error) {
                 console.error('🔍 Error loading cloud note:', error);
-                showFullScreenDialog(
-                    '❌ Error Loading Note',
-                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to load "${noteName}"<br><small>${error.message}</small></div>`,
-                    [{text: '🔄 Try Again', onclick: `loadCloudNoteFullScreen('${noteId}', '${noteName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
-                );
+                showOneDrivePage('error', `Failed to load "${noteName}"`, error.message);
             }
         }
         
-        async function renameCloudNoteFullScreen(noteId, currentName) {
+        async function renameCloudNote(noteId, currentName) {
             const newName = prompt(`Rename "${currentName}" to:`, currentName);
             if (!newName || newName === currentName) return;
             
             try {
-                showFullScreenDialog(
-                    '✏️ Renaming Note',
-                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Renaming "${currentName}" to "${newName}"...</div></div>`,
-                    []
-                );
+                showOneDrivePage('loading', `Renaming "${currentName}"...`);
                 
                 const response = await authenticatedFetch(`/api/onedrive/note/${noteId}/rename`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ new_name: newName })
                 });
                 
@@ -5435,31 +5386,24 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    showOneDriveNotes(); // Refresh the list
+                    showStatus(`Note renamed to "${newName}" ✅`, 'success');
+                    showOneDriveNotes(); // Refresh the notes list
                 } else {
                     throw new Error(data.error || 'Failed to rename note');
                 }
             } catch (error) {
-                console.error('🔍 Error renaming note:', error);
-                showFullScreenDialog(
-                    '❌ Error Renaming Note',
-                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to rename note<br><small>${error.message}</small></div>`,
-                    [{text: '🔄 Try Again', onclick: `renameCloudNoteFullScreen('${noteId}', '${currentName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
-                );
+                console.error('� Error renaming cloud note:', error);
+                showOneDrivePage('error', `Failed to rename "${currentName}"`, error.message);
             }
         }
         
-        async function deleteCloudNoteFullScreen(noteId, noteName) {
+        async function deleteCloudNote(noteId, noteName) {
             if (!confirm(`Are you sure you want to delete "${noteName}" from OneDrive? This cannot be undone.`)) {
                 return;
             }
             
             try {
-                showFullScreenDialog(
-                    '🗑️ Deleting Note',
-                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Deleting "${noteName}"...</div></div>`,
-                    []
-                );
+                showOneDrivePage('loading', `Deleting "${noteName}"...`);
                 
                 const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
                     method: 'DELETE'
@@ -5471,20 +5415,17 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    showOneDriveNotes(); // Refresh the list
+                    showStatus(`Note "${noteName}" deleted from OneDrive ✅`, 'success');
+                    showOneDriveNotes(); // Refresh the notes list
                 } else {
                     throw new Error(data.error || 'Failed to delete note');
                 }
             } catch (error) {
-                console.error('🔍 Error deleting note:', error);
-                showFullScreenDialog(
-                    '❌ Error Deleting Note',
-                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to delete "${noteName}"<br><small>${error.message}</small></div>`,
-                    [{text: '🔄 Try Again', onclick: `deleteCloudNoteFullScreen('${noteId}', '${noteName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
-                );
+                console.error('🔍 Error deleting cloud note:', error);
+                showOneDrivePage('error', `Failed to delete "${noteName}"`, error.message);
             }
         }
-
+        
         function hideCloudNotesBrowser() {
             document.getElementById('cloudNotesBrowser').style.display = 'none';
             
@@ -5502,202 +5443,7 @@
             updateSelectionCount();
         }
 
-        // Load a cloud note into a new tab
-        async function loadCloudNoteFullScreen(noteId, noteName) {
-            try {
-                console.log('🔍 Loading cloud note:', noteId, noteName);
-                
-                // Show loading
-                showFullScreenDialog(
-                    '📄 Loading Note',
-                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Loading "${noteName}"...</div></div>`,
-                    [{text: '❌ Cancel', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
-                );
-                
-                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                if (data.status === 'success') {
-                    // Close dialog and add note to local notes
-                    closeFullScreenDialog();
-                    
-                    const newNote = {
-                        id: Date.now(),
-                        title: noteName,
-                        content: data.content || '',
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    notes.push(newNote);
-                    renderNotes();
-                    selectNote(notes.length - 1);
-                    
-                    showStatus(`Note "${noteName}" loaded from OneDrive`, 'success');
-                } else {
-                    throw new Error(data.message || 'Failed to load note');
-                }
-            } catch (error) {
-                console.error('🔍 Error loading cloud note:', error);
-                showFullScreenDialog(
-                    '❌ Error Loading Note',
-                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to load "${noteName}"<br><small>${error.message}</small></div>`,
-                    [{text: '🔄 Try Again', onclick: `loadCloudNoteFullScreen('${noteId}', '${noteName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
-                );
-            }
-        }
         
-        async function renameCloudNoteFullScreen(noteId, currentName) {
-            const newName = prompt(`Rename "${currentName}" to:`, currentName);
-            if (!newName || newName === currentName) return;
-            
-            try {
-                showFullScreenDialog(
-                    '✏️ Renaming Note',
-                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Renaming "${currentName}" to "${newName}"...</div></div>`,
-                    []
-                );
-                
-                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}/rename`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ new_name: newName })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                if (data.status === 'success') {
-                    showOneDriveNotes(); // Refresh the list
-                } else {
-                    throw new Error(data.message || 'Failed to rename note');
-                }
-            } catch (error) {
-                console.error('🔍 Error renaming note:', error);
-                showFullScreenDialog(
-                    '❌ Error Renaming Note',
-                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to rename note<br><small>${error.message}</small></div>`,
-                    [{text: '🔄 Try Again', onclick: `renameCloudNoteFullScreen('${noteId}', '${currentName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
-                );
-            }
-        }
-        
-        async function deleteCloudNoteFullScreen(noteId, noteName) {
-            if (!confirm(`Are you sure you want to delete "${noteName}" from OneDrive? This cannot be undone.`)) {
-                return;
-            }
-            
-            try {
-                showFullScreenDialog(
-                    '🗑️ Deleting Note',
-                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Deleting "${noteName}"...</div></div>`,
-                    []
-                );
-                
-                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
-                    method: 'DELETE'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                if (data.status === 'success') {
-                    showOneDriveNotes(); // Refresh the list
-                } else {
-                    throw new Error(data.message || 'Failed to delete note');
-                }
-            } catch (error) {
-                console.error('🔍 Error deleting note:', error);
-                showFullScreenDialog(
-                    '❌ Error Deleting Note',
-                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to delete "${noteName}"<br><small>${error.message}</small></div>`,
-                    [{text: '🔄 Try Again', onclick: `deleteCloudNoteFullScreen('${noteId}', '${noteName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
-                );
-            }
-        }
-
-        async function loadCloudNote(noteId, noteName) {
-            try {
-                
-                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
-                if (!response) {
-                    return;
-                }
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Create a new tab with the loaded content
-                    addNote(data.content, noteName.replace(/\.txt$/, ''));
-                    hideCloudNotesBrowser();
-                }
-            } catch (error) {
-                console.error('Error loading note:', error);
-            }
-        }
-
-        // Rename a cloud note
-        async function renameCloudNote(noteId, currentName) {
-            const newName = prompt('Enter new name for the note:', currentName.replace(/\.txt$/, ''));
-            if (!newName || newName.trim() === '') return;
-            
-            const finalName = newName.trim() + (newName.trim().endsWith('.txt') ? '' : '.txt');
-            
-            try {
-                
-                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}/rename`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ new_name: finalName })
-                });
-                
-                if (!response) {
-                    return;
-                }
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Refresh the notes list
-                    showOneDriveNotes();
-                }
-            } catch (error) {
-                console.error('Error renaming note:', error);
-            }
-        }
-
-        // Delete a cloud note
-        async function deleteCloudNote(noteId, noteName) {
-            try {
-                console.log('🗑️ Deleting note:', noteId, noteName);
-                
-                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
-                    method: 'DELETE'
-                });
-                
-                if (!response) {
-                    console.error('❌ Delete failed: No response');
-                    return;
-                }
-                
-                const data = await response.json();
-                console.log('🗑️ Delete response:', data);
-                
-                // Always refresh the list regardless of reported success
-                showOneDriveNotes();
-            } catch (error) {
-                console.error('❌ Error deleting note:', error);
-                // Still refresh in case it worked
-                showOneDriveNotes();
-            }
-        }
-
         // EMERGENCY: Fix missing device flow section (call from console if needed)
         window.emergencyFixDeviceFlow = function() {
             console.log('🚨 EMERGENCY: Attempting to fix missing device flow section...');
