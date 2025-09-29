@@ -4975,7 +4975,7 @@
                     <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="selectAllNotes" onchange="toggleSelectAllNotes()" style="transform: scale(1.2);">
+                                <input type="checkbox" id="selectAllNotes" style="transform: scale(1.2);">
                                 <span style="font-weight: bold;">Select All</span>
                             </label>
                             <span id="selectedCount" style="color: #666; font-size: 14px;">0 selected</span>
@@ -5019,7 +5019,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
                                     <div style="display: flex; align-items: flex-start; gap: 15px; flex: 1;">
                                         <label style="margin-top: 5px;">
-                                            <input type="checkbox" class="note-checkbox" data-note-id="${note.id}" data-note-name="${note.name.replace(/'/g, "\\'")}" onchange="updateSelectedCount()" style="transform: scale(1.2);">
+                                            <input type="checkbox" class="note-checkbox" data-note-id="${note.id}" data-note-name="${note.name.replace(/'/g, "\\'")}" style="transform: scale(1.2);">
                                         </label>
                                         <div style="flex: 1; min-width: 200px;">
                                             <h3 style="margin: 0 0 10px 0; color: #333;">${note.name}</h3>
@@ -5114,10 +5114,34 @@
                     </div>
                 </div>
                 <script>
-                    // Initialize selection state after page renders
+                    // Initialize selection state and event listeners after page renders
                     setTimeout(() => {
-                        if (typeof updateSelectedCount === 'function') {
-                            updateSelectedCount();
+                        console.log('🔧 Initializing selection functionality...');
+                        console.log('🔧 Available functions:', {
+                            toggleSelectAllNotes: typeof window.toggleSelectAllNotes,
+                            updateSelectedCount: typeof window.updateSelectedCount
+                        });
+                        
+                        // Add event listener to "Select All" checkbox
+                        const selectAllCheckbox = document.getElementById('selectAllNotes');
+                        if (selectAllCheckbox) {
+                            selectAllCheckbox.addEventListener('change', window.toggleSelectAllNotes);
+                            console.log('✅ Select All checkbox listener added');
+                        } else {
+                            console.log('❌ Select All checkbox not found');
+                        }
+                        
+                        // Add event listeners to individual note checkboxes
+                        const noteCheckboxes = document.querySelectorAll('.note-checkbox');
+                        noteCheckboxes.forEach(checkbox => {
+                            checkbox.addEventListener('change', window.updateSelectedCount);
+                        });
+                        console.log(`✅ Added event listeners to ${noteCheckboxes.length} note checkboxes`);
+                        
+                        // Initialize selection count
+                        if (typeof window.updateSelectedCount === 'function') {
+                            window.updateSelectedCount();
+                            console.log('✅ Initial selection count updated');
                         }
                     }, 100);
                 </script>
@@ -5563,7 +5587,7 @@
         }
         
         // Toggle select all checkboxes
-        function toggleSelectAllNotes() {
+        window.toggleSelectAllNotes = function() {
             const selectAllCheckbox = document.getElementById('selectAllNotes');
             const checkboxes = document.querySelectorAll('.note-checkbox');
             
@@ -5580,7 +5604,7 @@
         }
         
         // Update the count of selected notes and enable/disable bulk delete button
-        function updateSelectedCount() {
+        window.updateSelectedCount = function() {
             const checkboxes = document.querySelectorAll('.note-checkbox');
             const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
             const selectedCount = selectedCheckboxes.length;
