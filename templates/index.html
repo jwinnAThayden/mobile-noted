@@ -12,7 +12,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Mutation Tracked (v3.5)</title>
+    <title>📝 Mobile Noted - Full Visibility Tracking (v3.6)</title>
     <!-- Cache buster: 2025-09-28-debug-enhanced -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -2922,22 +2922,51 @@
                 console.log('🔍 Device flow section shown, current display:', deviceFlowSection.style.display);
                 console.log('🔍 Device flow section computed style:', window.getComputedStyle(deviceFlowSection).display);
                 
-                // Add MutationObserver to track visibility changes
+                // Add comprehensive MutationObserver to track ALL changes
                 const observer = new MutationObserver(function(mutations) {
                     mutations.forEach(function(mutation) {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                            console.log('🔍 STYLE CHANGE detected on deviceFlowSection!');
+                        if (mutation.type === 'attributes') {
+                            console.log('🔍 ATTRIBUTE CHANGE detected on deviceFlowSection!');
+                            console.log('🔍 Changed attribute:', mutation.attributeName);
+                            console.log('🔍 Old value:', mutation.oldValue);
                             console.log('🔍 New style.display:', deviceFlowSection.style.display);
                             console.log('🔍 New computed display:', window.getComputedStyle(deviceFlowSection).display);
+                            console.log('🔍 Element class:', deviceFlowSection.className);
                             console.log('🔍 deviceFlowInProgress at time of change:', deviceFlowInProgress);
+                        } else if (mutation.type === 'childList') {
+                            console.log('🔍 CHILD LIST CHANGE detected on deviceFlowSection!');
                         }
                     });
                 });
                 
                 observer.observe(deviceFlowSection, { 
                     attributes: true, 
-                    attributeFilter: ['style'] 
+                    attributeOldValue: true,
+                    childList: true,
+                    subtree: true
                 });
+                
+                // Also observe parent elements that could hide the dialog
+                let parent = deviceFlowSection.parentElement;
+                const parentObservers = [];
+                while (parent && parent !== document.body) {
+                    const parentObserver = new MutationObserver(function(mutations) {
+                        mutations.forEach(function(mutation) {
+                            if (mutation.type === 'attributes') {
+                                console.log('🔍 PARENT CHANGE detected on:', parent.tagName, parent.id || parent.className);
+                                console.log('🔍 Changed parent attribute:', mutation.attributeName);
+                                console.log('🔍 Parent computed display:', window.getComputedStyle(parent).display);
+                                console.log('🔍 DeviceFlow computed display after parent change:', window.getComputedStyle(deviceFlowSection).display);
+                            }
+                        });
+                    });
+                    parentObserver.observe(parent, { attributes: true, attributeOldValue: true });
+                    parentObservers.push(parentObserver);
+                    parent = parent.parentElement;
+                }
+                
+                // Store all observers for cleanup
+                deviceFlowSection._allObservers = [observer, ...parentObservers];
                 
                 // Store observer for cleanup
                 deviceFlowSection._visibilityObserver = observer;
@@ -2964,7 +2993,32 @@
                     }
                 });
                 
-                // Double-check visibility after setup
+                // Periodic visibility monitoring
+                let visibilityCheckInterval = setInterval(() => {
+                    const computedStyle = window.getComputedStyle(deviceFlowSection);
+                    const isVisible = computedStyle.display !== 'none' && computedStyle.visibility !== 'hidden';
+                    
+                    if (!isVisible && deviceFlowInProgress) {
+                        console.error('🚨 DIALOG BECAME INVISIBLE!');
+                        console.log('🔍 Style display:', deviceFlowSection.style.display);
+                        console.log('🔍 Computed display:', computedStyle.display);
+                        console.log('🔍 Computed visibility:', computedStyle.visibility);
+                        console.log('🔍 Element class:', deviceFlowSection.className);
+                        console.log('🔍 Parent elements:');
+                        let p = deviceFlowSection.parentElement;
+                        while (p && p !== document.body) {
+                            const pStyle = window.getComputedStyle(p);
+                            console.log(`  - ${p.tagName}#${p.id}.${p.className}: display=${pStyle.display}, visibility=${pStyle.visibility}`);
+                            p = p.parentElement;
+                        }
+                        clearInterval(visibilityCheckInterval); // Stop checking once we found the issue
+                    }
+                }, 50); // Check every 50ms
+                
+                // Store interval for cleanup
+                deviceFlowSection._visibilityInterval = visibilityCheckInterval;
+                
+                // Initial check
                 setTimeout(() => {
                     console.log('🔍 After 100ms - display:', deviceFlowSection.style.display, 'computed:', window.getComputedStyle(deviceFlowSection).display);
                 }, 100);
@@ -3105,13 +3159,15 @@
                             updateOneDriveModalStatus();
                             const deviceFlowSection = document.getElementById('deviceFlowSection');
                             if (deviceFlowSection) {
-                                // Clean up MutationObserver
-                                if (deviceFlowSection._visibilityObserver) {
-                                    deviceFlowSection._visibilityObserver.disconnect();
-                                    delete deviceFlowSection._visibilityObserver;
-                                }
-                                
-                                // Clear the display override and hide the authentication UI
+                // Clean up all MutationObservers
+                if (deviceFlowSection._allObservers) {
+                    deviceFlowSection._allObservers.forEach(obs => obs.disconnect());
+                    delete deviceFlowSection._allObservers;
+                }
+                if (deviceFlowSection._visibilityObserver) {
+                    deviceFlowSection._visibilityObserver.disconnect();
+                    delete deviceFlowSection._visibilityObserver;
+                }                                // Clear the display override and hide the authentication UI
                                 delete deviceFlowSection.style.display;
                                 deviceFlowSection.style.display = 'none';
                             }
@@ -3462,7 +3518,11 @@
             
             const deviceFlowSection = document.getElementById('deviceFlowSection');
             if (deviceFlowSection) {
-                // Clean up MutationObserver
+                // Clean up all MutationObservers
+                if (deviceFlowSection._allObservers) {
+                    deviceFlowSection._allObservers.forEach(obs => obs.disconnect());
+                    delete deviceFlowSection._allObservers;
+                }
                 if (deviceFlowSection._visibilityObserver) {
                     deviceFlowSection._visibilityObserver.disconnect();
                     delete deviceFlowSection._visibilityObserver;
