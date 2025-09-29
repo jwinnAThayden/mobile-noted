@@ -12,7 +12,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Display Protected (v3.4)</title>
+    <title>📝 Mobile Noted - Mutation Tracked (v3.5)</title>
     <!-- Cache buster: 2025-09-28-debug-enhanced -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -2919,7 +2919,28 @@
             const deviceFlowSection = document.getElementById('deviceFlowSection');
             if (deviceFlowSection) {
                 deviceFlowSection.style.display = 'block';
-                console.log('🔍 Device flow section shown');
+                console.log('🔍 Device flow section shown, current display:', deviceFlowSection.style.display);
+                console.log('🔍 Device flow section computed style:', window.getComputedStyle(deviceFlowSection).display);
+                
+                // Add MutationObserver to track visibility changes
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                            console.log('🔍 STYLE CHANGE detected on deviceFlowSection!');
+                            console.log('🔍 New style.display:', deviceFlowSection.style.display);
+                            console.log('🔍 New computed display:', window.getComputedStyle(deviceFlowSection).display);
+                            console.log('🔍 deviceFlowInProgress at time of change:', deviceFlowInProgress);
+                        }
+                    });
+                });
+                
+                observer.observe(deviceFlowSection, { 
+                    attributes: true, 
+                    attributeFilter: ['style'] 
+                });
+                
+                // Store observer for cleanup
+                deviceFlowSection._visibilityObserver = observer;
                 
                 // CRITICAL: Override style.display to prevent hiding during device flow
                 const originalStyleDescriptor = Object.getOwnPropertyDescriptor(deviceFlowSection.style, 'display') || 
@@ -2930,8 +2951,10 @@
                         return deviceFlowInProgress ? 'block' : (this._realDisplay || 'block');
                     },
                     set: function(value) {
+                        console.log('🔍 Attempt to set display to:', value, 'deviceFlowInProgress:', deviceFlowInProgress);
                         if (deviceFlowInProgress && value === 'none') {
                             console.warn('🔍 BLOCKED attempt to hide deviceFlowSection during device flow!');
+                            console.trace('🔍 Stack trace for blocked hide attempt:');
                             return; // Ignore attempts to hide during device flow
                         }
                         this._realDisplay = value;
@@ -2940,6 +2963,11 @@
                         }
                     }
                 });
+                
+                // Double-check visibility after setup
+                setTimeout(() => {
+                    console.log('🔍 After 100ms - display:', deviceFlowSection.style.display, 'computed:', window.getComputedStyle(deviceFlowSection).display);
+                }, 100);
             } else {
                 console.error('🔍 Device flow section not found!');
             }
@@ -3077,6 +3105,12 @@
                             updateOneDriveModalStatus();
                             const deviceFlowSection = document.getElementById('deviceFlowSection');
                             if (deviceFlowSection) {
+                                // Clean up MutationObserver
+                                if (deviceFlowSection._visibilityObserver) {
+                                    deviceFlowSection._visibilityObserver.disconnect();
+                                    delete deviceFlowSection._visibilityObserver;
+                                }
+                                
                                 // Clear the display override and hide the authentication UI
                                 delete deviceFlowSection.style.display;
                                 deviceFlowSection.style.display = 'none';
@@ -3428,6 +3462,12 @@
             
             const deviceFlowSection = document.getElementById('deviceFlowSection');
             if (deviceFlowSection) {
+                // Clean up MutationObserver
+                if (deviceFlowSection._visibilityObserver) {
+                    deviceFlowSection._visibilityObserver.disconnect();
+                    delete deviceFlowSection._visibilityObserver;
+                }
+                
                 // Clear the display override and hide the authentication UI
                 delete deviceFlowSection.style.display;
                 deviceFlowSection.style.display = 'none';
