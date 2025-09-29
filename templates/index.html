@@ -2094,7 +2094,8 @@
         
         // Legacy compatibility
         function showOneDrivePanel() {
-            showOneDrivePanelProperly();
+            console.log('🔍 Showing OneDrive main page');
+            showOneDrivePage('main');
         }
         
 
@@ -2189,119 +2190,77 @@
             }
         }
         
-        // Simple and robust OneDrive status check with Railway-friendly timeout
+        // Simple and robust OneDrive status check
         async function checkOneDriveStatus() {
-            // Don't interfere with device flow authentication in progress
-            if (deviceFlowInProgress) {
-                console.log('🔍 Skipping status check - device flow in progress');
+            console.log('🔍 Checking OneDrive status...');
+            
+            try {
+                // Show loading page
+                showOneDrivePage('loading', { message: 'Checking status...' });
+                
+                const response = await fetch('/onedrive/status');
+                const data = await response.json();
+                
+                showOneDrivePage('status', { status: data });
+                
+            } catch (error) {
+                console.error('🔍 Error checking OneDrive status:', error);
+                showOneDrivePage('error', {
+                    error: `Failed to check OneDrive status: ${error.message}`,
+                    retry: 'checkOneDriveStatus()'
+                });
+            }
+        }
+        
+        async function uploadCurrentNote() {
+            const currentNote = getCurrentNote();
+            if (!currentNote || !currentNote.content) {
+                showOneDrivePage('error', 'No note selected', 'Please select a note with content to upload');
                 return;
             }
             
-            console.log('🔍 checkOneDriveStatus: Starting OneDrive status check...');
-            const statusDiv = document.getElementById('onedriveStatus');
-            
             try {
-                console.log('🔍 checkOneDriveStatus: Setting status to "Checking connection..."');
-                if (statusDiv) statusDiv.innerHTML = 'Checking connection...';
+                console.log('🔍 Uploading current note to OneDrive');
                 
-                // Create AbortController for manual timeout control - Railway needs much longer timeouts
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => {
-                    console.log('⏱️ OneDrive status check timed out after 60 seconds');
-                    controller.abort();
-                }, 60000); // Increased to 60 seconds for Railway heavy load
+                // Show loading page
+                showOneDrivePage('loading', `Uploading "${currentNote.title}" to OneDrive...`);
                 
-                try {
-
-                    const response = await fetch('/api/simple/onedrive/status', {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' },
-                        signal: controller.signal
-                    });
-                    
-                    clearTimeout(timeoutId);
-
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-
-                        
-                        if (statusDiv) {
-                            if (data.available) {
-                                if (data.authenticated) {
-                                    statusDiv.innerHTML = '✅ OneDrive connected and ready for sync';
-                                    document.getElementById('authSection').style.display = 'none';
-                                } else {
-                                    statusDiv.innerHTML = '🔐 OneDrive available - Click \"Connect OneDrive\" to authenticate';
-                                    document.getElementById('authSection').style.display = 'block';
-                                }
-                            } else {
-                                statusDiv.innerHTML = '❌ OneDrive not configured: ' + (data.error || 'Unknown error');
-                                document.getElementById('authSection').style.display = 'none';
-                            }
-                        }
-                        return;
-                    }
-                } catch (fetchError) {
-                    clearTimeout(timeoutId);
-                    console.error('Fetch error:', fetchError);
-                    
-                    if (fetchError.name === 'AbortError') {
-                        console.log('🔄 OneDrive status check aborted due to timeout, attempting retry...');
-                        if (statusDiv) statusDiv.innerHTML = '⏱️ Connection timeout - retrying...';
-                        
-                        // Attempt one retry with even longer timeout
-                        try {
-                            const retryController = new AbortController();
-                            const retryTimeoutId = setTimeout(() => {
-                                retryController.abort();
-                            }, 90000); // 90 seconds for retry on Railway
-                            
-                            const retryResponse = await fetch('/api/simple/onedrive/status', {
-                                method: 'GET',
-                                headers: { 'Content-Type': 'application/json' },
-                                signal: retryController.signal
-                            });
-                            
-                            clearTimeout(retryTimeoutId);
-                            
-                            if (retryResponse.ok) {
-                                const data = await retryResponse.json();
-                                if (statusDiv) {
-                                    if (data.available) {
-                                        if (data.authenticated) {
-                                            statusDiv.innerHTML = '✅ OneDrive connected (after retry)';
-                                        } else {
-                                            statusDiv.innerHTML = '⚠️ OneDrive available but not authenticated';
-                                        }
-                                    } else {
-                                        statusDiv.innerHTML = '❌ OneDrive not available: ' + (data.error || 'Unknown error');
-                                    }
-                                }
-                                return;
-                            }
-                        } catch (retryError) {
-                            console.error('Retry also failed:', retryError);
-                            if (statusDiv) statusDiv.innerHTML = '❌ Connection timeout - server unavailable';
-                            return;
-                        }
-                        
-                        if (statusDiv) statusDiv.innerHTML = '❌ Connection timeout - server may be overloaded';
-                        return;
-                    }
-                    throw fetchError;
+                const response = await authenticatedFetch('/api/onedrive/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: currentNote.title,
+                        content: currentNote.content
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                // If we get here, the simple endpoint failed
-
-                if (statusDiv) statusDiv.innerHTML = '❌ OneDrive service unavailable';
-                
+                const data = await response.json();
+                if (data.success) {
+                    showStatus(`Note "${currentNote.title}" uploaded to OneDrive successfully! ✅`, 'success');
+                    hideOneDrivePage();
+                } else {
+                    throw new Error(data.error || 'Upload failed');
+                }
             } catch (error) {
-                console.error('OneDrive status check error:', error);
-                if (statusDiv) {
-                    statusDiv.innerHTML = '❌ Connection error: ' + (error.message || 'Unknown error');
-                }
+                console.error('🔍 Error uploading note:', error);
+                showOneDrivePage('error', 'Upload failed', error.message);
             }
+        }
+        
+        function getCurrentNote() {
+            if (currentNoteIndex >= 0 && currentNoteIndex < notes.length) {
+                return {
+                    title: notes[currentNoteIndex].title || `Note ${currentNoteIndex + 1}`,
+                    content: notes[currentNoteIndex].content || ''
+                };
+            }
+            return null;
         }
 
         // Get CSRF token
@@ -3148,39 +3107,17 @@
 
         // Start OneDrive authentication
         async function startOneDriveAuth() {
-            console.log('🔍 🚀 CONNECT BUTTON CLICKED - Starting OneDrive authentication...');
-            authTimeoutCount = 0;  // Reset timeout counter for new auth attempt
-
-            // CRITICAL: Ensure cloud section is expanded so OneDrive controls are visible
-            const cloudControls = document.getElementById('cloudControls');
-            const cloudToggleIcon = document.getElementById('cloudToggleIcon');
-            if (cloudControls && !cloudControls.classList.contains('expanded')) {
-                cloudControls.classList.add('expanded');
-                if (cloudToggleIcon) {
-                    cloudToggleIcon.textContent = '▲';
-                    cloudToggleIcon.classList.add('rotated');
-                }
-                console.log('🔍 startOneDriveAuth: Cloud section expanded to show OneDrive controls');
-            }
-
-            // Always show authSection and deviceFlowSection for user feedback
-            const authSection = document.getElementById('authSection');
-            const deviceFlowSection = document.getElementById('deviceFlowSection');
-            if (authSection) {
-                authSection.style.display = 'block';
-                console.log('🔍 startOneDriveAuth: authSection shown');
-            } else {
-                console.error('🔍 startOneDriveAuth: authSection not found!');
-            }
-            if (deviceFlowSection) {
-                deviceFlowSection.style.display = 'block';
-                console.log('🔍 startOneDriveAuth: deviceFlowSection shown');
-            } else {
-                console.error('🔍 startOneDriveAuth: deviceFlowSection not found!');
-            }
-
+            console.log('🔍 🚀 Starting OneDrive authentication in full-screen mode...');
+            
             try {
-                // Try the simple endpoint first (more reliable)
+                // Show loading in full-screen
+                showFullScreenDialog(
+                    '� OneDrive Authentication',
+                    '<div style="text-align: center; padding: 40px;"><div style="font-size: 48px; margin-bottom: 20px;">⏳</div><div style="font-size: 18px; color: #666;">Starting authentication...</div></div>',
+                    [{text: '❌ Cancel', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
+                );
+                
+                // Try the simple endpoint first
                 console.log('🔍 Trying simple auth endpoint...');
                 let response = await fetch('/api/simple/onedrive/auth/start', {
                     method: 'POST',
@@ -3188,9 +3125,6 @@
                         'Content-Type': 'application/json'
                     }
                 });
-
-                console.log('🔍 Simple auth response status:', response ? response.status : 'null');
-                console.log('🔍 Simple auth response ok:', response ? response.ok : 'null');
 
                 if (!response || !response.ok) {
                     console.error('🔍 Simple auth endpoint failed, trying authenticated endpoint...');
@@ -3200,46 +3134,106 @@
                 }
 
                 if (!response) {
-                    console.error('🔍 Both auth endpoints failed - no response');
-                    showStatus('OneDrive authentication endpoints unavailable', true);
-                    if (deviceFlowSection) deviceFlowSection.style.display = 'none';
-                    return;
+                    throw new Error('OneDrive authentication endpoints unavailable');
                 }
 
                 // Check if response is JSON
                 const contentType = response.headers.get('content-type');
-                console.log('🔍 Response content-type:', contentType);
-
                 if (!contentType || !contentType.includes('application/json')) {
-                    console.error('🔍 Response is not JSON, content-type:', contentType);
                     const responseText = await response.text();
                     console.error('🔍 Response text:', responseText.substring(0, 200));
-                    showStatus('OneDrive authentication endpoint returned invalid response', true);
-                    if (deviceFlowSection) deviceFlowSection.style.display = 'none';
-                    return;
+                    throw new Error('OneDrive authentication endpoint returned invalid response');
                 }
 
                 const data = await response.json();
                 console.log('🔍 Auth response data:', data);
 
                 if (data.success) {
-                    deviceFlowInProgress = window.deviceFlowInProgress = true; // Prevent status checks from interfering
-                    console.log('🔍 Setting deviceFlowInProgress = true');
-                    displayDeviceFlow(data.auth_flow);
-                    // Don't call updateOneDriveModalStatus here - it would hide the device flow
-                    // The status will be updated when authentication completes via checkAuthProgress
+                    displayDeviceFlowFullScreen(data.auth_flow);
                 } else {
-                    showStatus('Failed to start OneDrive authentication: ' + data.error, true);
-                    if (deviceFlowSection) deviceFlowSection.style.display = 'none';
+                    throw new Error(data.error || 'Failed to start OneDrive authentication');
                 }
             } catch (error) {
                 console.error('🔍 OneDrive auth error:', error);
-                console.error('🔍 Error details:', error.message, error.stack);
-                showStatus('OneDrive authentication failed: ' + error.message, true);
-                if (deviceFlowSection) deviceFlowSection.style.display = 'none';
-                // Update modal status to reflect error
-                setTimeout(() => updateOneDriveModalStatus(), 500);
+                showFullScreenDialog(
+                    '❌ Authentication Error',
+                    `<div style="text-align: center; padding: 20px;"><div style="color: #dc3545; font-size: 18px; margin-bottom: 15px;">Failed to start authentication</div><div style="color: #666;">${error.message}</div></div>`,
+                    [{text: '🔄 Try Again', onclick: 'startOneDriveAuth()', color: '#28a745'}, {text: '❌ Close', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
+                );
             }
+        }
+        
+        function displayDeviceFlowFullScreen(authFlow) {
+            console.log('🔍 Displaying device flow in full-screen:', authFlow);
+            
+            const deviceContent = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="margin-bottom: 30px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🔐</div>
+                        <div style="font-size: 24px; color: #333; margin-bottom: 10px;">Device Authentication</div>
+                        <div style="color: #666;">Complete authentication on your device</div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0; border-left: 4px solid #0078d4;">
+                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Follow these steps:</div>
+                        <div style="text-align: left; margin-bottom: 15px;">
+                            <div style="margin-bottom: 8px;">1. Visit: <strong>${authFlow.verification_uri}</strong></div>
+                            <div style="margin-bottom: 8px;">2. Enter code: <strong id="deviceCode" style="font-size: 20px; color: #0078d4; letter-spacing: 2px;">${authFlow.user_code}</strong></div>
+                            <div>3. Sign in with your Microsoft account</div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                            <button onclick="copyFullPageDeviceCode()" style="
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 14px;
+                            ">
+                                📋 Copy Code
+                            </button>
+                            <button onclick="window.open('${authFlow.verification_uri}', '_blank')" style="
+                                background: #0078d4;
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 14px;
+                            ">
+                                🌐 Open Browser
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="authProgress" style="margin-top: 20px;">
+                        <div style="font-size: 16px; color: #666; margin-bottom: 10px;">Waiting for authentication...</div>
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 5px;">
+                            <div style="width: 8px; height: 8px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+                            <div style="width: 8px; height: 8px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite 0.2s;"></div>
+                            <div style="width: 8px; height: 8px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite 0.4s;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <style>
+                    @keyframes pulse {
+                        0%, 100% { opacity: 0.3; }
+                        50% { opacity: 1; }
+                    }
+                </style>
+            `;
+            
+            showFullScreenDialog(
+                '🔐 OneDrive Authentication',
+                deviceContent,
+                [{text: '❌ Cancel', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
+            );
+            
+            // Start checking for authentication completion
+            checkAuthStatusFullPage();
         }
 
         // Display device flow authentication UI
@@ -4019,6 +4013,74 @@
             }, 30000); // Give user 30 seconds to visit URL and enter code
         }
 
+        // Single-Page Navigation System
+        function showOneDrivePage(pageType, data = {}) {
+            console.log('🔍 Showing OneDrive page:', pageType);
+            
+            // Hide main notes interface
+            const mainInterface = document.querySelector('.container');
+            if (mainInterface) {
+                mainInterface.style.display = 'none';
+            }
+            
+            // Create or show OneDrive interface
+            let onedriveInterface = document.getElementById('onedriveInterface');
+            if (!onedriveInterface) {
+                onedriveInterface = document.createElement('div');
+                onedriveInterface.id = 'onedriveInterface';
+                onedriveInterface.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: #f5f5f5;
+                    z-index: 1000;
+                    overflow-y: auto;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                `;
+                document.body.appendChild(onedriveInterface);
+            }
+            
+            onedriveInterface.style.display = 'block';
+            
+            // Generate page content based on type
+            switch (pageType) {
+                case 'main':
+                    onedriveInterface.innerHTML = generateMainOneDrivePage();
+                    break;
+                case 'browse':
+                    onedriveInterface.innerHTML = generateBrowsePage(data.notes || []);
+                    break;
+                case 'auth':
+                    onedriveInterface.innerHTML = generateAuthPage(data.authFlow);
+                    break;
+                case 'status':
+                    onedriveInterface.innerHTML = generateStatusPage(data.status);
+                    break;
+                case 'loading':
+                    onedriveInterface.innerHTML = generateLoadingPage(data.message || 'Loading...');
+                    break;
+                case 'error':
+                    onedriveInterface.innerHTML = generateErrorPage(data.error, data.retry);
+                    break;
+            }
+        }
+        
+        function hideOneDrivePage() {
+            console.log('🔍 Hiding OneDrive page');
+            const onedriveInterface = document.getElementById('onedriveInterface');
+            if (onedriveInterface) {
+                onedriveInterface.style.display = 'none';
+            }
+            
+            // Show main notes interface
+            const mainInterface = document.querySelector('.container');
+            if (mainInterface) {
+                mainInterface.style.display = 'block';
+            }
+        }
+
         // Copy device code in full-page mode
         function copyFullPageDeviceCode() {
             const codeElement = document.getElementById('authDeviceCode');
@@ -4666,10 +4728,11 @@
             }
         }
 
-        // Show OneDrive notes browser
+        // Show OneDrive notes browser in single-page mode
         async function showOneDriveNotes() {
-            console.log('🔍 showOneDriveNotes: Starting...');
             try {
+                console.log('🔍 Loading OneDrive notes...');
+                
                 // Check authentication first
                 const authStatus = await fetch('/onedrive/status');
                 const authData = await authStatus.json();
@@ -4680,75 +4743,745 @@
                     return;
                 }
                 
-                const browser = document.getElementById('cloudNotesBrowser');
-                const status = document.getElementById('cloudNotesStatus');
-                const list = document.getElementById('cloudNotesList');
+                // Show loading page
+                showOneDrivePage('loading', { message: 'Loading your cloud notes...' });
                 
-                if (!browser || !status || !list) {
-                    console.error('🔍 showOneDriveNotes: Browser elements not found');
-                    return;
-                }
-                
-                browser.style.display = 'block';
-                status.textContent = 'Loading cloud notes...';
-                list.innerHTML = '';
-                
-                console.log('🔍 showOneDriveNotes: Fetching notes...');
                 const response = await authenticatedFetch('/api/onedrive/notes');
                 if (!response) {
-                    console.error('🔍 showOneDriveNotes: No response from API');
-                    status.textContent = 'Failed to load notes. Please try again.';
-                    return;
+                    throw new Error('No response from OneDrive API');
                 }
                 
                 const data = await response.json();
+                console.log('🔍 OneDrive notes data:', data);
                 
                 if (data.success) {
-                    status.textContent = `Found ${data.count} notes in OneDrive`;
-                    
-                    // Show/hide bulk actions based on note count
-                    const bulkBar = document.getElementById('bulkActionsBar');
-                    if (data.notes.length > 0) {
-                        bulkBar.style.display = 'flex';
-                    } else {
-                        bulkBar.style.display = 'none';
-                    }
-                    
-                    if (data.notes.length === 0) {
-                        list.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No notes found in OneDrive</p>';
-                    } else {
-                        data.notes.forEach(note => {
-                            const noteItem = document.createElement('div');
-                            noteItem.className = 'cloud-note-item';
-                            noteItem.innerHTML = `
-                                <input type="checkbox" class="note-checkbox" data-note-id="${note.id}" data-note-name="${note.name}" onchange="updateSelectionCount()">
-                                <div class="cloud-note-header">
-                                    <div class="cloud-note-name">${note.name}</div>
-                                    <div class="cloud-note-actions">
-                                        <button class="cloud-note-btn load" onclick="loadCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')">
+                    showOneDrivePage('browse', { notes: data.notes });
+                } else {
+                    throw new Error(data.error || 'Failed to load notes');
+                }
+            } catch (error) {
+                console.error('🔍 Error loading OneDrive notes:', error);
+                showOneDrivePage('error', {
+                    error: `Failed to load cloud notes: ${error.message}`,
+                    retry: 'showOneDriveNotes()'
+                });
+            }
+        }
+        
+        // Page Generation Functions
+        function generateMainOneDrivePage() {
+            return `
+                <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
+                    <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 40px;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">☁️</div>
+                            <h1 style="color: #333; margin: 0 0 10px 0;">OneDrive Integration</h1>
+                            <p style="color: #666; font-size: 18px;">Sync your notes with Microsoft OneDrive</p>
+                        </div>
+                        
+                        <div style="display: grid; gap: 20px; max-width: 400px; margin: 0 auto;">
+                            <button onclick="startOneDriveAuth()" style="
+                                background: linear-gradient(135deg, #0078d4, #106ebe);
+                                color: white;
+                                border: none;
+                                padding: 20px;
+                                border-radius: 12px;
+                                cursor: pointer;
+                                font-size: 18px;
+                                font-weight: bold;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 15px;
+                                transition: transform 0.2s;
+                            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                🔐 Authenticate with OneDrive
+                            </button>
+                            
+                            <button onclick="showOneDriveNotes()" style="
+                                background: linear-gradient(135deg, #28a745, #20c997);
+                                color: white;
+                                border: none;
+                                padding: 20px;
+                                border-radius: 12px;
+                                cursor: pointer;
+                                font-size: 18px;
+                                font-weight: bold;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 15px;
+                                transition: transform 0.2s;
+                            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                📂 Browse Cloud Notes
+                            </button>
+                            
+                            <button onclick="uploadCurrentNote()" style="
+                                background: linear-gradient(135deg, #17a2b8, #20c997);
+                                color: white;
+                                border: none;
+                                padding: 20px;
+                                border-radius: 12px;
+                                cursor: pointer;
+                                font-size: 18px;
+                                font-weight: bold;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 15px;
+                                transition: transform 0.2s;
+                            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                ⬆️ Upload Current Note
+                            </button>
+                            
+                            <button onclick="checkOneDriveStatus()" style="
+                                background: linear-gradient(135deg, #6c757d, #495057);
+                                color: white;
+                                border: none;
+                                padding: 20px;
+                                border-radius: 12px;
+                                cursor: pointer;
+                                font-size: 18px;
+                                font-weight: bold;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 15px;
+                                transition: transform 0.2s;
+                            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                ℹ️ Check Status
+                            </button>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 40px;">
+                            <button onclick="hideOneDrivePage()" style="
+                                background: #dc3545;
+                                color: white;
+                                border: none;
+                                padding: 15px 30px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 16px;
+                            ">
+                                ← Back to Notes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateBrowsePage(notes) {
+            let notesHtml = '';
+            
+            if (notes.length === 0) {
+                notesHtml = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">📔</div>
+                        <h2 style="color: #666;">No notes found</h2>
+                        <p style="color: #999;">Your OneDrive doesn't contain any notes yet</p>
+                    </div>
+                `;
+            } else {
+                notesHtml = `
+                    <div style="display: grid; gap: 15px;">
+                        ${notes.map((note, index) => `
+                            <div style="
+                                background: white;
+                                border-radius: 10px;
+                                padding: 20px;
+                                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                                border-left: 4px solid #0078d4;
+                            ">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <h3 style="margin: 0 0 10px 0; color: #333;">${note.name}</h3>
+                                        <div style="color: #666; font-size: 14px; margin-bottom: 5px;">
+                                            Modified: ${new Date(note.modified).toLocaleString()}
+                                        </div>
+                                        <div style="color: #999; font-size: 12px;">
+                                            Size: ${(note.size / 1024).toFixed(1)} KB
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <button onclick="loadCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')" style="
+                                            background: #0078d4;
+                                            color: white;
+                                            border: none;
+                                            padding: 10px 15px;
+                                            border-radius: 6px;
+                                            cursor: pointer;
+                                            font-size: 14px;
+                                            white-space: nowrap;
+                                        ">
                                             📄 Load
                                         </button>
-                                        <button class="cloud-note-btn rename" onclick="renameCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')">
+                                        <button onclick="renameCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')" style="
+                                            background: #ffc107;
+                                            color: black;
+                                            border: none;
+                                            padding: 10px 15px;
+                                            border-radius: 6px;
+                                            cursor: pointer;
+                                            font-size: 14px;
+                                            white-space: nowrap;
+                                        ">
                                             ✏️ Rename
                                         </button>
-                                        <button class="cloud-note-btn delete" onclick="deleteCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')">
+                                        <button onclick="deleteCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')" style="
+                                            background: #dc3545;
+                                            color: white;
+                                            border: none;
+                                            padding: 10px 15px;
+                                            border-radius: 6px;
+                                            cursor: pointer;
+                                            font-size: 14px;
+                                            white-space: nowrap;
+                                        ">
                                             🗑️ Delete
                                         </button>
                                     </div>
                                 </div>
-                                <div class="cloud-note-meta">
-                                    Modified: ${new Date(note.modified).toLocaleString()}<br>
-                                    Size: ${(note.size / 1024).toFixed(1)} KB
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            return `
+                <div style="padding: 20px; max-width: 1000px; margin: 0 auto;">
+                    <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h1 style="margin: 0; color: #333;">☁️ Cloud Notes</h1>
+                                <p style="margin: 5px 0 0 0; color: #666;">Found ${notes.length} notes in OneDrive</p>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button onclick="showOneDriveNotes()" style="
+                                    background: #28a745;
+                                    color: white;
+                                    border: none;
+                                    padding: 12px 20px;
+                                    border-radius: 8px;
+                                    cursor: pointer;
+                                    font-size: 14px;
+                                ">
+                                    🔄 Refresh
+                                </button>
+                                <button onclick="hideOneDrivePage()" style="
+                                    background: #dc3545;
+                                    color: white;
+                                    border: none;
+                                    padding: 12px 20px;
+                                    border-radius: 8px;
+                                    cursor: pointer;
+                                    font-size: 14px;
+                                ">
+                                    ← Back
+                                </button>
+                            </div>
+                        </div>
+                        
+                        ${notesHtml}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateAuthPage(authFlow) {
+            return `
+                <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
+                    <div style="background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;">
+                        <div style="margin-bottom: 40px;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">🔐</div>
+                            <h1 style="color: #333; margin: 0 0 10px 0;">Device Authentication</h1>
+                            <p style="color: #666; font-size: 18px;">Complete authentication on your device</p>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 30px; margin: 30px 0; border-left: 4px solid #0078d4;">
+                            <h2 style="color: #333; margin: 0 0 20px 0;">Follow these steps:</h2>
+                            <div style="text-align: left; margin-bottom: 25px; line-height: 1.6;">
+                                <div style="margin-bottom: 15px; font-size: 16px;">
+                                    <strong>1. Visit:</strong> 
+                                    <a href="${authFlow.verification_uri}" target="_blank" style="color: #0078d4; text-decoration: none; font-weight: bold;">
+                                        ${authFlow.verification_uri}
+                                    </a>
                                 </div>
-                            `;
-                            list.appendChild(noteItem);
-                        });
+                                <div style="margin-bottom: 15px; font-size: 16px;">
+                                    <strong>2. Enter code:</strong> 
+                                    <span id="deviceCode" style="
+                                        font-size: 24px; 
+                                        color: #0078d4; 
+                                        letter-spacing: 3px; 
+                                        font-weight: bold;
+                                        background: white;
+                                        padding: 8px 15px;
+                                        border-radius: 6px;
+                                        display: inline-block;
+                                        margin-left: 10px;
+                                    ">${authFlow.user_code}</span>
+                                </div>
+                                <div style="font-size: 16px;">
+                                    <strong>3. Sign in</strong> with your Microsoft account
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="copyDeviceCode()" style="
+                                    background: #28a745;
+                                    color: white;
+                                    border: none;
+                                    padding: 15px 25px;
+                                    border-radius: 8px;
+                                    cursor: pointer;
+                                    font-size: 16px;
+                                    font-weight: bold;
+                                ">
+                                    📋 Copy Code
+                                </button>
+                                <button onclick="window.open('${authFlow.verification_uri}', '_blank')" style="
+                                    background: #0078d4;
+                                    color: white;
+                                    border: none;
+                                    padding: 15px 25px;
+                                    border-radius: 8px;
+                                    cursor: pointer;
+                                    font-size: 16px;
+                                    font-weight: bold;
+                                ">
+                                    🌐 Open Browser
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="authProgress" style="margin: 30px 0;">
+                            <div style="font-size: 18px; color: #666; margin-bottom: 15px;">Waiting for authentication...</div>
+                            <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
+                                <div style="width: 12px; height: 12px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+                                <div style="width: 12px; height: 12px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite 0.2s;"></div>
+                                <div style="width: 12px; height: 12px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite 0.4s;"></div>
+                            </div>
+                        </div>
+                        
+                        <button onclick="hideOneDrivePage()" style="
+                            background: #dc3545;
+                            color: white;
+                            border: none;
+                            padding: 15px 30px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 16px;
+                        ">
+                            ❌ Cancel
+                        </button>
+                        
+                        <style>
+                            @keyframes pulse {
+                                0%, 100% { opacity: 0.3; }
+                                50% { opacity: 1; }
+                            }
+                        </style>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateStatusPage(status) {
+            return `
+                <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
+                    <div style="background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 40px;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">${status.authenticated ? '✅' : '❌'}</div>
+                            <h1 style="color: #333; margin: 0 0 10px 0;">OneDrive Status</h1>
+                            <p style="color: ${status.authenticated ? '#28a745' : '#dc3545'}; font-size: 18px; font-weight: bold;">
+                                ${status.authenticated ? 'Connected' : 'Not Connected'}
+                            </p>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 30px; margin-bottom: 30px;">
+                            ${status.authenticated ? `
+                                <div style="margin-bottom: 20px;">
+                                    <strong>👤 User:</strong> ${status.user_name || 'Unknown'}
+                                </div>
+                                <div style="margin-bottom: 20px;">
+                                    <strong>� Email:</strong> ${status.user_email || 'Unknown'}
+                                </div>
+                                <div style="margin-bottom: 20px;">
+                                    <strong>⏰ Last Check:</strong> ${new Date().toLocaleString()}
+                                </div>
+                                <div>
+                                    <strong>🔗 Connection:</strong> <span style="color: #28a745;">Active</span>
+                                </div>
+                            ` : `
+                                <div style="text-align: center; color: #666;">
+                                    <p style="margin-bottom: 20px;">Not authenticated with OneDrive</p>
+                                    <p>Click "Authenticate" to connect your account</p>
+                                </div>
+                            `}
+                        </div>
+                        
+                        <div style="text-align: center; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                            <button onclick="checkOneDriveStatus()" style="
+                                background: #17a2b8;
+                                color: white;
+                                border: none;
+                                padding: 15px 25px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 16px;
+                            ">
+                                🔄 Refresh Status
+                            </button>
+                            ${status.authenticated ? `
+                                <button onclick="showOneDriveNotes()" style="
+                                    background: #28a745;
+                                    color: white;
+                                    border: none;
+                                    padding: 15px 25px;
+                                    border-radius: 8px;
+                                    cursor: pointer;
+                                    font-size: 16px;
+                                ">
+                                    📂 Browse Notes
+                                </button>
+                            ` : `
+                                <button onclick="startOneDriveAuth()" style="
+                                    background: #0078d4;
+                                    color: white;
+                                    border: none;
+                                    padding: 15px 25px;
+                                    border-radius: 8px;
+                                    cursor: pointer;
+                                    font-size: 16px;
+                                ">
+                                    🔐 Authenticate
+                                </button>
+                            `}
+                            <button onclick="hideOneDrivePage()" style="
+                                background: #dc3545;
+                                color: white;
+                                border: none;
+                                padding: 15px 25px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 16px;
+                            ">
+                                ← Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateLoadingPage(message = 'Loading...') {
+            return `
+                <div style="padding: 20px; max-width: 800px; margin: 0 auto; text-align: center;">
+                    <div style="background: white; border-radius: 15px; padding: 60px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                        <div style="font-size: 64px; margin-bottom: 30px;">⏳</div>
+                        <h1 style="color: #333; margin: 0 0 20px 0;">${message}</h1>
+                        
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 30px 0;">
+                            <div style="width: 16px; height: 16px; background: #0078d4; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out;"></div>
+                            <div style="width: 16px; height: 16px; background: #0078d4; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out 0.16s;"></div>
+                            <div style="width: 16px; height: 16px; background: #0078d4; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out 0.32s;"></div>
+                        </div>
+                        
+                        <p style="color: #666; font-size: 16px; margin-bottom: 30px;">Please wait while we process your request</p>
+                        
+                        <button onclick="hideOneDrivePage()" style="
+                            background: #6c757d;
+                            color: white;
+                            border: none;
+                            padding: 12px 25px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">
+                            Cancel
+                        </button>
+                        
+                        <style>
+                            @keyframes bounce {
+                                0%, 80%, 100% { transform: scale(0); }
+                                40% { transform: scale(1); }
+                            }
+                        </style>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateErrorPage(error, details = '') {
+            return `
+                <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
+                    <div style="background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 30px;">❌</div>
+                        <h1 style="color: #dc3545; margin: 0 0 20px 0;">Error</h1>
+                        <h2 style="color: #333; margin: 0 0 30px 0; font-weight: normal;">${error}</h2>
+                        
+                        ${details ? `
+                            <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: left;">
+                                <strong>Details:</strong><br>
+                                <code style="color: #e83e8c; font-size: 14px; white-space: pre-wrap;">${details}</code>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap;">
+                            <button onclick="showOneDrivePage('main')" style="
+                                background: #0078d4;
+                                color: white;
+                                border: none;
+                                padding: 15px 25px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 16px;
+                            ">
+                                🔄 Try Again
+                            </button>
+                            <button onclick="hideOneDrivePage()" style="
+                                background: #dc3545;
+                                color: white;
+                                border: none;
+                                padding: 15px 25px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 16px;
+                            ">
+                                ← Back to Notes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Copy device code function for auth page
+        function copyDeviceCode() {
+            const deviceCodeElement = document.getElementById('deviceCode');
+            if (deviceCodeElement) {
+                const code = deviceCodeElement.textContent;
+                navigator.clipboard.writeText(code).then(() => {
+                    showStatus(`Device code copied: ${code}`, 'info');
+                }).catch(err => {
+                    console.error('Failed to copy device code:', err);
+                    showStatus('Failed to copy device code', 'error');
+                });
+            }
+        }
+        
+        // Polling function for OneDrive authentication
+        function pollOneDriveAuth(authFlow) {
+            console.log('🔍 Starting OneDrive auth polling...');
+            
+            const checkAuth = async () => {
+                try {
+                    const response = await fetch('/api/onedrive/auth/poll', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            device_code: authFlow.device_code
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('🔍 Auth poll response:', data);
+                        
+                        if (data.success) {
+                            // Authentication successful
+                            showStatus('OneDrive connected successfully! ✅', 'success');
+                            hideOneDrivePage();
+                            return true; // Stop polling
+                        } else if (data.error === 'authorization_pending') {
+                            // Still waiting, continue polling
+                            return false;
+                        } else {
+                            // Other error
+                            throw new Error(data.error || 'Authentication failed');
+                        }
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
+                } catch (error) {
+                    console.error('🔍 Auth polling error:', error);
+                    showOneDrivePage('error', 'Authentication failed', error.message);
+                    return true; // Stop polling on error
+                }
+            };
+            
+            // Start polling every 5 seconds
+            const pollInterval = setInterval(async () => {
+                const shouldStop = await checkAuth();
+                if (shouldStop) {
+                    clearInterval(pollInterval);
+                }
+            }, 5000);
+            
+            // Clear interval if user navigates away
+            window.addEventListener('beforeunload', () => {
+                clearInterval(pollInterval);
+            });
+        }            let notesHtml = '';
+            if (notes.length === 0) {
+                notesHtml = '<div style="text-align: center; padding: 40px; color: #666;"><div style="font-size: 48px; margin-bottom: 20px;">📔</div><div style="font-size: 18px;">No notes found in your OneDrive</div></div>';
+            } else {
+                notesHtml = '<div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px;">';
+                notes.forEach((note, index) => {
+                    const truncatedContent = note.content ? note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '') : 'Empty note';
+                    notesHtml += `
+                        <div style="
+                            padding: 15px;
+                            border-bottom: 1px solid #eee;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            background: ${index % 2 === 0 ? '#f9f9f9' : 'white'};
+                        ">
+                            <div style="flex: 1; text-align: left;">
+                                <div style="font-weight: bold; color: #333; margin-bottom: 5px;">${note.name}</div>
+                                <div style="color: #666; font-size: 14px;">Modified: ${new Date(note.modified).toLocaleString()}</div>
+                                <div style="color: #999; font-size: 12px; margin-top: 5px;">Size: ${(note.size / 1024).toFixed(1)} KB</div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-left: 15px;">
+                                <button onclick="loadCloudNoteFullScreen('${note.id}', '${note.name.replace(/'/g, "\\'")}')"
+                                        style="background: #0078d4; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">📄 Load</button>
+                                <button onclick="renameCloudNoteFullScreen('${note.id}', '${note.name.replace(/'/g, "\\'")}')"
+                                        style="background: #ffc107; color: black; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">✏️ Rename</button>
+                                <button onclick="deleteCloudNoteFullScreen('${note.id}', '${note.name.replace(/'/g, "\\'")}')"
+                                        style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                notesHtml += '</div>';
+            }
+            
+            showFullScreenDialog(
+                '☁️ Cloud Notes',
+                notesHtml,
+                [{text: '🔄 Refresh', onclick: 'showOneDriveNotes()', color: '#28a745'}, {text: '❌ Close', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
+            );
+        }
+        
+        async function loadCloudNoteFullScreen(noteId, noteName) {
+            try {
+                console.log('🔍 Loading cloud note:', noteId, noteName);
+                
+                // Show loading
+                showFullScreenDialog(
+                    '📄 Loading Note',
+                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Loading "${noteName}"...</div></div>`,
+                    [{text: '❌ Cancel', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
+                );
+                
+                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    // Close dialog and add note to local notes
+                    closeFullScreenDialog();
+                    
+                    const newNote = {
+                        id: Date.now(),
+                        title: noteName,
+                        content: data.content || '',
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    notes.push(newNote);
+                    renderNotes();
+                    selectNote(notes.length - 1);
+                    
+                    showStatus(`Note "${noteName}" loaded from OneDrive`, 'success');
                 } else {
-                    status.textContent = 'Failed to load cloud notes: ' + data.error;
+                    throw new Error(data.error || 'Failed to load note');
                 }
             } catch (error) {
-                document.getElementById('cloudNotesStatus').textContent = 'Error: ' + error.message;
+                console.error('🔍 Error loading cloud note:', error);
+                showFullScreenDialog(
+                    '❌ Error Loading Note',
+                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to load "${noteName}"<br><small>${error.message}</small></div>`,
+                    [{text: '🔄 Try Again', onclick: `loadCloudNoteFullScreen('${noteId}', '${noteName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
+                );
+            }
+        }
+        
+        async function renameCloudNoteFullScreen(noteId, currentName) {
+            const newName = prompt(`Rename "${currentName}" to:`, currentName);
+            if (!newName || newName === currentName) return;
+            
+            try {
+                showFullScreenDialog(
+                    '✏️ Renaming Note',
+                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Renaming "${currentName}" to "${newName}"...</div></div>`,
+                    []
+                );
+                
+                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}/rename`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ new_name: newName })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    showOneDriveNotes(); // Refresh the list
+                } else {
+                    throw new Error(data.error || 'Failed to rename note');
+                }
+            } catch (error) {
+                console.error('🔍 Error renaming note:', error);
+                showFullScreenDialog(
+                    '❌ Error Renaming Note',
+                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to rename note<br><small>${error.message}</small></div>`,
+                    [{text: '🔄 Try Again', onclick: `renameCloudNoteFullScreen('${noteId}', '${currentName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
+                );
+            }
+        }
+        
+        async function deleteCloudNoteFullScreen(noteId, noteName) {
+            if (!confirm(`Are you sure you want to delete "${noteName}" from OneDrive? This cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                showFullScreenDialog(
+                    '🗑️ Deleting Note',
+                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Deleting "${noteName}"...</div></div>`,
+                    []
+                );
+                
+                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    showOneDriveNotes(); // Refresh the list
+                } else {
+                    throw new Error(data.error || 'Failed to delete note');
+                }
+            } catch (error) {
+                console.error('🔍 Error deleting note:', error);
+                showFullScreenDialog(
+                    '❌ Error Deleting Note',
+                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to delete "${noteName}"<br><small>${error.message}</small></div>`,
+                    [{text: '🔄 Try Again', onclick: `deleteCloudNoteFullScreen('${noteId}', '${noteName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
+                );
             }
         }
 
@@ -4770,6 +5503,125 @@
         }
 
         // Load a cloud note into a new tab
+        async function loadCloudNoteFullScreen(noteId, noteName) {
+            try {
+                console.log('🔍 Loading cloud note:', noteId, noteName);
+                
+                // Show loading
+                showFullScreenDialog(
+                    '📄 Loading Note',
+                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Loading "${noteName}"...</div></div>`,
+                    [{text: '❌ Cancel', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
+                );
+                
+                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // Close dialog and add note to local notes
+                    closeFullScreenDialog();
+                    
+                    const newNote = {
+                        id: Date.now(),
+                        title: noteName,
+                        content: data.content || '',
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    notes.push(newNote);
+                    renderNotes();
+                    selectNote(notes.length - 1);
+                    
+                    showStatus(`Note "${noteName}" loaded from OneDrive`, 'success');
+                } else {
+                    throw new Error(data.message || 'Failed to load note');
+                }
+            } catch (error) {
+                console.error('🔍 Error loading cloud note:', error);
+                showFullScreenDialog(
+                    '❌ Error Loading Note',
+                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to load "${noteName}"<br><small>${error.message}</small></div>`,
+                    [{text: '🔄 Try Again', onclick: `loadCloudNoteFullScreen('${noteId}', '${noteName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
+                );
+            }
+        }
+        
+        async function renameCloudNoteFullScreen(noteId, currentName) {
+            const newName = prompt(`Rename "${currentName}" to:`, currentName);
+            if (!newName || newName === currentName) return;
+            
+            try {
+                showFullScreenDialog(
+                    '✏️ Renaming Note',
+                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Renaming "${currentName}" to "${newName}"...</div></div>`,
+                    []
+                );
+                
+                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}/rename`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ new_name: newName })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showOneDriveNotes(); // Refresh the list
+                } else {
+                    throw new Error(data.message || 'Failed to rename note');
+                }
+            } catch (error) {
+                console.error('🔍 Error renaming note:', error);
+                showFullScreenDialog(
+                    '❌ Error Renaming Note',
+                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to rename note<br><small>${error.message}</small></div>`,
+                    [{text: '🔄 Try Again', onclick: `renameCloudNoteFullScreen('${noteId}', '${currentName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
+                );
+            }
+        }
+        
+        async function deleteCloudNoteFullScreen(noteId, noteName) {
+            if (!confirm(`Are you sure you want to delete "${noteName}" from OneDrive? This cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                showFullScreenDialog(
+                    '🗑️ Deleting Note',
+                    `<div style="text-align: center; padding: 20px;"><div style="font-size: 24px; margin-bottom: 15px;">⏳</div><div>Deleting "${noteName}"...</div></div>`,
+                    []
+                );
+                
+                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showOneDriveNotes(); // Refresh the list
+                } else {
+                    throw new Error(data.message || 'Failed to delete note');
+                }
+            } catch (error) {
+                console.error('🔍 Error deleting note:', error);
+                showFullScreenDialog(
+                    '❌ Error Deleting Note',
+                    `<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to delete "${noteName}"<br><small>${error.message}</small></div>`,
+                    [{text: '🔄 Try Again', onclick: `deleteCloudNoteFullScreen('${noteId}', '${noteName}')`, color: '#28a745'}, {text: '❌ Back', onclick: 'showOneDriveNotes()', color: '#dc3545'}]
+                );
+            }
+        }
+
         async function loadCloudNote(noteId, noteName) {
             try {
                 
