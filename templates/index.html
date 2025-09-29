@@ -3324,7 +3324,11 @@
         window.copyModalDeviceCode = function(event) {
             const codeElement = document.getElementById('modalDeviceCode');
             if (codeElement) {
-                navigator.clipboard.writeText(codeElement.textContent).then(() => {
+                // Clean the text by trimming whitespace
+                const cleanCode = codeElement.textContent.trim();
+                console.log('🔍 Copying device code:', cleanCode);
+                
+                navigator.clipboard.writeText(cleanCode).then(() => {
                     // Visual feedback
                     const button = event ? event.target : document.querySelector('[onclick="copyModalDeviceCode()"]');
                     if (button) {
@@ -3338,7 +3342,17 @@
                     }
                 }).catch(err => {
                     console.error('Failed to copy code:', err);
-                    alert('Failed to copy code. Please select and copy manually.');
+                    // Visual feedback for error instead of alert
+                    const button = event ? event.target : document.querySelector('[onclick="copyModalDeviceCode()"]');
+                    if (button) {
+                        const originalText = button.textContent;
+                        button.textContent = '❌ Copy Failed';
+                        button.style.background = '#dc3545';
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                            button.style.background = '#0078d4';
+                        }, 3000);
+                    }
                 });
             }
         };
