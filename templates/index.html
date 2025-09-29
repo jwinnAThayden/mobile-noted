@@ -5113,6 +5113,14 @@
                         ${notesHtml}
                     </div>
                 </div>
+                <script>
+                    // Initialize selection state after page renders
+                    setTimeout(() => {
+                        if (typeof updateSelectedCount === 'function') {
+                            updateSelectedCount();
+                        }
+                    }, 100);
+                </script>
             `;
         }
         
@@ -5559,6 +5567,11 @@
             const selectAllCheckbox = document.getElementById('selectAllNotes');
             const checkboxes = document.querySelectorAll('.note-checkbox');
             
+            console.log('🔍 toggleSelectAllNotes:', {
+                selectAllChecked: selectAllCheckbox?.checked,
+                totalCheckboxes: checkboxes.length
+            });
+            
             checkboxes.forEach(checkbox => {
                 checkbox.checked = selectAllCheckbox.checked;
             });
@@ -5572,15 +5585,25 @@
             const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
             const selectedCount = selectedCheckboxes.length;
             
+            console.log('🔍 updateSelectedCount:', {
+                totalCheckboxes: checkboxes.length,
+                selectedCount: selectedCount,
+                checkboxes: Array.from(checkboxes).map(cb => ({ id: cb.dataset.noteId, checked: cb.checked }))
+            });
+            
             // Update count display
             const countElement = document.getElementById('selectedCount');
             if (countElement) {
                 countElement.textContent = `${selectedCount} selected`;
+            } else {
+                console.log('🔍 selectedCount element not found');
             }
             
             // Update bulk operation buttons
             const bulkLoadBtn = document.getElementById('bulkLoadBtn');
             const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            
+            console.log('🔍 Bulk buttons found:', { bulkLoadBtn: !!bulkLoadBtn, bulkDeleteBtn: !!bulkDeleteBtn });
             
             [bulkLoadBtn, bulkDeleteBtn].forEach(btn => {
                 if (btn) {
