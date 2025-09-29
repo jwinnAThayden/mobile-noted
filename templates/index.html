@@ -1627,12 +1627,12 @@
             </div>
             
             <!-- Cloud Section -->
-            <div class="cloud-section">
+            <div class="cloud-section onedrive-panel">
                 <div class="section-header" onclick="toggleCloudSection()">
                     <span>☁️ Cloud Sync</span>
-                    <span id="cloudToggleIcon" class="toggle-icon">▼</span>
+                    <span id="cloudToggleIcon" class="toggle-icon rotated">▲</span>
                 </div>
-                <div id="cloudControls" class="cloud-controls">
+                <div id="cloudControls" class="cloud-controls expanded">
                     <!-- OneDrive Status -->
                     <div id="onedriveStatus" class="sync-status">
                         <div class="status-indicator">
@@ -3150,6 +3150,18 @@
             console.log('🔍 🚀 CONNECT BUTTON CLICKED - Starting OneDrive authentication...');
             authTimeoutCount = 0;  // Reset timeout counter for new auth attempt
 
+            // CRITICAL: Ensure cloud section is expanded so OneDrive controls are visible
+            const cloudControls = document.getElementById('cloudControls');
+            const cloudToggleIcon = document.getElementById('cloudToggleIcon');
+            if (cloudControls && !cloudControls.classList.contains('expanded')) {
+                cloudControls.classList.add('expanded');
+                if (cloudToggleIcon) {
+                    cloudToggleIcon.textContent = '▲';
+                    cloudToggleIcon.classList.add('rotated');
+                }
+                console.log('🔍 startOneDriveAuth: Cloud section expanded to show OneDrive controls');
+            }
+
             // Always show authSection and deviceFlowSection for user feedback
             const authSection = document.getElementById('authSection');
             const deviceFlowSection = document.getElementById('deviceFlowSection');
@@ -4350,6 +4362,18 @@
         window.emergencyFixDeviceFlow = function() {
             console.log('🚨 EMERGENCY: Attempting to fix missing device flow section...');
             
+            // FIRST: Ensure cloud section is expanded
+            const cloudControls = document.getElementById('cloudControls');
+            const cloudToggleIcon = document.getElementById('cloudToggleIcon');
+            if (cloudControls && !cloudControls.classList.contains('expanded')) {
+                cloudControls.classList.add('expanded');
+                if (cloudToggleIcon) {
+                    cloudToggleIcon.textContent = '▲';
+                    cloudToggleIcon.classList.add('rotated');
+                }
+                console.log('🚨 EMERGENCY: Cloud section expanded');
+            }
+            
             // First, try to find existing device flow section
             let deviceFlowSection = document.getElementById('deviceFlowSection');
             if (deviceFlowSection) {
@@ -4392,6 +4416,19 @@
         // EMERGENCY: Force show OneDrive modal (call from console if needed)
         window.forceShowOneDriveModal = function() {
             console.log('🚨 EMERGENCY: Force showing OneDrive modal');
+            
+            // Ensure cloud section is expanded first
+            const cloudControls = document.getElementById('cloudControls');
+            const cloudToggleIcon = document.getElementById('cloudToggleIcon');
+            if (cloudControls && !cloudControls.classList.contains('expanded')) {
+                cloudControls.classList.add('expanded');
+                if (cloudToggleIcon) {
+                    cloudToggleIcon.textContent = '▲';
+                    cloudToggleIcon.classList.add('rotated');
+                }
+                console.log('🚨 EMERGENCY: Cloud section expanded');
+            }
+            
             const modal = document.querySelector('.onedrive-panel');
             if (modal) {
                 modal.classList.add('dialog-always-visible');
