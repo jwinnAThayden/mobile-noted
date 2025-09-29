@@ -4963,189 +4963,96 @@
             let notesHtml = '';
             
             if (notes.length === 0) {
-                notesHtml = `
-                    <div style="text-align: center; padding: 60px 20px;">
-                        <div style="font-size: 64px; margin-bottom: 20px;">📔</div>
-                        <h2 style="color: #666;">No notes found</h2>
-                        <p style="color: #999;">Your OneDrive doesn't contain any notes yet</p>
-                    </div>
-                `;
+                notesHtml = '<div style="text-align: center; padding: 60px 20px;">' +
+                           '<div style="font-size: 64px; margin-bottom: 20px;">📔</div>' +
+                           '<h2 style="color: #666;">No notes found</h2>' +
+                           '<p style="color: #999;">Your OneDrive doesn\'t contain any notes yet</p>' +
+                           '</div>';
             } else {
-                notesHtml = `
-                    <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="selectAllNotes" style="transform: scale(1.2);">
-                                <span style="font-weight: bold;">Select All</span>
-                            </label>
-                            <span id="selectedCount" style="color: #666; font-size: 14px;">0 selected</span>
-                        </div>
-                        <div id="bulkOperations" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button id="bulkLoadBtn" onclick="loadSelectedNotes()" disabled style="
-                                background: #0078d4;
-                                color: white;
-                                border: none;
-                                padding: 8px 16px;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 14px;
-                                opacity: 0.5;
-                            ">
-                                📄 Load Selected
-                            </button>
-                            <button id="bulkDeleteBtn" onclick="deleteSelectedNotes()" disabled style="
-                                background: #dc3545;
-                                color: white;
-                                border: none;
-                                padding: 8px 16px;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 14px;
-                                opacity: 0.5;
-                            ">
-                                🗑️ Delete Selected
-                            </button>
-                        </div>
-                    </div>
-                    <div style="display: grid; gap: 15px;">
-                        ${notes.map((note, index) => `
-                            <div style="
-                                background: white;
-                                border-radius: 10px;
-                                padding: 20px;
-                                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                                border-left: 4px solid #0078d4;
-                            ">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
-                                    <div style="display: flex; align-items: flex-start; gap: 15px; flex: 1;">
-                                        <label style="margin-top: 5px;">
-                                            <input type="checkbox" class="note-checkbox" data-note-id="${note.id}" data-note-name="${note.name.replace(/'/g, "\\'")}" style="transform: scale(1.2);">
-                                        </label>
-                                        <div style="flex: 1; min-width: 200px;">
-                                            <h3 style="margin: 0 0 10px 0; color: #333;">${note.name}</h3>
-                                            <div style="color: #666; font-size: 14px; margin-bottom: 5px;">
-                                                Modified: ${new Date(note.modified).toLocaleString()}
-                                            </div>
-                                            <div style="color: #999; font-size: 12px;">
-                                                Size: ${(note.size / 1024).toFixed(1)} KB
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                        <button onclick="loadCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')" style="
-                                            background: #0078d4;
-                                            color: white;
-                                            border: none;
-                                            padding: 10px 15px;
-                                            border-radius: 6px;
-                                            cursor: pointer;
-                                            font-size: 14px;
-                                            white-space: nowrap;
-                                        ">
-                                            📄 Load
-                                        </button>
-                                        <button onclick="renameCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')" style="
-                                            background: #ffc107;
-                                            color: black;
-                                            border: none;
-                                            padding: 10px 15px;
-                                            border-radius: 6px;
-                                            cursor: pointer;
-                                            font-size: 14px;
-                                            white-space: nowrap;
-                                        ">
-                                            ✏️ Rename
-                                        </button>
-                                        <button onclick="deleteCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')" style="
-                                            background: #dc3545;
-                                            color: white;
-                                            border: none;
-                                            padding: 10px 15px;
-                                            border-radius: 6px;
-                                            cursor: pointer;
-                                            font-size: 14px;
-                                            white-space: nowrap;
-                                        ">
-                                            🗑️ Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
+                const notesGridHtml = notes.map((note, index) => {
+                    const escapedName = note.name.replace(/'/g, "\\'");
+                    const modifiedDate = new Date(note.modified).toLocaleString();
+                    const sizeKB = (note.size / 1024).toFixed(1);
+                    
+                    return '<div style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid #0078d4;">' +
+                           '<div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">' +
+                           '<div style="display: flex; align-items: flex-start; gap: 15px; flex: 1;">' +
+                           '<label style="margin-top: 5px;">' +
+                           '<input type="checkbox" class="note-checkbox" data-note-id="' + note.id + '" data-note-name="' + escapedName + '" style="transform: scale(1.2);">' +
+                           '</label>' +
+                           '<div style="flex: 1; min-width: 200px;">' +
+                           '<h3 style="margin: 0 0 10px 0; color: #333;">' + note.name + '</h3>' +
+                           '<div style="color: #666; font-size: 14px; margin-bottom: 5px;">Modified: ' + modifiedDate + '</div>' +
+                           '<div style="color: #999; font-size: 12px;">Size: ' + sizeKB + ' KB</div>' +
+                           '</div>' +
+                           '</div>' +
+                           '<div style="display: flex; gap: 10px; flex-wrap: wrap;">' +
+                           '<button onclick="loadCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #0078d4; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">📄 Load</button>' +
+                           '<button onclick="renameCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #ffc107; color: black; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">✏️ Rename</button>' +
+                           '<button onclick="deleteCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">🗑️ Delete</button>' +
+                           '</div>' +
+                           '</div>' +
+                           '</div>';
+                }).join('');
+                
+                notesHtml = '<div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">' +
+                           '<div style="display: flex; align-items: center; gap: 10px;">' +
+                           '<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">' +
+                           '<input type="checkbox" id="selectAllNotes" style="transform: scale(1.2);">' +
+                           '<span style="font-weight: bold;">Select All</span>' +
+                           '</label>' +
+                           '<span id="selectedCount" style="color: #666; font-size: 14px;">0 selected</span>' +
+                           '</div>' +
+                           '<div id="bulkOperations" style="display: flex; gap: 10px; flex-wrap: wrap;">' +
+                           '<button id="bulkLoadBtn" onclick="loadSelectedNotes()" disabled style="background: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; opacity: 0.5;">📄 Load Selected</button>' +
+                           '<button id="bulkDeleteBtn" onclick="deleteSelectedNotes()" disabled style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; opacity: 0.5;">🗑️ Delete Selected</button>' +
+                           '</div>' +
+                           '</div>' +
+                           '<div style="display: grid; gap: 15px;">' +
+                           notesGridHtml +
+                           '</div>';
             }
             
-            return `
-                <div style="padding: 20px; max-width: 1000px; margin: 0 auto;">
-                    <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
-                            <div>
-                                <h1 style="margin: 0; color: #333;">Cloud Notes</h1>
-                                <p style="margin: 5px 0 0 0; color: #666;">Found ${notes.length} notes in OneDrive</p>
-                            </div>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button onclick="showOneDriveNotes()" style="
-                                    background: #28a745;
-                                    color: white;
-                                    border: none;
-                                    padding: 12px 20px;
-                                    border-radius: 8px;
-                                    cursor: pointer;
-                                    font-size: 14px;
-                                ">
-                                    🔄 Refresh
-                                </button>
-                                <button onclick="hideOneDrivePage()" style="
-                                    background: #dc3545;
-                                    color: white;
-                                    border: none;
-                                    padding: 12px 20px;
-                                    border-radius: 8px;
-                                    cursor: pointer;
-                                    font-size: 14px;
-                                ">
-                                    ← Back
-                                </button>
-                            </div>
-                        </div>
-                        
-                        ${notesHtml}
-                    </div>
-                </div>
-                <script>
-                    // Initialize selection state and event listeners after page renders
-                    setTimeout(() => {
-                        console.log('[INIT] Initializing selection functionality...');
-                        console.log('[INIT] Available functions:', {
-                            toggleSelectAllNotes: typeof window.toggleSelectAllNotes,
-                            updateSelectedCount: typeof window.updateSelectedCount
-                        });
-                        
-                        // Add event listener to "Select All" checkbox
-                        const selectAllCheckbox = document.getElementById('selectAllNotes');
-                        if (selectAllCheckbox) {
-                            selectAllCheckbox.addEventListener('change', window.toggleSelectAllNotes);
-                            console.log('[OK] Select All checkbox listener added');
-                        } else {
-                            console.log('[ERROR] Select All checkbox not found');
-                        }
-                        
-                        // Add event listeners to individual note checkboxes
-                        const noteCheckboxes = document.querySelectorAll('.note-checkbox');
-                        noteCheckboxes.forEach(checkbox => {
-                            checkbox.addEventListener('change', window.updateSelectedCount);
-                        });
-                        console.log('[OK] Added event listeners to ' + noteCheckboxes.length + ' note checkboxes');
-                        
-                        // Initialize selection count
-                        if (typeof window.updateSelectedCount === 'function') {
-                            window.updateSelectedCount();
-                            console.log('[OK] Initial selection count updated');
-                        }
-                    }, 100);
-                </script>
-            `;
+            return '<div style="padding: 20px; max-width: 1000px; margin: 0 auto;">' +
+                   '<div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">' +
+                   '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">' +
+                   '<div>' +
+                   '<h1 style="margin: 0; color: #333;">Cloud Notes</h1>' +
+                   '<p style="margin: 5px 0 0 0; color: #666;">Found ' + notes.length + ' notes in OneDrive</p>' +
+                   '</div>' +
+                   '<div style="display: flex; gap: 10px; flex-wrap: wrap;">' +
+                   '<button onclick="showOneDriveNotes()" style="background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;">🔄 Refresh</button>' +
+                   '<button onclick="hideOneDrivePage()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;">← Back</button>' +
+                   '</div>' +
+                   '</div>' +
+                   notesHtml +
+                   '</div>' +
+                   '</div>' +
+                   '<script>' +
+                   'setTimeout(() => {' +
+                   'console.log("[INIT] Initializing selection functionality...");' +
+                   'console.log("[INIT] Available functions:", {' +
+                   'toggleSelectAllNotes: typeof window.toggleSelectAllNotes,' +
+                   'updateSelectedCount: typeof window.updateSelectedCount' +
+                   '});' +
+                   'const selectAllCheckbox = document.getElementById("selectAllNotes");' +
+                   'if (selectAllCheckbox) {' +
+                   'selectAllCheckbox.addEventListener("change", window.toggleSelectAllNotes);' +
+                   'console.log("[OK] Select All checkbox listener added");' +
+                   '} else {' +
+                   'console.log("[ERROR] Select All checkbox not found");' +
+                   '}' +
+                   'const noteCheckboxes = document.querySelectorAll(".note-checkbox");' +
+                   'noteCheckboxes.forEach(checkbox => {' +
+                   'checkbox.addEventListener("change", window.updateSelectedCount);' +
+                   '});' +
+                   'console.log("[OK] Added event listeners to " + noteCheckboxes.length + " note checkboxes");' +
+                   'if (typeof window.updateSelectedCount === "function") {' +
+                   'window.updateSelectedCount();' +
+                   'console.log("[OK] Initial selection count updated");' +
+                   '}' +
+                   '}, 100);' +
+                   '</script>';
         }
         
         function generateAuthPage(authFlow) {
