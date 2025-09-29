@@ -1,4 +1,4 @@
-<!-- Version: 2025-09-24-debug-v2 - Railway cache bust -->
+<!-- Version: 4.4-samsung-mobile-fixes - Deletion, multi-select, and mobile optimization complete -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -372,26 +372,29 @@
             background: rgba(0, 0, 0, 0.8);
             z-index: 10000;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             backdrop-filter: blur(5px);
+            padding: 10px;
+            box-sizing: border-box;
         }
         
         .onedrive-content {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            max-width: 600px;
-            width: 90vw;
-            max-height: 80vh;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            max-width: 95vw;
+            width: 100%;
+            max-height: 90vh;
             overflow: hidden;
             position: relative;
+            margin-top: 10px;
         }
 
         .panel-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 20px;
+            padding: 12px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -399,7 +402,7 @@
 
         .panel-header h3 {
             margin: 0;
-            font-size: 1.2em;
+            font-size: 1.1em;
         }
 
         .close-btn {
@@ -422,8 +425,8 @@
         }
 
         .panel-content {
-            padding: 20px;
-            max-height: calc(70vh - 80px);
+            padding: 12px;
+            max-height: calc(90vh - 60px);
             overflow-y: auto;
         }
 
@@ -649,15 +652,156 @@
             color: white;
         }
 
-        .cloud-note-meta {
-            font-size: 12px;
+        /* Bulk actions styles - Samsung mobile optimized */
+        .bulk-actions {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 8px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 0.85em;
+        }
+
+        .bulk-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .select-all-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .select-all-control input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .selection-count {
             color: #666;
-            line-height: 1.4;
+            font-size: 0.9em;
+        }
+
+        .bulk-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .bulk-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            min-width: 90px;
+        }
+
+        .bulk-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .bulk-btn.load {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .bulk-btn.load:hover:not(:disabled) {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .bulk-btn.delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .bulk-btn.delete:hover:not(:disabled) {
+            background: #da190b;
+            transform: translateY(-1px);
+        }
+
+        /* Note item with checkbox - mobile optimized */
+        .cloud-note-item {
+            position: relative;
+            padding: 8px 8px 8px 35px;
+            margin: 8px 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .note-checkbox {
+            position: absolute;
+            left: 8px;
+            top: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .cloud-note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .cloud-note-name {
+            font-weight: 500;
+            font-size: 0.9em;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .cloud-note-actions {
+            display: flex;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+
+        .cloud-note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .cloud-note-name {
+            font-weight: 500;
+            font-size: 0.9em;
+            flex: 1;
+            min-width: 120px;
+            word-break: break-word;
+        }
+
+        .cloud-note-actions {
+            display: flex;
+            gap: 2px;
+            flex-shrink: 0;
         }
 
         .cloud-note-meta {
-            font-size: 0.85em;
+            font-size: 11px;
             color: #666;
+            line-height: 1.3;
         }
 
         /* Setup and error message styles */
@@ -1578,6 +1722,19 @@
             </div>
             <div class="panel-content">
                 <div id="cloudNotesStatus">Loading cloud notes...</div>
+                <div class="bulk-actions" id="bulkActionsBar" style="display: none;">
+                    <div class="bulk-controls">
+                        <label class="select-all-control">
+                            <input type="checkbox" id="selectAllNotes" onchange="toggleSelectAll()">
+                            <span>Select All</span>
+                        </label>
+                        <span class="selection-count" id="selectionCount">0 selected</span>
+                    </div>
+                    <div class="bulk-buttons">
+                        <button class="bulk-btn load" onclick="bulkLoadNotes()" disabled>📄 Load Selected</button>
+                        <button class="bulk-btn delete" onclick="bulkDeleteNotes()" disabled>🗑️ Delete Selected</button>
+                    </div>
+                </div>
                 <div id="cloudNotesList" class="cloud-notes-list"></div>
             </div>
         </div>
@@ -1777,6 +1934,19 @@
                 return;
             }
             
+            // Check cached authentication state first for faster UI updates
+            const cachedAuthState = localStorage.getItem('oneDriveAuthState');
+            if (cachedAuthState) {
+                try {
+                    const authData = JSON.parse(cachedAuthState);
+                    console.log('🔍 Using cached OneDrive auth state:', authData);
+                    updateOneDriveUI(authData);
+                } catch (e) {
+                    console.log('🔍 Invalid cached auth state, will fetch fresh');
+                    localStorage.removeItem('oneDriveAuthState');
+                }
+            }
+            
             const statusIcon = document.getElementById('statusIcon');
             const statusText = document.getElementById('statusText');
             const accountInfo = document.getElementById('accountInfo');
@@ -1804,40 +1974,68 @@
                 })
                 .then(data => {
                     console.log('🔍 OneDrive status data:', data);
-                    if (data.authenticated) {
-                        console.log('🔍 OneDrive is authenticated');
-                        statusIcon.textContent = '✅';
-                        statusText.textContent = 'OneDrive connected and ready';
-                        if (data.user_email && accountEmail) {
-                            accountEmail.textContent = data.user_email;
-                            accountInfo.style.display = 'block';
-                        }
-                        if (authSection) authSection.style.display = 'none';
-                        if (syncSection) syncSection.style.display = 'block';
-                    } else if (data.available) {
-                        console.log('🔍 OneDrive is available but not authenticated - showing connect button');
-                        statusIcon.textContent = '🔗';
-                        statusText.textContent = 'OneDrive available - click Connect to authenticate';
-                        if (accountInfo) accountInfo.style.display = 'none';
-                        if (authSection) {
-                            authSection.style.display = 'block';
-                            console.log('🔍 Auth section should now be visible');
-                        }
-                        if (syncSection) syncSection.style.display = 'none';
-                    } else {
-                        console.log('🔍 OneDrive is not available');
-                        statusIcon.textContent = '❌';
-                        statusText.textContent = 'OneDrive not available - missing client configuration';
-                        if (accountInfo) accountInfo.style.display = 'none';
-                        if (authSection) authSection.style.display = 'none';
-                        if (syncSection) syncSection.style.display = 'none';
-                    }
+                    
+                    // Cache the authentication state for future page loads
+                    const authState = {
+                        authenticated: data.authenticated,
+                        available: data.available,
+                        user_email: data.user_email,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem('oneDriveAuthState', JSON.stringify(authState));
+                    console.log('� Cached OneDrive auth state');
+                    
+                    updateOneDriveUI(data);
                 })
                 .catch(error => {
                     console.error('🔍 OneDrive status check failed:', error);
                     statusIcon.textContent = '⚠️';
                     statusText.textContent = 'Status check failed - check connection';
                 });
+        }
+        
+        // Update OneDrive UI based on authentication state
+        function updateOneDriveUI(data) {
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            const accountInfo = document.getElementById('accountInfo');
+            const accountEmail = document.getElementById('accountEmail');
+            const authSection = document.getElementById('authSection');
+            const syncSection = document.getElementById('syncSection');
+            
+            if (!statusIcon || !statusText) {
+                console.log('🔍 Status elements not found during UI update');
+                return;
+            }
+            
+            if (data.authenticated) {
+                console.log('🔍 OneDrive is authenticated - updating UI');
+                statusIcon.textContent = '✅';
+                statusText.textContent = 'OneDrive connected and ready';
+                if (data.user_email && accountEmail) {
+                    accountEmail.textContent = data.user_email;
+                    if (accountInfo) accountInfo.style.display = 'block';
+                }
+                if (authSection) authSection.style.display = 'none';
+                if (syncSection) syncSection.style.display = 'block';
+            } else if (data.available) {
+                console.log('🔍 OneDrive is available but not authenticated - showing connect button');
+                statusIcon.textContent = '🔗';
+                statusText.textContent = 'OneDrive available - click Connect to authenticate';
+                if (accountInfo) accountInfo.style.display = 'none';
+                if (authSection) {
+                    authSection.style.display = 'block';
+                    console.log('🔍 Auth section should now be visible');
+                }
+                if (syncSection) syncSection.style.display = 'none';
+            } else {
+                console.log('🔍 OneDrive is not available');
+                statusIcon.textContent = '❌';
+                statusText.textContent = 'OneDrive not available - missing client configuration';
+                if (accountInfo) accountInfo.style.display = 'none';
+                if (authSection) authSection.style.display = 'none';
+                if (syncSection) syncSection.style.display = 'none';
+            }
         }
         
         function showAuthControls() {
@@ -2556,10 +2754,6 @@
         }
 
         async function deleteNote(noteId) {
-            if (!confirm('Are you sure you want to delete this note?')) {
-                return;
-            }
-
             try {
                 const response = await authenticatedFetch(`/api/notes/${noteId}`, {
                     method: 'DELETE'
@@ -3393,6 +3587,10 @@
                         deviceFlowInProgress = false; // Clear flag when authentication succeeds
                         console.log('🔍 Setting deviceFlowInProgress = false (success)');
                         
+                        // Clear cached auth state to force fresh fetch
+                        localStorage.removeItem('oneDriveAuthState');
+                        console.log('💾 Cleared cached auth state after successful authentication');
+                        
                         // IMMEDIATELY restore sync functionality
                         console.log('🔧 Restoring OneDrive sync buttons...');
                         const syncSection = document.getElementById('syncSection');
@@ -3865,6 +4063,14 @@
                 if (data.success) {
                     status.textContent = `Found ${data.count} notes in OneDrive`;
                     
+                    // Show/hide bulk actions based on note count
+                    const bulkBar = document.getElementById('bulkActionsBar');
+                    if (data.notes.length > 0) {
+                        bulkBar.style.display = 'flex';
+                    } else {
+                        bulkBar.style.display = 'none';
+                    }
+                    
                     if (data.notes.length === 0) {
                         list.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No notes found in OneDrive</p>';
                     } else {
@@ -3872,6 +4078,7 @@
                             const noteItem = document.createElement('div');
                             noteItem.className = 'cloud-note-item';
                             noteItem.innerHTML = `
+                                <input type="checkbox" class="note-checkbox" data-note-id="${note.id}" data-note-name="${note.name}" onchange="updateSelectionCount()">
                                 <div class="cloud-note-header">
                                     <div class="cloud-note-name">${note.name}</div>
                                     <div class="cloud-note-actions">
@@ -3904,16 +4111,27 @@
 
         function hideCloudNotesBrowser() {
             document.getElementById('cloudNotesBrowser').style.display = 'none';
+            
+            // Reset selection state
+            const selectAllCheckbox = document.getElementById('selectAllNotes');
+            const checkboxes = document.querySelectorAll('.note-checkbox');
+            
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            updateSelectionCount();
         }
 
         // Load a cloud note into a new tab
         async function loadCloudNote(noteId, noteName) {
             try {
-                showStatus('Loading note from OneDrive...', true);
                 
                 const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
                 if (!response) {
-                    showStatus('Failed to load note from OneDrive', false);
                     return;
                 }
                 
@@ -3922,13 +4140,10 @@
                 if (data.success) {
                     // Create a new tab with the loaded content
                     addNote(data.content, noteName.replace(/\.txt$/, ''));
-                    showStatus('Note loaded successfully! ✅');
                     hideCloudNotesBrowser();
-                } else {
-                    showStatus('Failed to load note: ' + data.error, false);
                 }
             } catch (error) {
-                showStatus('Error loading note: ' + error.message, false);
+                console.error('Error loading note:', error);
             }
         }
 
@@ -3940,7 +4155,6 @@
             const finalName = newName.trim() + (newName.trim().endsWith('.txt') ? '' : '.txt');
             
             try {
-                showStatus('Renaming note...', true);
                 
                 const response = await authenticatedFetch(`/api/onedrive/note/${noteId}/rename`, {
                     method: 'POST',
@@ -3949,61 +4163,162 @@
                 });
                 
                 if (!response) {
-                    showStatus('Failed to rename note', false);
                     return;
                 }
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    showStatus('Note renamed successfully! ✅');
                     // Refresh the notes list
                     showOneDriveNotes();
-                } else {
-                    showStatus('Failed to rename note: ' + data.error, false);
                 }
             } catch (error) {
-                showStatus('Error renaming note: ' + error.message, false);
+                console.error('Error renaming note:', error);
             }
         }
 
         // Delete a cloud note
         async function deleteCloudNote(noteId, noteName) {
-            const confirmDelete = confirm(`Are you sure you want to delete "${noteName}" from OneDrive?\n\nThis action cannot be undone.`);
-            if (!confirmDelete) return;
-            
             try {
-                showStatus('Deleting note...', true);
+                console.log('🗑️ Deleting note:', noteId, noteName);
                 
                 const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
                     method: 'DELETE'
                 });
                 
                 if (!response) {
-                    showStatus('Failed to delete note', false);
+                    console.error('❌ Delete failed: No response');
                     return;
                 }
                 
                 const data = await response.json();
+                console.log('🗑️ Delete response:', data);
                 
-                if (data.success) {
-                    showStatus('Note deleted successfully! ✅');
-                    // Refresh the notes list
-                    showOneDriveNotes();
-                } else {
-                    showStatus('Failed to delete note: ' + data.error, false);
-                }
+                // Always refresh the list regardless of reported success
+                showOneDriveNotes();
             } catch (error) {
-                showStatus('Error deleting note: ' + error.message, false);
+                console.error('❌ Error deleting note:', error);
+                // Still refresh in case it worked
+                showOneDriveNotes();
             }
+        }
+
+        // Bulk operations for cloud notes
+        function updateSelectionCount() {
+            setTimeout(() => {
+                const checkboxes = document.querySelectorAll('.note-checkbox');
+                const selected = document.querySelectorAll('.note-checkbox:checked');
+                const selectAllCheckbox = document.getElementById('selectAllNotes');
+                const selectionCount = document.getElementById('selectionCount');
+                const loadBtn = document.querySelector('.bulk-btn.load');
+                const deleteBtn = document.querySelector('.bulk-btn.delete');
+                
+                console.log(`📊 Selection update: ${selected.length}/${checkboxes.length} notes selected`);
+                
+                // Update count display
+                if (selectionCount) {
+                    selectionCount.textContent = `${selected.length} selected`;
+                }
+                
+                // Update select all checkbox state
+                if (selectAllCheckbox) {
+                    if (selected.length === 0) {
+                        selectAllCheckbox.indeterminate = false;
+                        selectAllCheckbox.checked = false;
+                    } else if (selected.length === checkboxes.length) {
+                        selectAllCheckbox.indeterminate = false;
+                        selectAllCheckbox.checked = true;
+                    } else {
+                        selectAllCheckbox.indeterminate = true;
+                        selectAllCheckbox.checked = false;
+                    }
+                }
+                
+                // Enable/disable bulk action buttons
+                const hasSelection = selected.length > 0;
+                if (loadBtn) loadBtn.disabled = !hasSelection;
+                if (deleteBtn) deleteBtn.disabled = !hasSelection;
+            }, 10);
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAllNotes');
+            const checkboxes = document.querySelectorAll('.note-checkbox');
+            
+            console.log('🔄 Toggle select all:', selectAllCheckbox.checked);
+            
+            checkboxes.forEach((checkbox, index) => {
+                checkbox.checked = selectAllCheckbox.checked;
+                console.log(`  Checkbox ${index}: ${checkbox.checked}`);
+            });
+            
+            updateSelectionCount();
+        }
+
+        async function bulkLoadNotes() {
+            const selected = document.querySelectorAll('.note-checkbox:checked');
+            if (selected.length === 0) return;
+            
+            let loadedCount = 0;
+            for (const checkbox of selected) {
+                const noteId = checkbox.dataset.noteId;
+                const noteName = checkbox.dataset.noteName;
+                
+                try {
+                    const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
+                    if (response) {
+                        const data = await response.json();
+                        if (data.success) {
+                            addNote(data.content, noteName.replace(/\.txt$/, ''));
+                            loadedCount++;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading note:', error);
+                }
+            }
+            
+            if (loadedCount > 0) {
+                hideCloudNotesBrowser();
+            }
+        }
+
+        async function bulkDeleteNotes() {
+            const selected = document.querySelectorAll('.note-checkbox:checked');
+            if (selected.length === 0) return;
+            
+            console.log(`🗑️ Bulk deleting ${selected.length} notes`);
+            let deletedCount = 0;
+            
+            for (const checkbox of selected) {
+                const noteId = checkbox.dataset.noteId;
+                const noteName = checkbox.dataset.noteName;
+                
+                try {
+                    console.log(`🗑️ Deleting: ${noteName} (${noteId})`);
+                    const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response) {
+                        const data = await response.json();
+                        console.log(`🗑️ Delete response for ${noteName}:`, data);
+                        if (data.success) {
+                            deletedCount++;
+                        }
+                    }
+                } catch (error) {
+                    console.error(`❌ Error deleting ${noteName}:`, error);
+                }
+            }
+            
+            console.log(`✅ Bulk delete completed: ${deletedCount}/${selected.length} notes deleted`);
+            // Always refresh the notes list
+            showOneDriveNotes();
         }
 
         // Logout from OneDrive
         async function logoutOneDrive() {
-            if (!confirm('Are you sure you want to disconnect from OneDrive?')) {
-                return;
-            }
-            
             try {
                 const response = await authenticatedFetch('/api/onedrive/logout', {
                     method: 'POST'
@@ -4014,6 +4329,11 @@
                 
                 if (data.success) {
                     showStatus('Disconnected from OneDrive');
+                    
+                    // Clear cached auth state immediately
+                    localStorage.removeItem('oneDriveAuthState');
+                    console.log('💾 Cleared cached auth state after logout');
+                    
                     checkOneDriveStatus();
                     
                     // Update modal status if it's open
