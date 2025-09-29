@@ -5136,7 +5136,7 @@
                         noteCheckboxes.forEach(checkbox => {
                             checkbox.addEventListener('change', window.updateSelectedCount);
                         });
-                        console.log(`[OK] Added event listeners to ${noteCheckboxes.length} note checkboxes`);
+                        console.log('[OK] Added event listeners to ' + noteCheckboxes.length + ' note checkboxes');
                         
                         // Initialize selection count
                         if (typeof window.updateSelectedCount === 'function') {
@@ -5600,7 +5600,7 @@
                 checkbox.checked = selectAllCheckbox.checked;
             });
             
-            updateSelectedCount();
+            window.updateSelectedCount();
         }
         
         // Update the count of selected notes and enable/disable bulk delete button
@@ -5742,7 +5742,7 @@
                     const noteName = checkbox.dataset.noteName;
                     
                     try {
-                        console.log(`[DEBUG] Loading note: ${noteName} (${noteId})`);
+                        console.log('[DEBUG] Loading note: ' + noteName + ' (' + noteId + ')');
                         
                         const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
                         
