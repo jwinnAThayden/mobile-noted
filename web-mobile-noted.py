@@ -1358,6 +1358,30 @@ def list_onedrive_notes():
         logger.error(f"Error listing OneDrive notes: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/onedrive/note/<note_id>', methods=['DELETE'])
+@login_required
+def delete_onedrive_note(note_id):
+    """Delete a specific note from OneDrive"""
+    if not ONEDRIVE_AVAILABLE or not onedrive_manager:
+        return jsonify({'success': False, 'error': 'OneDrive not available'}), 503
+    
+    try:
+        if not onedrive_manager.is_authenticated():
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated with OneDrive'
+            }), 401
+        
+        success = onedrive_manager.delete_note(note_id)
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to delete note'}), 500
+        
+    except Exception as e:
+        logger.error(f"Error deleting OneDrive note {note_id}: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/favicon.ico')
 def favicon():
     """Serve favicon"""

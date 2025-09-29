@@ -4972,6 +4972,27 @@
                 `;
             } else {
                 notesHtml = `
+                    <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="selectAllNotes" onchange="toggleSelectAllNotes()" style="transform: scale(1.2);">
+                                <span style="font-weight: bold;">Select All</span>
+                            </label>
+                            <span id="selectedCount" style="color: #666; font-size: 14px;">0 selected</span>
+                        </div>
+                        <button id="bulkDeleteBtn" onclick="deleteSelectedNotes()" disabled style="
+                            background: #dc3545;
+                            color: white;
+                            border: none;
+                            padding: 8px 16px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            opacity: 0.5;
+                        ">
+                            🗑️ Delete Selected
+                        </button>
+                    </div>
                     <div style="display: grid; gap: 15px;">
                         ${notes.map((note, index) => `
                             <div style="
@@ -4982,13 +5003,18 @@
                                 border-left: 4px solid #0078d4;
                             ">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
-                                    <div style="flex: 1; min-width: 200px;">
-                                        <h3 style="margin: 0 0 10px 0; color: #333;">${note.name}</h3>
-                                        <div style="color: #666; font-size: 14px; margin-bottom: 5px;">
-                                            Modified: ${new Date(note.modified).toLocaleString()}
-                                        </div>
-                                        <div style="color: #999; font-size: 12px;">
-                                            Size: ${(note.size / 1024).toFixed(1)} KB
+                                    <div style="display: flex; align-items: flex-start; gap: 15px; flex: 1;">
+                                        <label style="margin-top: 5px;">
+                                            <input type="checkbox" class="note-checkbox" data-note-id="${note.id}" data-note-name="${note.name.replace(/'/g, "\\'")}" onchange="updateSelectedCount()" style="transform: scale(1.2);">
+                                        </label>
+                                        <div style="flex: 1; min-width: 200px;">
+                                            <h3 style="margin: 0 0 10px 0; color: #333;">${note.name}</h3>
+                                            <div style="color: #666; font-size: 14px; margin-bottom: 5px;">
+                                                Modified: ${new Date(note.modified).toLocaleString()}
+                                            </div>
+                                            <div style="color: #999; font-size: 12px;">
+                                                Size: ${(note.size / 1024).toFixed(1)} KB
+                                            </div>
                                         </div>
                                     </div>
                                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -5511,6 +5537,121 @@
             } catch (error) {
                 console.error('🔍 Error deleting cloud note:', error);
                 showOneDrivePage('error', `Failed to delete "${noteName}"`, error.message);
+            }
+        }
+        
+        // Toggle select all checkboxes
+        function toggleSelectAllNotes() {
+            const selectAllCheckbox = document.getElementById('selectAllNotes');
+            const checkboxes = document.querySelectorAll('.note-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            updateSelectedCount();
+        }
+        
+        // Update the count of selected notes and enable/disable bulk delete button
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.note-checkbox');
+            const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
+            const selectedCount = selectedCheckboxes.length;
+            
+            // Update count display
+            const countElement = document.getElementById('selectedCount');
+            if (countElement) {
+                countElement.textContent = `${selectedCount} selected`;
+            }
+            
+            // Update bulk delete button
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            if (bulkDeleteBtn) {
+                bulkDeleteBtn.disabled = selectedCount === 0;
+                bulkDeleteBtn.style.opacity = selectedCount === 0 ? '0.5' : '1';
+                bulkDeleteBtn.style.cursor = selectedCount === 0 ? 'not-allowed' : 'pointer';
+            }
+            
+            // Update select all checkbox state
+            const selectAllCheckbox = document.getElementById('selectAllNotes');
+            if (selectAllCheckbox) {
+                if (selectedCount === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (selectedCount === checkboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                }
+            }
+        }
+        
+        // Delete all selected notes
+        async function deleteSelectedNotes() {
+            const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                return;
+            }
+            
+            const noteNames = Array.from(selectedCheckboxes).map(cb => cb.dataset.noteName);
+            const confirmMessage = selectedCheckboxes.length === 1 
+                ? `Are you sure you want to delete "${noteNames[0]}" from OneDrive? This cannot be undone.`
+                : `Are you sure you want to delete ${selectedCheckboxes.length} notes from OneDrive?\n\nNotes to delete:\n${noteNames.join('\n')}\n\nThis cannot be undone.`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            try {
+                showOneDrivePage('loading', `Deleting ${selectedCheckboxes.length} notes...`);
+                
+                let successCount = 0;
+                let errorCount = 0;
+                const errors = [];
+                
+                // Delete notes one by one
+                for (const checkbox of selectedCheckboxes) {
+                    const noteId = checkbox.dataset.noteId;
+                    const noteName = checkbox.dataset.noteName;
+                    
+                    try {
+                        const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        if (data.success) {
+                            successCount++;
+                        } else {
+                            throw new Error(data.error || 'Failed to delete note');
+                        }
+                    } catch (error) {
+                        errorCount++;
+                        errors.push(`${noteName}: ${error.message}`);
+                        console.error(`🔍 Error deleting note ${noteName}:`, error);
+                    }
+                }
+                
+                // Show results
+                if (errorCount === 0) {
+                    showStatus(`Successfully deleted ${successCount} notes from OneDrive ✅`, 'success');
+                    showOneDriveNotes(); // Refresh the notes list
+                } else if (successCount === 0) {
+                    showOneDrivePage('error', 'Failed to delete notes', `All ${errorCount} notes failed to delete:\n${errors.join('\n')}`);
+                } else {
+                    showStatus(`Deleted ${successCount} notes, ${errorCount} failed ⚠️`, 'warning');
+                    showOneDriveNotes(); // Refresh the notes list
+                }
+                
+            } catch (error) {
+                console.error('🔍 Error in bulk delete operation:', error);
+                showOneDrivePage('error', 'Bulk delete failed', error.message);
             }
         }
         
