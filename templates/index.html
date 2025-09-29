@@ -12,7 +12,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - UX Debug Enhanced (v3.7)</title>
+    <title>📝 Mobile Noted - Parent Container Fixed (v3.8)</title>
     <!-- Cache buster: 2025-09-28-debug-enhanced -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -3073,11 +3073,19 @@
                             if (ancestorStyle.display === 'none' || 
                                 ancestorStyle.visibility === 'hidden' || 
                                 ancestorStyle.opacity === '0') {
-                                console.log(`  ⚠️ Ancestor ${ancestor.tagName} is hiding content:`, {
+                                console.log(`  🚨 FOUND THE PROBLEM! Ancestor ${ancestor.tagName}#${ancestor.id}.${ancestor.className} is hiding content:`, {
                                     display: ancestorStyle.display,
                                     visibility: ancestorStyle.visibility,
-                                    opacity: ancestorStyle.opacity
+                                    opacity: ancestorStyle.opacity,
+                                    element: ancestor
                                 });
+                                
+                                // IMMEDIATE FIX: Show the hidden parent during device flow
+                                if (deviceFlowInProgress && ancestorStyle.display === 'none') {
+                                    console.log(`  🔧 FIXING: Setting parent ${ancestor.tagName} to display: block`);
+                                    ancestor.style.display = 'block';
+                                    ancestor._hiddenForDeviceFlow = true; // Mark for restoration
+                                }
                             }
                             ancestor = ancestor.parentElement;
                         }
