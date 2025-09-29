@@ -3158,67 +3158,8 @@
         function displayDeviceFlowPage(authFlow) {
             console.log('🔍 Displaying device flow:', authFlow);
             
-            const deviceContent = `
-                <div style="text-align: center; padding: 20px;">
-                    <div style="margin-bottom: 30px;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">🔐</div>
-                        <div style="font-size: 24px; color: #333; margin-bottom: 10px;">Device Authentication</div>
-                        <div style="color: #666;">Complete authentication on your device</div>
-                    </div>
-                    
-                    <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0; border-left: 4px solid #0078d4;">
-                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Follow these steps:</div>
-                        <div style="text-align: left; margin-bottom: 15px;">
-                            <div style="margin-bottom: 8px;">1. Visit: <strong>${authFlow.verification_uri}</strong></div>
-                            <div style="margin-bottom: 8px;">2. Enter code: <strong id="deviceCode" style="font-size: 20px; color: #0078d4; letter-spacing: 2px;">${authFlow.user_code}</strong></div>
-                            <div>3. Sign in with your Microsoft account</div>
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-                            <button onclick="copyDeviceCode()" style="
-                                background: #28a745;
-                                color: white;
-                                border: none;
-                                padding: 10px 20px;
-                                border-radius: 5px;
-                                cursor: pointer;
-                                font-size: 14px;
-                            ">
-                                📋 Copy Code
-                            </button>
-                            <button onclick="window.open('${authFlow.verification_uri}', '_blank')" style="
-                                background: #0078d4;
-                                color: white;
-                                border: none;
-                                padding: 10px 20px;
-                                border-radius: 5px;
-                                cursor: pointer;
-                                font-size: 14px;
-                            ">
-                                🌐 Open Browser
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="authProgress" style="margin-top: 20px;">
-                        <div style="font-size: 16px; color: #666; margin-bottom: 10px;">Waiting for authentication...</div>
-                        <div style="display: flex; justify-content: center; align-items: center; gap: 5px;">
-                            <div style="width: 8px; height: 8px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite;"></div>
-                            <div style="width: 8px; height: 8px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite 0.2s;"></div>
-                            <div style="width: 8px; height: 8px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite 0.4s;"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <style>
-                    @keyframes pulse {
-                        0%, 100% { opacity: 0.3; }
-                        50% { opacity: 1; }
-                    }
-                </style>
-            `;
-            
-            showOneDrivePage('auth', 'OneDrive Authentication', deviceContent);
+            // Show the auth page with auth flow data
+            showOneDrivePage('auth', { authFlow: authFlow });
             
             // Start checking for authentication completion
             checkAuthStatusPage();
