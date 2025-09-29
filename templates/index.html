@@ -1692,7 +1692,7 @@
                     <div id="syncSection" class="sync-section" style="display: none;">
                         <div class="sync-buttons">
                             <button class="btn cloud-btn" onclick="syncFromOneDrive()">📥 Pull Notes</button>
-                            <button class="btn cloud-btn" onclick="syncToOneDrive()">� Push Notes</button>
+                            <button class="btn cloud-btn" onclick="syncToOneDrive()">☁️ Push Notes</button>
                             <button class="btn cloud-btn" onclick="showOneDriveNotes()">📂 Browse</button>
                         </div>
                     </div>
@@ -1993,7 +1993,7 @@
                         timestamp: Date.now()
                     };
                     localStorage.setItem('oneDriveAuthState', JSON.stringify(authState));
-                    console.log('� Cached OneDrive auth state');
+                    console.log('🔍 Cached OneDrive auth state');
                     
                     updateOneDriveUI(data);
                 })
@@ -3112,7 +3112,7 @@
             try {
                 // Show loading in full-screen
                 showFullScreenDialog(
-                    '� OneDrive Authentication',
+                    '☁️ OneDrive Authentication',
                     '<div style="text-align: center; padding: 40px;"><div style="font-size: 48px; margin-bottom: 20px;">⏳</div><div style="font-size: 18px; color: #666;">Starting authentication...</div></div>',
                     [{text: '❌ Cancel', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
                 );
@@ -3463,7 +3463,7 @@
                         
                         <div style="margin-bottom: 20px; margin-top: 60px;">
                             <h3 style="color: #0078d4; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px;">
-                                <span style="font-size: 24px;">�</span>
+                                <span style="font-size: 24px;">☁️</span>
                                 OneDrive Authentication
                             </h3>
                         </div>
@@ -5104,7 +5104,7 @@
                                     <strong>👤 User:</strong> ${status.user_name || 'Unknown'}
                                 </div>
                                 <div style="margin-bottom: 20px;">
-                                    <strong>� Email:</strong> ${status.user_email || 'Unknown'}
+                                    <strong>👤 Email:</strong> ${status.user_email || 'Unknown'}
                                 </div>
                                 <div style="margin-bottom: 20px;">
                                     <strong>⏰ Last Check:</strong> ${new Date().toLocaleString()}
@@ -5392,7 +5392,7 @@
                     throw new Error(data.error || 'Failed to rename note');
                 }
             } catch (error) {
-                console.error('� Error renaming cloud note:', error);
+                console.error('🔍 Error renaming cloud note:', error);
                 showOneDrivePage('error', `Failed to rename "${currentName}"`, error.message);
             }
         }
