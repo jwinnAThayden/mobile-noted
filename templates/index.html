@@ -1,4 +1,4 @@
-<!-- Version: 4.4-samsung-mobile-fixes - Deletion, multi-select, and mobile optimization complete -->
+<!-- Version: 4.5-dialog-visibility-fixes - OneDrive modal visibility and Samsung compatibility enhanced -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -372,7 +372,7 @@
             background: rgba(0, 0, 0, 0.8);
             z-index: 10000;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
             backdrop-filter: blur(5px);
             padding: 10px;
@@ -927,10 +927,19 @@
 
         /* Always visible dialogs and modals */
         .dialog-always-visible, .modal-always-visible, .onedrive-panel {
+            display: flex !important;
+            visibility: visible !important;
             opacity: 1 !important;
             transform: none !important;
             pointer-events: auto !important;
-            z-index: 9999 !important;
+            z-index: 99999 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
         }
 
         /* Moveable dialog styles */
@@ -1996,6 +2005,26 @@
         
         // Update OneDrive UI based on authentication state
         function updateOneDriveUI(data) {
+            console.log('🎨 Updating OneDrive UI with data:', data);
+            
+            // EMERGENCY: Check if modal is visible
+            const modal = document.querySelector('.onedrive-panel');
+            if (modal) {
+                const computedStyle = window.getComputedStyle(modal);
+                console.log('🔍 Modal visibility check:', {
+                    display: computedStyle.display,
+                    visibility: computedStyle.visibility,
+                    opacity: computedStyle.opacity,
+                    zIndex: computedStyle.zIndex
+                });
+                
+                if (computedStyle.display === 'none') {
+                    console.log('🚨 MODAL HIDDEN! Force showing...');
+                    modal.style.display = 'flex';
+                    modal.classList.add('dialog-always-visible');
+                }
+            }
+            
             const statusIcon = document.getElementById('statusIcon');
             const statusText = document.getElementById('statusText');
             const accountInfo = document.getElementById('accountInfo');
@@ -3445,6 +3474,15 @@
                                         // Don't hide this parent completely when cleaning up
                                         ancestor._containsSyncSection = true;
                                     }
+                                    
+                                    // SAMSUNG FIX: Force modal to front
+                                    const modal = document.querySelector('.onedrive-panel');
+                                    if (modal && deviceFlowInProgress) {
+                                        console.log(`  📱 SAMSUNG FIX: Forcing modal visibility`);
+                                        modal.style.zIndex = '99999';
+                                        modal.style.display = 'flex';
+                                        modal.classList.add('dialog-always-visible');
+                                    }
                                 }
                             }
                             ancestor = ancestor.parentElement;
@@ -3452,6 +3490,29 @@
                         
                         if (delay === 100 && deviceFlowInProgress) {
                             console.log(`  💬 USER: Can you see the OneDrive authentication dialog now?`);
+                            
+                            // EMERGENCY: Force visibility if dialog still hidden
+                            setTimeout(() => {
+                                const modal = document.querySelector('.onedrive-panel');
+                                if (modal) {
+                                    const computedStyle = window.getComputedStyle(modal);
+                                    console.log('🚨 EMERGENCY CHECK - Modal visibility:', {
+                                        display: computedStyle.display,
+                                        visibility: computedStyle.visibility,
+                                        opacity: computedStyle.opacity,
+                                        zIndex: computedStyle.zIndex
+                                    });
+                                    
+                                    if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
+                                        console.log('🚨 EMERGENCY: Forcing modal visibility!');
+                                        modal.classList.add('dialog-always-visible');
+                                        modal.style.display = 'flex';
+                                        modal.style.visibility = 'visible';
+                                        modal.style.opacity = '1';
+                                        modal.style.zIndex = '99999';
+                                    }
+                                }
+                            }, 500);
                         }
                     }, delay);
                 });
@@ -4202,6 +4263,31 @@
                 showOneDriveNotes();
             }
         }
+
+        // EMERGENCY: Force show OneDrive modal (call from console if needed)
+        window.forceShowOneDriveModal = function() {
+            console.log('🚨 EMERGENCY: Force showing OneDrive modal');
+            const modal = document.querySelector('.onedrive-panel');
+            if (modal) {
+                modal.classList.add('dialog-always-visible');
+                modal.style.display = 'flex';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+                modal.style.zIndex = '99999';
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.right = '0';
+                modal.style.bottom = '0';
+                modal.style.width = '100vw';
+                modal.style.height = '100vh';
+                console.log('🚨 Modal should now be visible!');
+                return true;
+            } else {
+                console.log('🚨 OneDrive modal not found!');
+                return false;
+            }
+        };
 
         // Bulk operations for cloud notes
         function updateSelectionCount() {
