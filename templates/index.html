@@ -12,7 +12,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Full Visibility Tracking (v3.6)</title>
+    <title>📝 Mobile Noted - UX Debug Enhanced (v3.7)</title>
     <!-- Cache buster: 2025-09-28-debug-enhanced -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -2692,6 +2692,7 @@
         let oneDriveAuthTimer = null;
         let authTimeoutCount = 0;  // Track timeout retries
         let deviceFlowInProgress = false;  // Track when device flow authentication is active
+        window.deviceFlowInProgress = deviceFlowInProgress; // Make globally accessible for debugging
         let autoSyncEnabled = false;
         
         // Load OneDrive status on page load
@@ -2892,7 +2893,7 @@
                 console.log('🔍 Auth response data:', data);
 
                 if (data.success) {
-                    deviceFlowInProgress = true; // Prevent status checks from interfering
+                    deviceFlowInProgress = window.deviceFlowInProgress = true; // Prevent status checks from interfering
                     console.log('🔍 Setting deviceFlowInProgress = true');
                     displayDeviceFlow(data.auth_flow);
                     // Don't call updateOneDriveModalStatus here - it would hide the device flow
@@ -2968,6 +2969,34 @@
                 // Store all observers for cleanup
                 deviceFlowSection._allObservers = [observer, ...parentObservers];
                 
+                // Add global function for manual checking (call checkDialogVisibility() in console)
+                window.checkDialogVisibility = function() {
+                    const el = document.getElementById('deviceFlowSection');
+                    if (!el) {
+                        console.log('❌ deviceFlowSection not found in DOM');
+                        return false;
+                    }
+                    
+                    const style = window.getComputedStyle(el);
+                    const rect = el.getBoundingClientRect();
+                    const hasSize = rect.width > 0 && rect.height > 0;
+                    const isVisible = style.display !== 'none' && 
+                                    style.visibility !== 'hidden' && 
+                                    parseFloat(style.opacity) > 0;
+                    
+                    console.log('🔍 Manual Dialog Visibility Check:');
+                    console.log('  Element found:', !!el);
+                    console.log('  Display:', style.display);
+                    console.log('  Visibility:', style.visibility);
+                    console.log('  Opacity:', style.opacity);
+                    console.log('  Has size (WxH):', rect.width + 'x' + rect.height);
+                    console.log('  BoundingRect:', rect);
+                    console.log('  Is theoretically visible:', isVisible && hasSize);
+                    console.log('  deviceFlowInProgress:', window.deviceFlowInProgress);
+                    
+                    return isVisible && hasSize;
+                };
+                
                 // Store observer for cleanup
                 deviceFlowSection._visibilityObserver = observer;
                 
@@ -3018,10 +3047,46 @@
                 // Store interval for cleanup
                 deviceFlowSection._visibilityInterval = visibilityCheckInterval;
                 
-                // Initial check
-                setTimeout(() => {
-                    console.log('🔍 After 100ms - display:', deviceFlowSection.style.display, 'computed:', window.getComputedStyle(deviceFlowSection).display);
-                }, 100);
+                // Multiple visibility checks with user experience focus
+                [100, 500, 1000, 2000].forEach(delay => {
+                    setTimeout(() => {
+                        const computedStyle = window.getComputedStyle(deviceFlowSection);
+                        const rect = deviceFlowSection.getBoundingClientRect();
+                        const isInViewport = rect.top >= 0 && rect.left >= 0 && 
+                                           rect.bottom <= window.innerHeight && 
+                                           rect.right <= window.innerWidth;
+                        
+                        console.log(`🔍 At ${delay}ms:`);
+                        console.log(`  - Style display: ${deviceFlowSection.style.display}`);
+                        console.log(`  - Computed display: ${computedStyle.display}`);
+                        console.log(`  - Computed visibility: ${computedStyle.visibility}`);
+                        console.log(`  - Computed opacity: ${computedStyle.opacity}`);
+                        console.log(`  - BoundingRect:`, rect);
+                        console.log(`  - In viewport: ${isInViewport}`);
+                        console.log(`  - Element exists in DOM: ${document.contains(deviceFlowSection)}`);
+                        console.log(`  - Has content: ${deviceFlowSection.innerHTML.length > 0}`);
+                        
+                        // Check if any ancestor has transform or position issues
+                        let ancestor = deviceFlowSection.parentElement;
+                        while (ancestor && ancestor !== document.body) {
+                            const ancestorStyle = window.getComputedStyle(ancestor);
+                            if (ancestorStyle.display === 'none' || 
+                                ancestorStyle.visibility === 'hidden' || 
+                                ancestorStyle.opacity === '0') {
+                                console.log(`  ⚠️ Ancestor ${ancestor.tagName} is hiding content:`, {
+                                    display: ancestorStyle.display,
+                                    visibility: ancestorStyle.visibility,
+                                    opacity: ancestorStyle.opacity
+                                });
+                            }
+                            ancestor = ancestor.parentElement;
+                        }
+                        
+                        if (delay === 100 && deviceFlowInProgress) {
+                            console.log(`  💬 USER: Can you see the OneDrive authentication dialog now?`);
+                        }
+                    }, delay);
+                });
             } else {
                 console.error('🔍 Device flow section not found!');
             }
