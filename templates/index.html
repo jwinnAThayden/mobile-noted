@@ -4980,18 +4980,32 @@
                             </label>
                             <span id="selectedCount" style="color: #666; font-size: 14px;">0 selected</span>
                         </div>
-                        <button id="bulkDeleteBtn" onclick="deleteSelectedNotes()" disabled style="
-                            background: #dc3545;
-                            color: white;
-                            border: none;
-                            padding: 8px 16px;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            opacity: 0.5;
-                        ">
-                            🗑️ Delete Selected
-                        </button>
+                        <div id="bulkOperations" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="bulkLoadBtn" onclick="loadSelectedNotes()" disabled style="
+                                background: #0078d4;
+                                color: white;
+                                border: none;
+                                padding: 8px 16px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 14px;
+                                opacity: 0.5;
+                            ">
+                                📄 Load Selected
+                            </button>
+                            <button id="bulkDeleteBtn" onclick="deleteSelectedNotes()" disabled style="
+                                background: #dc3545;
+                                color: white;
+                                border: none;
+                                padding: 8px 16px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 14px;
+                                opacity: 0.5;
+                            ">
+                                🗑️ Delete Selected
+                            </button>
+                        </div>
                     </div>
                     <div style="display: grid; gap: 15px;">
                         ${notes.map((note, index) => `
@@ -5564,13 +5578,17 @@
                 countElement.textContent = `${selectedCount} selected`;
             }
             
-            // Update bulk delete button
+            // Update bulk operation buttons
+            const bulkLoadBtn = document.getElementById('bulkLoadBtn');
             const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-            if (bulkDeleteBtn) {
-                bulkDeleteBtn.disabled = selectedCount === 0;
-                bulkDeleteBtn.style.opacity = selectedCount === 0 ? '0.5' : '1';
-                bulkDeleteBtn.style.cursor = selectedCount === 0 ? 'not-allowed' : 'pointer';
-            }
+            
+            [bulkLoadBtn, bulkDeleteBtn].forEach(btn => {
+                if (btn) {
+                    btn.disabled = selectedCount === 0;
+                    btn.style.opacity = selectedCount === 0 ? '0.5' : '1';
+                    btn.style.cursor = selectedCount === 0 ? 'not-allowed' : 'pointer';
+                }
+            });
             
             // Update select all checkbox state
             const selectAllCheckbox = document.getElementById('selectAllNotes');
@@ -5652,6 +5670,93 @@
             } catch (error) {
                 console.error('🔍 Error in bulk delete operation:', error);
                 showOneDrivePage('error', 'Bulk delete failed', error.message);
+            }
+        }
+        
+        // Load all selected notes into separate tabs
+        async function loadSelectedNotes() {
+            const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                return;
+            }
+            
+            try {
+                showOneDrivePage('loading', `Loading ${selectedCheckboxes.length} notes...`);
+                
+                let successCount = 0;
+                let errorCount = 0;
+                const errors = [];
+                const loadedNotes = [];
+                
+                // Load notes one by one
+                for (const checkbox of selectedCheckboxes) {
+                    const noteId = checkbox.dataset.noteId;
+                    const noteName = checkbox.dataset.noteName;
+                    
+                    try {
+                        console.log(`🔍 Loading note: ${noteName} (${noteId})`);
+                        
+                        const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (data.success && data.content !== undefined) {
+                            // Create a new note object
+                            const newNote = {
+                                id: Date.now() + successCount, // Ensure unique IDs
+                                title: noteName.replace(/\.(txt|md)$/, ''), // Remove file extension
+                                content: data.content || '',
+                                timestamp: new Date().toISOString()
+                            };
+                            
+                            // Add to notes array
+                            notes.push(newNote);
+                            loadedNotes.push(newNote);
+                            successCount++;
+                            
+                            // Brief delay between loads to avoid overwhelming the system
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                        } else {
+                            throw new Error(data.error || 'Failed to load note content');
+                        }
+                    } catch (error) {
+                        errorCount++;
+                        errors.push(`${noteName}: ${error.message}`);
+                        console.error(`🔍 Error loading note ${noteName}:`, error);
+                    }
+                }
+                
+                // Update the UI with all loaded notes
+                if (successCount > 0) {
+                    renderNotes();
+                    // Select the last loaded note
+                    if (loadedNotes.length > 0) {
+                        const lastNoteIndex = notes.findIndex(note => note.id === loadedNotes[loadedNotes.length - 1].id);
+                        if (lastNoteIndex !== -1) {
+                            selectNote(lastNoteIndex);
+                        }
+                    }
+                }
+                
+                // Show results and return to main interface
+                hideOneDrivePage();
+                
+                if (errorCount === 0) {
+                    showStatus(`Successfully loaded ${successCount} notes ✅`, 'success');
+                } else if (successCount === 0) {
+                    showStatus(`Failed to load all ${errorCount} notes ❌`, 'error');
+                } else {
+                    showStatus(`Loaded ${successCount} notes, ${errorCount} failed ⚠️`, 'warning');
+                }
+                
+            } catch (error) {
+                console.error('🔍 Error in bulk load operation:', error);
+                showOneDrivePage('error', 'Bulk load failed', error.message);
             }
         }
         
