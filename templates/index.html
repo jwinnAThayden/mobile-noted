@@ -3245,17 +3245,142 @@
         function displayDeviceFlow(authFlow) {
             console.log('🔍 displayDeviceFlow called, deviceFlowInProgress:', deviceFlowInProgress);
             
-            // IMMEDIATE DIAGNOSTIC - Check if element exists in DOM
-            const allDeviceFlow = document.querySelectorAll('#deviceFlowSection');
-            console.log('🔍 DOM Search Results for deviceFlowSection:', allDeviceFlow.length);
-            if (allDeviceFlow.length === 0) {
-                console.error('❌ CRITICAL: deviceFlowSection not found in DOM at all!');
-                console.log('🔍 Searching for any element containing "deviceFlow"...');
-                const anyDeviceFlow = document.querySelectorAll('[id*="deviceFlow"]');
-                console.log('🔍 Elements with deviceFlow in ID:', anyDeviceFlow.length, anyDeviceFlow);
+            // Create a proper modal overlay for better visibility
+            const existingModal = document.getElementById('deviceFlowModal');
+            if (existingModal) {
+                existingModal.remove();
             }
             
-            // Show the integrated device flow section
+            const modal = document.createElement('div');
+            modal.id = 'deviceFlowModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 99999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(5px);
+                padding: 20px;
+                box-sizing: border-box;
+            `;
+            
+            modal.innerHTML = \`
+                <div style="background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;">
+                    <div style="padding: 30px; text-align: center;">
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #0078d4; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <span style="font-size: 24px;">�</span>
+                                OneDrive Authentication
+                            </h3>
+                        </div>
+                        
+                        <p style="margin-bottom: 20px; color: #666; font-size: 16px;">Complete authentication on Microsoft's website:</p>
+                        
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #0078d4;">
+                            <div style="margin-bottom: 15px;">
+                                <strong style="display: block; margin-bottom: 8px; color: #333;">1. Visit this URL:</strong>
+                                <a id="modalVerificationUrl" href="\${authFlow.verification_uri}" target="_blank" 
+                                   style="color: #0078d4; text-decoration: none; font-weight: bold; word-break: break-all; font-size: 14px;">
+                                    \${authFlow.verification_uri}
+                                </a>
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <strong style="display: block; margin-bottom: 8px; color: #333;">2. Enter this code:</strong>
+                                <div style="display: flex; align-items: center; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                    <span id="modalDeviceCode" style="font-family: monospace; font-size: 1.5em; font-weight: bold; color: #0078d4; background: #ffffff; padding: 12px 16px; border-radius: 8px; border: 2px solid #0078d4; letter-spacing: 2px;">
+                                        \${authFlow.user_code}
+                                    </span>
+                                    <button onclick="copyModalDeviceCode()" style="background: #0078d4; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">📋 Copy Code</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="modalAuthProgress" style="margin-bottom: 20px;">
+                            <div style="background: #e9ecef; border-radius: 10px; height: 10px; overflow: hidden; margin-bottom: 10px;">
+                                <div id="modalAuthProgressFill" style="background: #0078d4; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <p id="modalAuthProgressText" style="margin: 0; font-size: 14px; color: #666;">Waiting for authentication...</p>
+                        </div>
+                        
+                        <button onclick="cancelOneDriveAuth()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            \`;
+            
+            document.body.appendChild(modal);
+            
+        // Add copy function for modal
+        window.copyModalDeviceCode = function() {
+            const codeElement = document.getElementById('modalDeviceCode');
+            if (codeElement) {
+                navigator.clipboard.writeText(codeElement.textContent).then(() => {
+                    // Visual feedback
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = '✅ Copied!';
+                    button.style.background = '#28a745';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.background = '#0078d4';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy code:', err);
+                    alert('Failed to copy code. Please select and copy manually.');
+                });
+            }
+        };
+        
+        // Function to close the device flow modal
+        window.closeDeviceFlowModal = function() {
+            const modal = document.getElementById('deviceFlowModal');
+            if (modal) {
+                modal.remove();
+                console.log('🔍 Device flow modal closed');
+            }
+        };
+        
+        // Helper function to update auth progress in both integrated section and modal
+        window.updateAuthProgress = function(progressPercent, message, color = '#0078d4') {
+            // Update integrated section
+            const authProgressFill = document.getElementById('authProgressFill');
+            const authProgressText = document.getElementById('authProgressText');
+            if (authProgressFill) {
+                authProgressFill.style.width = progressPercent + '%';
+                authProgressFill.style.background = color;
+            }
+            if (authProgressText) {
+                authProgressText.textContent = message;
+                authProgressText.style.color = color;
+            }
+            
+            // Update modal section
+            const modalAuthProgressFill = document.getElementById('modalAuthProgressFill');
+            const modalAuthProgressText = document.getElementById('modalAuthProgressText');
+            if (modalAuthProgressFill) {
+                modalAuthProgressFill.style.width = progressPercent + '%';
+                modalAuthProgressFill.style.background = color;
+            }
+            if (modalAuthProgressText) {
+                modalAuthProgressText.textContent = message;
+                modalAuthProgressText.style.color = color;
+            }
+        };            // Update progress references to use modal elements
+            window.modalAuthProgressFill = document.getElementById('modalAuthProgressFill');
+            window.modalAuthProgressText = document.getElementById('modalAuthProgressText');
+            
+            console.log('🔍 Device flow modal created and displayed');
+            
+            // Also try to show the integrated section as backup
             const deviceFlowSection = document.getElementById('deviceFlowSection');
             if (deviceFlowSection) {
                 deviceFlowSection.style.display = 'block';
@@ -3585,8 +3710,11 @@
                                 </a>
                                 
                                 <p style="margin: 15px 0 5px 0;"><strong>Enter this code:</strong></p>
-                                <div style="background: #f0f0f0; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 18px; font-weight: bold; letter-spacing: 2px; text-align: center;">
-                                    <span id="deviceCode">${authFlow.user_code}</span>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px; flex-wrap: wrap; justify-content: center;">
+                                    <span id="deviceCode" style="font-family: monospace; font-size: 1.3em; font-weight: bold; color: #0078d4; background: #f0f8ff; padding: 8px 12px; border-radius: 4px; border: 1px solid #0078d4;">
+                                        ${authFlow.user_code}
+                                    </span>
+                                    <button onclick="copyDeviceCode()" style="background: #0078d4; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 14px;">📋 Copy</button>
                                 </div>
                             </div>
                             
@@ -3639,7 +3767,7 @@
             const authProgressFill = document.getElementById('authProgressFill');
             
             if (authProgressText) {
-                authProgressText.textContent = `📋 Visit the URL above, enter the code, then click "Check Status" (auto-check in 30s)`;
+                updateAuthProgress(10, '📋 Visit the URL above, enter the code, then click "Check Status" (auto-check in 30s)');
             }
             
             oneDriveAuthTimer = setInterval(() => {
@@ -3655,9 +3783,9 @@
                 const authProgressText = document.getElementById('authProgressText');
                 if (authProgressText) {
                     if (remainingMinutes > 0) {
-                        authProgressText.textContent = `Waiting for authentication... (${remainingMinutes} minutes remaining)`;
+                        updateAuthProgress(progressPercent, `Waiting for authentication... (${remainingMinutes} minutes remaining)`);
                     } else {
-                        authProgressText.textContent = 'Time almost up! Please complete authentication now.';
+                        updateAuthProgress(progressPercent, 'Time almost up! Please complete authentication now.', '#ff6b35');
                     }
                 }
                 
@@ -3665,7 +3793,7 @@
                     clearInterval(oneDriveAuthTimer);
                     oneDriveAuthTimer = null;
                     if (authProgressText) {
-                        authProgressText.textContent = 'Authentication expired';
+                        updateAuthProgress(0, 'Authentication expired', '#dc3545');
                     }
                     showStatus('Authentication expired. Please try again.', true);
                     checkOneDriveStatus();
@@ -3725,19 +3853,13 @@
                         authTimeoutCount = 0;  // Reset timeout counter on success
                         
                         // Enhanced success feedback
-                        const authProgressFill = document.getElementById('authProgressFill');
-                        const authProgressText = document.getElementById('authProgressText');
-                        
-                        if (authProgressFill) {
-                            authProgressFill.style.width = '100%';
-                            authProgressFill.style.background = '#28a745';
-                        }
-                        if (authProgressText) {
-                            authProgressText.textContent = '✅ Authentication successful! Connecting...';
-                            authProgressText.style.color = '#28a745';
-                        }
+                        // Update progress in both integrated section and modal
+                        updateAuthProgress(100, '✅ Authentication successful! Connecting...', '#28a745');
                         
                         showStatus('OneDrive connected successfully! ✅');
+                        
+                        // Close the device flow modal
+                        closeDeviceFlowModal();
                         
                         deviceFlowInProgress = false; // Clear flag when authentication succeeds
                         console.log('🔍 Setting deviceFlowInProgress = false (success)');
@@ -3877,6 +3999,9 @@
             try {
                 deviceFlowInProgress = false; // Clear flag when cancelling
                 console.log('🔍 Setting deviceFlowInProgress = false (cancelled)');
+                
+                // Close the device flow modal
+                closeDeviceFlowModal();
                 
                 if (oneDriveAuthTimer) {
                     clearInterval(oneDriveAuthTimer);
