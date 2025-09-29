@@ -12,7 +12,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - OneDrive Functionality Preserved (v3.9)</title>
+    <title>📝 Mobile Noted - Sync Buttons Restored (v4.0)</title>
     <!-- Cache buster: 2025-09-28-debug-enhanced -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -3034,19 +3034,41 @@
                 window.restoreOneDriveButtons = function() {
                     console.log('🔧 Manual OneDrive Button Restore:');
                     
+                    // AGGRESSIVE RESTORATION - Force show sync section
+                    const syncSection = document.getElementById('syncSection');
+                    const authSection = document.getElementById('authSection');
+                    
+                    if (syncSection) {
+                        syncSection.style.display = 'block';
+                        console.log('  ✅ Sync section force shown');
+                        
+                        // Also ensure parent containers are visible
+                        let parent = syncSection.parentElement;
+                        while (parent && parent !== document.body) {
+                            if (window.getComputedStyle(parent).display === 'none') {
+                                console.log(`  🔧 Unhiding parent ${parent.tagName} for sync section`);
+                                parent.style.display = 'block';
+                            }
+                            parent = parent.parentElement;
+                        }
+                    }
+                    
+                    if (authSection) {
+                        authSection.style.display = 'none';
+                        console.log('  ✅ Auth section hidden');
+                    }
+                    
                     // Force refresh OneDrive status
                     updateOneDriveModalStatus();
                     
-                    // Show sync section if authenticated
+                    // Also check authentication status
                     fetch('/api/onedrive/status')
                         .then(response => response.json())
                         .then(data => {
-                            if (data.authenticated) {
-                                const syncSection = document.getElementById('syncSection');
-                                if (syncSection) {
-                                    syncSection.style.display = 'block';
-                                    console.log('  ✅ Sync section restored');
-                                }
+                            console.log('  📊 Auth status:', data.authenticated);
+                            if (data.authenticated && syncSection) {
+                                syncSection.style.display = 'block';
+                                console.log('  ✅ Confirmed sync section restored');
                             }
                         })
                         .catch(err => console.log('  ❌ Failed to check auth status:', err));
@@ -3294,6 +3316,24 @@
                         
                         deviceFlowInProgress = false; // Clear flag when authentication succeeds
                         console.log('🔍 Setting deviceFlowInProgress = false (success)');
+                        
+                        // IMMEDIATELY restore sync functionality
+                        console.log('🔧 Restoring OneDrive sync buttons...');
+                        const syncSection = document.getElementById('syncSection');
+                        const authSection = document.getElementById('authSection');
+                        
+                        if (syncSection) {
+                            syncSection.style.display = 'block';
+                            console.log('✅ Sync section restored');
+                        }
+                        
+                        if (authSection) {
+                            authSection.style.display = 'none';
+                            console.log('✅ Auth section hidden');
+                        }
+                        
+                        // Force immediate status update to show sync buttons
+                        updateOneDriveModalStatus();
                         
                         // Update status and hide device flow section
                         setTimeout(() => {
