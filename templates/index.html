@@ -2004,6 +2004,25 @@
                 });
         }
         
+        // Update OneDrive status after authentication or other state changes
+        function updateOneDriveStatus() {
+            console.log('🔍 Updating OneDrive status after state change...');
+            
+            // Update the modal status if it's currently visible
+            updateOneDriveModalStatus();
+            
+            // Also update the main OneDrive button status
+            fetch('/api/simple/onedrive/status')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('🔍 Updated OneDrive status:', data);
+                    updateOneDriveUI(data);
+                })
+                .catch(error => {
+                    console.error('🔍 Failed to update OneDrive status:', error);
+                });
+        }
+        
         // Update OneDrive UI based on authentication state
         function updateOneDriveUI(data) {
             console.log('🎨 Updating OneDrive UI with data:', data);
@@ -2198,7 +2217,7 @@
                 // Show loading page
                 showOneDrivePage('loading', { message: 'Checking status...' });
                 
-                const response = await fetch('/onedrive/status');
+                const response = await fetch('/api/onedrive/status');
                 const data = await response.json();
                 
                 showOneDrivePage('status', { status: data });
