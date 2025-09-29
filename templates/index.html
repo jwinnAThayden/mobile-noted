@@ -1927,9 +1927,10 @@
         }
         
         function hideDeviceFlowDisplay() {
-            const deviceFlowDisplay = document.getElementById('deviceFlowDisplay');
-            if (deviceFlowDisplay) {
-                deviceFlowDisplay.style.display = 'none';
+            const deviceFlowSection = document.getElementById('deviceFlowSection'); // Fix: use correct element ID
+            if (deviceFlowSection) {
+                deviceFlowSection.style.display = 'none';
+                console.log('🔍 hideDeviceFlowDisplay: Hidden deviceFlowSection');
             }
         }
 
@@ -3077,14 +3078,14 @@
         // Show appropriate OneDrive controls
         function showOneDriveControls(state, statusData = null) {
             const authSection = document.getElementById('authSection');
-            const deviceFlowDisplay = document.getElementById('deviceFlowDisplay');
+            const deviceFlowSection = document.getElementById('deviceFlowSection'); // Fix: use correct element ID
             const syncSection = document.getElementById('syncSection');
             
             if (!authSection) return; // Panel not shown yet
             
             // Hide all first
             authSection.style.display = 'none';
-            if (deviceFlowDisplay) deviceFlowDisplay.style.display = 'none';
+            if (deviceFlowSection) deviceFlowSection.style.display = 'none'; // Fix: use correct element
             if (syncSection) syncSection.style.display = 'none';
             
             switch (state) {
@@ -3124,7 +3125,14 @@
                     authSection.style.display = 'block';
                     break;
                 case 'authenticating':
-                    if (deviceFlowDisplay) deviceFlowDisplay.style.display = 'block';
+                    // Show the actual device flow section, not the non-existent deviceFlowDisplay
+                    const deviceFlowSection = document.getElementById('deviceFlowSection');
+                    if (deviceFlowSection) {
+                        deviceFlowSection.style.display = 'block';
+                        console.log('🔍 showOneDriveControls: Showing deviceFlowSection for authenticating state');
+                    } else {
+                        console.error('🔍 showOneDriveControls: deviceFlowSection not found!');
+                    }
                     break;
                 case 'authenticated':
                     if (syncSection) syncSection.style.display = 'block';
@@ -3145,8 +3153,18 @@
             // Always show authSection and deviceFlowSection for user feedback
             const authSection = document.getElementById('authSection');
             const deviceFlowSection = document.getElementById('deviceFlowSection');
-            if (authSection) authSection.style.display = 'block';
-            if (deviceFlowSection) deviceFlowSection.style.display = 'block';
+            if (authSection) {
+                authSection.style.display = 'block';
+                console.log('🔍 startOneDriveAuth: authSection shown');
+            } else {
+                console.error('🔍 startOneDriveAuth: authSection not found!');
+            }
+            if (deviceFlowSection) {
+                deviceFlowSection.style.display = 'block';
+                console.log('🔍 startOneDriveAuth: deviceFlowSection shown');
+            } else {
+                console.error('🔍 startOneDriveAuth: deviceFlowSection not found!');
+            }
 
             try {
                 // Try the simple endpoint first (more reliable)
@@ -3214,6 +3232,16 @@
         // Display device flow authentication UI
         function displayDeviceFlow(authFlow) {
             console.log('🔍 displayDeviceFlow called, deviceFlowInProgress:', deviceFlowInProgress);
+            
+            // IMMEDIATE DIAGNOSTIC - Check if element exists in DOM
+            const allDeviceFlow = document.querySelectorAll('#deviceFlowSection');
+            console.log('🔍 DOM Search Results for deviceFlowSection:', allDeviceFlow.length);
+            if (allDeviceFlow.length === 0) {
+                console.error('❌ CRITICAL: deviceFlowSection not found in DOM at all!');
+                console.log('🔍 Searching for any element containing "deviceFlow"...');
+                const anyDeviceFlow = document.querySelectorAll('[id*="deviceFlow"]');
+                console.log('🔍 Elements with deviceFlow in ID:', anyDeviceFlow.length, anyDeviceFlow);
+            }
             
             // Show the integrated device flow section
             const deviceFlowSection = document.getElementById('deviceFlowSection');
@@ -3518,6 +3546,60 @@
                 });
             } else {
                 console.error('🔍 Device flow section not found!');
+                console.log('🔍 Attempting emergency recovery...');
+                
+                // Emergency: Try to find OneDrive panel and inject device flow section
+                const onedrivePanel = document.querySelector('.onedrive-panel');
+                if (onedrivePanel) {
+                    console.log('🔍 Found OneDrive panel, creating emergency device flow section...');
+                    
+                    const emergencySection = document.createElement('div');
+                    emergencySection.id = 'deviceFlowSection';
+                    emergencySection.style.cssText = 'display: block !important; margin-top: 15px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 2px solid #0078d4; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 10000 !important;';
+                    
+                    emergencySection.innerHTML = `
+                        <div style="text-align: center;">
+                            <div style="margin-bottom: 15px;">
+                                <span style="font-size: 24px; margin-right: 8px;">🔗</span>
+                                <strong style="color: #0078d4;">OneDrive Authentication</strong>
+                            </div>
+                            <p style="margin-bottom: 15px; color: #666;">Please complete authentication on Microsoft's website:</p>
+                            
+                            <div style="background: white; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #ddd;">
+                                <p style="margin: 5px 0;"><strong>Visit:</strong></p>
+                                <a id="verificationUrl" href="${authFlow.verification_uri}" target="_blank" 
+                                   style="color: #0078d4; text-decoration: none; font-weight: bold; word-break: break-all;">
+                                    ${authFlow.verification_uri}
+                                </a>
+                                
+                                <p style="margin: 15px 0 5px 0;"><strong>Enter this code:</strong></p>
+                                <div style="background: #f0f0f0; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 18px; font-weight: bold; letter-spacing: 2px; text-align: center;">
+                                    <span id="deviceCode">${authFlow.user_code}</span>
+                                </div>
+                            </div>
+                            
+                            <div id="authProgress" style="margin-top: 15px;">
+                                <div style="background: #e0e0e0; border-radius: 10px; height: 8px; overflow: hidden;">
+                                    <div id="authProgressFill" style="background: #0078d4; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                                </div>
+                                <p id="authProgressText" style="margin: 10px 0 5px 0; font-size: 14px; color: #666;">Waiting for authentication...</p>
+                            </div>
+                            
+                            <button onclick="cancelOneDriveAuth()" style="background: #666; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                                Cancel
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Insert at the end of OneDrive panel
+                    onedrivePanel.appendChild(emergencySection);
+                    
+                    console.log('🔍 ✅ Emergency device flow section created successfully!');
+                    console.log('🔍 Emergency section display:', emergencySection.style.display);
+                    console.log('🔍 Emergency section computed display:', window.getComputedStyle(emergencySection).display);
+                } else {
+                    console.error('❌ CRITICAL: OneDrive panel not found either! Complete UI failure!');
+                }
             }
             
             // Populate device flow information
@@ -4263,6 +4345,49 @@
                 showOneDriveNotes();
             }
         }
+
+        // EMERGENCY: Fix missing device flow section (call from console if needed)
+        window.emergencyFixDeviceFlow = function() {
+            console.log('🚨 EMERGENCY: Attempting to fix missing device flow section...');
+            
+            // First, try to find existing device flow section
+            let deviceFlowSection = document.getElementById('deviceFlowSection');
+            if (deviceFlowSection) {
+                console.log('✅ Device flow section found, forcing visibility...');
+                deviceFlowSection.style.cssText = 'display: block !important; margin-top: 15px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 2px solid #0078d4; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 10000 !important;';
+                return true;
+            }
+            
+            // If not found, create emergency one
+            const onedrivePanel = document.querySelector('.onedrive-panel');
+            if (!onedrivePanel) {
+                console.error('❌ OneDrive panel not found!');
+                return false;
+            }
+            
+            console.log('🔧 Creating emergency device flow section...');
+            const emergencySection = document.createElement('div');
+            emergencySection.id = 'deviceFlowSection';
+            emergencySection.style.cssText = 'display: block !important; margin-top: 15px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 2px solid #0078d4; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 10000 !important;';
+            
+            emergencySection.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="margin-bottom: 15px;">
+                        <span style="font-size: 24px; margin-right: 8px;">🔗</span>
+                        <strong style="color: #0078d4;">OneDrive Authentication</strong>
+                    </div>
+                    <p style="margin-bottom: 15px; color: #666;">Click "Connect to OneDrive" to start authentication</p>
+                    
+                    <button onclick="startOneDriveAuth()" style="background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                        Retry Authentication
+                    </button>
+                </div>
+            `;
+            
+            onedrivePanel.appendChild(emergencySection);
+            console.log('✅ Emergency device flow section created!');
+            return true;
+        };
 
         // EMERGENCY: Force show OneDrive modal (call from console if needed)
         window.forceShowOneDriveModal = function() {
