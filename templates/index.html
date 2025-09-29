@@ -3107,15 +3107,11 @@
 
         // Start OneDrive authentication
         async function startOneDriveAuth() {
-            console.log('🔍 🚀 Starting OneDrive authentication in full-screen mode...');
+            console.log('🔍 🚀 Starting OneDrive authentication...');
             
             try {
-                // Show loading in full-screen
-                showFullScreenDialog(
-                    '☁️ OneDrive Authentication',
-                    '<div style="text-align: center; padding: 40px;"><div style="font-size: 48px; margin-bottom: 20px;">⏳</div><div style="font-size: 18px; color: #666;">Starting authentication...</div></div>',
-                    [{text: '❌ Cancel', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
-                );
+                // Show loading page
+                showOneDrivePage('loading', 'Starting OneDrive authentication...');
                 
                 // Try the simple endpoint first
                 console.log('🔍 Trying simple auth endpoint...');
@@ -3149,17 +3145,149 @@
                 console.log('🔍 Auth response data:', data);
 
                 if (data.success) {
-                    displayDeviceFlowFullScreen(data.auth_flow);
+                    displayDeviceFlowPage(data.auth_flow);
                 } else {
                     throw new Error(data.error || 'Failed to start OneDrive authentication');
                 }
             } catch (error) {
                 console.error('🔍 OneDrive auth error:', error);
-                showFullScreenDialog(
-                    '❌ Authentication Error',
-                    `<div style="text-align: center; padding: 20px;"><div style="color: #dc3545; font-size: 18px; margin-bottom: 15px;">Failed to start authentication</div><div style="color: #666;">${error.message}</div></div>`,
-                    [{text: '🔄 Try Again', onclick: 'startOneDriveAuth()', color: '#28a745'}, {text: '❌ Close', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
-                );
+                showOneDrivePage('error', 'Authentication Failed', `Failed to start authentication: ${error.message}`);
+            }
+        }
+        
+        function displayDeviceFlowPage(authFlow) {
+            console.log('🔍 Displaying device flow:', authFlow);
+            
+            const deviceContent = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="margin-bottom: 30px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🔐</div>
+                        <div style="font-size: 24px; color: #333; margin-bottom: 10px;">Device Authentication</div>
+                        <div style="color: #666;">Complete authentication on your device</div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0; border-left: 4px solid #0078d4;">
+                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Follow these steps:</div>
+                        <div style="text-align: left; margin-bottom: 15px;">
+                            <div style="margin-bottom: 8px;">1. Visit: <strong>${authFlow.verification_uri}</strong></div>
+                            <div style="margin-bottom: 8px;">2. Enter code: <strong id="deviceCode" style="font-size: 20px; color: #0078d4; letter-spacing: 2px;">${authFlow.user_code}</strong></div>
+                            <div>3. Sign in with your Microsoft account</div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                            <button onclick="copyDeviceCode()" style="
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 14px;
+                            ">
+                                📋 Copy Code
+                            </button>
+                            <button onclick="window.open('${authFlow.verification_uri}', '_blank')" style="
+                                background: #0078d4;
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 14px;
+                            ">
+                                🌐 Open Browser
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="authProgress" style="margin-top: 20px;">
+                        <div style="font-size: 16px; color: #666; margin-bottom: 10px;">Waiting for authentication...</div>
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 5px;">
+                            <div style="width: 8px; height: 8px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+                            <div style="width: 8px; height: 8px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite 0.2s;"></div>
+                            <div style="width: 8px; height: 8px; background: #0078d4; border-radius: 50%; animation: pulse 1.5s infinite 0.4s;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <style>
+                    @keyframes pulse {
+                        0%, 100% { opacity: 0.3; }
+                        50% { opacity: 1; }
+                    }
+                </style>
+            `;
+            
+            showOneDrivePage('auth', 'OneDrive Authentication', deviceContent);
+            
+            // Start checking for authentication completion
+            checkAuthStatusPage();
+        }
+        
+        // Copy device code for single-page navigation
+        function copyDeviceCode() {
+            const codeElement = document.getElementById('deviceCode');
+            if (codeElement) {
+                const cleanCode = codeElement.textContent.trim();
+                console.log('🔍 Copying device code:', cleanCode);
+                
+                navigator.clipboard.writeText(cleanCode).then(() => {
+                    // Visual feedback
+                    const button = document.querySelector('[onclick="copyDeviceCode()"]');
+                    if (button) {
+                        const originalText = button.textContent;
+                        button.textContent = '✅ Copied!';
+                        button.style.background = '#28a745';
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                            button.style.background = '#28a745';
+                        }, 2000);
+                    }
+                }).catch(err => {
+                    console.error('🔍 Failed to copy device code:', err);
+                });
+            }
+        }
+        
+        // Check authentication status for single-page navigation
+        async function checkAuthStatusPage() {
+            try {
+                console.log('🔍 Checking authentication status...');
+                
+                const response = await fetch('/api/simple/onedrive/auth/check', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('🔍 Auth check result:', data);
+                
+                if (data.success && data.authenticated) {
+                    // Authentication successful!
+                    showOneDrivePage('success', 'Authentication Successful!', 
+                        '<div style="text-align: center; padding: 20px;"><div style="font-size: 48px; margin-bottom: 15px;">✅</div><div style="color: #28a745; font-size: 18px;">OneDrive connected successfully!</div></div>');
+                    
+                    // Refresh OneDrive status and return to main page
+                    setTimeout(() => {
+                        hideOneDrivePage();
+                        updateOneDriveStatus();
+                    }, 2000);
+                } else if (data.success && !data.authenticated) {
+                    // Still waiting
+                    setTimeout(checkAuthStatusPage, 5000);
+                } else {
+                    // Authentication failed
+                    showOneDrivePage('error', 'Authentication Failed', data.error || 'Authentication failed');
+                }
+            } catch (error) {
+                console.error('🔍 Error checking auth status:', error);
+                setTimeout(checkAuthStatusPage, 5000);
             }
         }
         
