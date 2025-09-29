@@ -5116,8 +5116,8 @@
                 <script>
                     // Initialize selection state and event listeners after page renders
                     setTimeout(() => {
-                        console.log('🔧 Initializing selection functionality...');
-                        console.log('🔧 Available functions:', {
+                        console.log('[INIT] Initializing selection functionality...');
+                        console.log('[INIT] Available functions:', {
                             toggleSelectAllNotes: typeof window.toggleSelectAllNotes,
                             updateSelectedCount: typeof window.updateSelectedCount
                         });
@@ -5126,9 +5126,9 @@
                         const selectAllCheckbox = document.getElementById('selectAllNotes');
                         if (selectAllCheckbox) {
                             selectAllCheckbox.addEventListener('change', window.toggleSelectAllNotes);
-                            console.log('✅ Select All checkbox listener added');
+                            console.log('[OK] Select All checkbox listener added');
                         } else {
-                            console.log('❌ Select All checkbox not found');
+                            console.log('[ERROR] Select All checkbox not found');
                         }
                         
                         // Add event listeners to individual note checkboxes
@@ -5136,12 +5136,12 @@
                         noteCheckboxes.forEach(checkbox => {
                             checkbox.addEventListener('change', window.updateSelectedCount);
                         });
-                        console.log(`✅ Added event listeners to ${noteCheckboxes.length} note checkboxes`);
+                        console.log(`[OK] Added event listeners to ${noteCheckboxes.length} note checkboxes`);
                         
                         // Initialize selection count
                         if (typeof window.updateSelectedCount === 'function') {
                             window.updateSelectedCount();
-                            console.log('✅ Initial selection count updated');
+                            console.log('[OK] Initial selection count updated');
                         }
                     }, 100);
                 </script>
@@ -5591,7 +5591,7 @@
             const selectAllCheckbox = document.getElementById('selectAllNotes');
             const checkboxes = document.querySelectorAll('.note-checkbox');
             
-            console.log('🔍 toggleSelectAllNotes:', {
+            console.log('[DEBUG] toggleSelectAllNotes:', {
                 selectAllChecked: selectAllCheckbox?.checked,
                 totalCheckboxes: checkboxes.length
             });
@@ -5609,7 +5609,7 @@
             const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
             const selectedCount = selectedCheckboxes.length;
             
-            console.log('🔍 updateSelectedCount:', {
+            console.log('[DEBUG] updateSelectedCount:', {
                 totalCheckboxes: checkboxes.length,
                 selectedCount: selectedCount,
                 checkboxes: Array.from(checkboxes).map(cb => ({ id: cb.dataset.noteId, checked: cb.checked }))
@@ -5620,14 +5620,14 @@
             if (countElement) {
                 countElement.textContent = `${selectedCount} selected`;
             } else {
-                console.log('🔍 selectedCount element not found');
+                console.log('[DEBUG] selectedCount element not found');
             }
             
             // Update bulk operation buttons
             const bulkLoadBtn = document.getElementById('bulkLoadBtn');
             const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
             
-            console.log('🔍 Bulk buttons found:', { bulkLoadBtn: !!bulkLoadBtn, bulkDeleteBtn: !!bulkDeleteBtn });
+            console.log('[DEBUG] Bulk buttons found:', { bulkLoadBtn: !!bulkLoadBtn, bulkDeleteBtn: !!bulkDeleteBtn });
             
             [bulkLoadBtn, bulkDeleteBtn].forEach(btn => {
                 if (btn) {
@@ -5742,7 +5742,7 @@
                     const noteName = checkbox.dataset.noteName;
                     
                     try {
-                        console.log(`🔍 Loading note: ${noteName} (${noteId})`);
+                        console.log(`[DEBUG] Loading note: ${noteName} (${noteId})`);
                         
                         const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
                         
