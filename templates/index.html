@@ -3262,31 +3262,36 @@
                 bottom: 0;
                 width: 100vw;
                 height: 100vh;
-                background: rgba(0, 0, 0, 0.8);
-                z-index: 99999;
+                background: rgba(0, 0, 0, 0.95);
+                z-index: 999999;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 backdrop-filter: blur(5px);
-                padding: 20px;
+                padding: 10px;
                 box-sizing: border-box;
+                overflow-y: auto;
             `;
             
             modal.innerHTML = `
-                <div style="background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;">
-                    <div style="padding: 30px; text-align: center;">
-                        <div style="margin-bottom: 20px;">
-                            <h3 style="color: #0078d4; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <div style="background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); max-width: 450px; width: 95vw; min-height: 60vh; max-height: 95vh; overflow-y: auto; position: relative; margin: auto;">
+                    <div style="padding: 20px; text-align: center;">
+                        <div style="position: absolute; top: 15px; right: 15px;">
+                            <button onclick="closeDeviceFlowModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666; padding: 5px; line-height: 1;">×</button>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; margin-top: 30px;">
+                            <h3 style="color: #0078d4; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px;">
                                 <span style="font-size: 24px;">�</span>
                                 OneDrive Authentication
                             </h3>
                         </div>
                         
-                        <p style="margin-bottom: 20px; color: #666; font-size: 16px;">Complete authentication on Microsoft's website:</p>
+                        <p style="margin-bottom: 20px; color: #666; font-size: 14px;">Complete authentication on Microsoft's website:</p>
                         
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #0078d4;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #0078d4;">
                             <div style="margin-bottom: 15px;">
-                                <strong style="display: block; margin-bottom: 8px; color: #333;">1. Visit this URL:</strong>
+                                <strong style="display: block; margin-bottom: 8px; color: #333; font-size: 14px;">1. Visit this URL:</strong>
                                 <a id="modalVerificationUrl" href="${authFlow.verification_uri}" target="_blank" 
                                    style="color: #0078d4; text-decoration: none; font-weight: bold; word-break: break-all; font-size: 14px;">
                                     ${authFlow.verification_uri}
@@ -4343,17 +4348,38 @@
 
         // Show OneDrive notes browser
         async function showOneDriveNotes() {
+            console.log('🔍 showOneDriveNotes: Starting...');
             try {
+                // Check authentication first
+                const authStatus = await fetch('/onedrive/status');
+                const authData = await authStatus.json();
+                
+                if (!authData.authenticated) {
+                    console.log('🔍 showOneDriveNotes: Not authenticated, starting auth flow...');
+                    startOneDriveAuth();
+                    return;
+                }
+                
                 const browser = document.getElementById('cloudNotesBrowser');
                 const status = document.getElementById('cloudNotesStatus');
                 const list = document.getElementById('cloudNotesList');
+                
+                if (!browser || !status || !list) {
+                    console.error('🔍 showOneDriveNotes: Browser elements not found');
+                    return;
+                }
                 
                 browser.style.display = 'block';
                 status.textContent = 'Loading cloud notes...';
                 list.innerHTML = '';
                 
+                console.log('🔍 showOneDriveNotes: Fetching notes...');
                 const response = await authenticatedFetch('/api/onedrive/notes');
-                if (!response) return;
+                if (!response) {
+                    console.error('🔍 showOneDriveNotes: No response from API');
+                    status.textContent = 'Failed to load notes. Please try again.';
+                    return;
+                }
                 
                 const data = await response.json();
                 
