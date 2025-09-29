@@ -12,7 +12,7 @@
     <meta name="application-name" content="Noted">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="msapplication-config" content="/static/browserconfig.xml">
-    <title>📝 Mobile Noted - Sync Buttons Restored (v4.0)</title>
+    <title>📝 Mobile Noted - Enhanced Browse (v4.1)</title>
     <!-- Cache buster: 2025-09-28-debug-enhanced -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -562,10 +562,12 @@
             background: #f8f9fa;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 10px;
-            cursor: pointer;
             transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .cloud-note-item:hover {
@@ -574,9 +576,83 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .cloud-note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .cloud-note-name {
             font-weight: 500;
-            margin-bottom: 5px;
+            font-size: 16px;
+            color: #333;
+            flex: 1;
+        }
+
+        .cloud-note-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .cloud-note-item:hover .cloud-note-actions {
+            opacity: 1;
+        }
+
+        .cloud-note-btn {
+            background: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 60px;
+        }
+
+        .cloud-note-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .cloud-note-btn.load {
+            background: #e7f3ff;
+            border-color: #0078d4;
+            color: #0078d4;
+        }
+
+        .cloud-note-btn.load:hover {
+            background: #0078d4;
+            color: white;
+        }
+
+        .cloud-note-btn.rename {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .cloud-note-btn.rename:hover {
+            background: #ffc107;
+            color: white;
+        }
+
+        .cloud-note-btn.delete {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .cloud-note-btn.delete:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .cloud-note-meta {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
         }
 
         .cloud-note-meta {
@@ -3796,7 +3872,20 @@
                             const noteItem = document.createElement('div');
                             noteItem.className = 'cloud-note-item';
                             noteItem.innerHTML = `
-                                <div class="cloud-note-name">${note.name}</div>
+                                <div class="cloud-note-header">
+                                    <div class="cloud-note-name">${note.name}</div>
+                                    <div class="cloud-note-actions">
+                                        <button class="cloud-note-btn load" onclick="loadCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')">
+                                            📄 Load
+                                        </button>
+                                        <button class="cloud-note-btn rename" onclick="renameCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')">
+                                            ✏️ Rename
+                                        </button>
+                                        <button class="cloud-note-btn delete" onclick="deleteCloudNote('${note.id}', '${note.name.replace(/'/g, "\\'")}')">
+                                            🗑️ Delete
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="cloud-note-meta">
                                     Modified: ${new Date(note.modified).toLocaleString()}<br>
                                     Size: ${(note.size / 1024).toFixed(1)} KB
@@ -3815,6 +3904,98 @@
 
         function hideCloudNotesBrowser() {
             document.getElementById('cloudNotesBrowser').style.display = 'none';
+        }
+
+        // Load a cloud note into a new tab
+        async function loadCloudNote(noteId, noteName) {
+            try {
+                showStatus('Loading note from OneDrive...', true);
+                
+                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`);
+                if (!response) {
+                    showStatus('Failed to load note from OneDrive', false);
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Create a new tab with the loaded content
+                    addNote(data.content, noteName.replace(/\.txt$/, ''));
+                    showStatus('Note loaded successfully! ✅');
+                    hideCloudNotesBrowser();
+                } else {
+                    showStatus('Failed to load note: ' + data.error, false);
+                }
+            } catch (error) {
+                showStatus('Error loading note: ' + error.message, false);
+            }
+        }
+
+        // Rename a cloud note
+        async function renameCloudNote(noteId, currentName) {
+            const newName = prompt('Enter new name for the note:', currentName.replace(/\.txt$/, ''));
+            if (!newName || newName.trim() === '') return;
+            
+            const finalName = newName.trim() + (newName.trim().endsWith('.txt') ? '' : '.txt');
+            
+            try {
+                showStatus('Renaming note...', true);
+                
+                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}/rename`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ new_name: finalName })
+                });
+                
+                if (!response) {
+                    showStatus('Failed to rename note', false);
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('Note renamed successfully! ✅');
+                    // Refresh the notes list
+                    showOneDriveNotes();
+                } else {
+                    showStatus('Failed to rename note: ' + data.error, false);
+                }
+            } catch (error) {
+                showStatus('Error renaming note: ' + error.message, false);
+            }
+        }
+
+        // Delete a cloud note
+        async function deleteCloudNote(noteId, noteName) {
+            const confirmDelete = confirm(`Are you sure you want to delete "${noteName}" from OneDrive?\n\nThis action cannot be undone.`);
+            if (!confirmDelete) return;
+            
+            try {
+                showStatus('Deleting note...', true);
+                
+                const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response) {
+                    showStatus('Failed to delete note', false);
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('Note deleted successfully! ✅');
+                    // Refresh the notes list
+                    showOneDriveNotes();
+                } else {
+                    showStatus('Failed to delete note: ' + data.error, false);
+                }
+            } catch (error) {
+                showStatus('Error deleting note: ' + error.message, false);
+            }
         }
 
         // Logout from OneDrive
