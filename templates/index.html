@@ -5114,7 +5114,7 @@
             
             if (notes.length === 0) {
                 notesHtml = '<div style="text-align: center; padding: 60px 20px;">' +
-                           '<div style="font-size: 64px; margin-bottom: 20px;">AUTH</div>' +
+                           '<div style="font-size: 64px; margin-bottom: 20px;">FOLDER</div>' +
                            '<h2 style="color: #666;">No notes found</h2>' +
                            '<p style="color: #999;">Your OneDrive doesn\'t contain any notes yet</p>' +
                            '</div>';
@@ -5138,7 +5138,7 @@
                            '</div>' +
                            '<div style="display: flex; gap: 10px; flex-wrap: wrap;">' +
                            '<button onclick="loadCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #0078d4; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;"> Load</button>' +
-                           '<button onclick="renameCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #ffc107; color: black; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">✏️ Rename</button>' +
+                           '<button onclick="renameCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #ffc107; color: black; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">Rename</button>' +
                            '<button onclick="deleteCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;"> Delete</button>' +
                            '</div>' +
                            '</div>' +
