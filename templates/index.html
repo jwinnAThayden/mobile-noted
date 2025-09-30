@@ -1703,7 +1703,7 @@
     <div id="notificationPanel" class="notification-panel collapsed">
         <div class="notification-header" onclick="toggleNotificationPanel()">
             <span>Messages <span id="notificationCount" class="notification-count" style="display: none;">0</span></span>
-            <span id="notificationToggle">▼</span>
+            <span id="notificationToggle">v</span>
         </div>
         <div class="notification-content" id="notificationContent">
             <div class="notification-item info">
@@ -1732,7 +1732,7 @@
             <div class="cloud-section onedrive-panel">
                 <div class="section-header" onclick="toggleCloudSection()">
                     <span>☁️ Cloud Sync</span>
-                    <span id="cloudToggleIcon" class="toggle-icon rotated">▲</span>
+                    <span id="cloudToggleIcon" class="toggle-icon rotated">^</span>
                 </div>
                 <div id="cloudControls" class="cloud-controls expanded">
                     <!-- OneDrive Status -->
@@ -1883,11 +1883,11 @@
             
             if (controls.classList.contains('expanded')) {
                 controls.classList.remove('expanded');
-                icon.textContent = '▼';
+                icon.textContent = 'v';
                 icon.classList.remove('rotated');
             } else {
                 controls.classList.add('expanded');
-                icon.textContent = '▲';
+                icon.textContent = '^';
                 icon.classList.add('rotated');
             }
         }
@@ -1914,7 +1914,7 @@
             const icon = document.getElementById('cloudToggleIcon');
             if (controls && icon) {
                 controls.classList.add('expanded');
-                icon.textContent = '▲';
+                icon.textContent = '^';
                 icon.classList.add('rotated');
             }
             
@@ -1930,7 +1930,7 @@
             
             if (controls && !controls.classList.contains('expanded')) {
                 controls.classList.add('expanded');
-                icon.textContent = '▲';
+                icon.textContent = '^';
                 icon.classList.add('rotated');
             }
             
@@ -1984,7 +1984,7 @@
             const toggle = document.getElementById('notificationToggle');
             
             panel.classList.toggle('collapsed');
-            toggle.textContent = panel.classList.contains('collapsed') ? '▼' : '▲';
+            toggle.textContent = panel.classList.contains('collapsed') ? 'v' : '^';
         }
 
         // Progress tracking functions
@@ -2070,17 +2070,17 @@
             const deviceFlowSection = document.getElementById('deviceFlowSection'); // Fix: use correct element ID
             if (deviceFlowSection) {
                 deviceFlowSection.style.display = 'none';
-                console.log('🔍 hideDeviceFlowDisplay: Hidden deviceFlowSection');
+                console.log('[DEBUG] hideDeviceFlowDisplay: Hidden deviceFlowSection');
             }
         }
 
         // Update OneDrive status within the modal
         function updateOneDriveModalStatus() {
-            console.log('🔍 Updating OneDrive status...', 'deviceFlowInProgress:', deviceFlowInProgress);
+            console.log('[DEBUG] Updating OneDrive status...', 'deviceFlowInProgress:', deviceFlowInProgress);
             
             // CRITICAL: Don't interfere with device flow authentication
             if (deviceFlowInProgress) {
-                console.log('🔍 BLOCKING updateOneDriveModalStatus - device flow in progress');
+                console.log('[DEBUG] BLOCKING updateOneDriveModalStatus - device flow in progress');
                 return;
             }
             
@@ -2577,7 +2577,7 @@
             const toggle = document.getElementById('notificationToggle');
             
             panel.classList.toggle('collapsed');
-            toggle.textContent = panel.classList.contains('collapsed') ? '▼' : '▲';
+            toggle.textContent = panel.classList.contains('collapsed') ? 'v' : '^';
         }
 
         // Progress bar helper functions
