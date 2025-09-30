@@ -1979,13 +1979,7 @@
             }
         }
         
-        function toggleNotificationPanel() {
-            const panel = document.getElementById('notificationPanel');
-            const toggle = document.getElementById('notificationToggle');
-            
-            panel.classList.toggle('collapsed');
-            toggle.textContent = panel.classList.contains('collapsed') ? 'v' : '^';
-        }
+
 
         // Progress tracking functions
         function showOperationProgress(message, percentage = 0) {
@@ -2572,7 +2566,7 @@
             }
         }
         
-        function toggleNotificationPanel() {
+        window.toggleNotificationPanel = function() {
             const panel = document.getElementById('notificationPanel');
             const toggle = document.getElementById('notificationToggle');
             
