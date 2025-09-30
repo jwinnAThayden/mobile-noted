@@ -2401,7 +2401,7 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    showStatus(`Note "${currentNote.title}" uploaded to OneDrive successfully! ✅`, 'success');
+                    showStatus(`Note "${currentNote.title}" uploaded to OneDrive successfully!`, 'success');
                     hideOneDrivePage();
                 } else {
                     throw new Error(data.error || 'Upload failed');
@@ -3413,7 +3413,7 @@
                                 cursor: pointer;
                                 font-size: 14px;
                             ">
-                                📋 Copy Code
+                                Copy Code
                             </button>
                             <button onclick="window.open('${authFlow.verification_uri}', '_blank')" style="
                                 background: #0078d4;
@@ -3424,7 +3424,7 @@
                                 cursor: pointer;
                                 font-size: 14px;
                             ">
-                                🌐 Open Browser
+                                Open Browser
                             </button>
                         </div>
                     </div>
@@ -3448,9 +3448,9 @@
             `;
             
             showFullScreenDialog(
-                '🔐 OneDrive Authentication',
+                'OneDrive Authentication',
                 deviceContent,
-                [{text: '❌ Cancel', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
+                [{text: 'Cancel', onclick: 'closeFullScreenDialog()', color: '#dc3545'}]
             );
             
             // Start checking for authentication completion
@@ -4049,7 +4049,7 @@
                                 if (deviceFlowInProgress && ancestorStyle.display === 'none' && 
                                     ancestor.contains(deviceFlowSection)) {
                                     console.log(`  🔧 FIXING: Setting parent ${ancestor.tagName}#${ancestor.id} to display: block`);
-                                    console.log(`  📋 Original display was: none - will restore after auth`);
+                                    console.log(`  Original display was: none - will restore after auth`);
                                     
                                     // Store original display value
                                     ancestor._originalDisplay = 'none';
@@ -4191,7 +4191,7 @@
             const authProgressFill = document.getElementById('authProgressFill');
             
             if (authProgressText) {
-                updateAuthProgress(10, '📋 Visit the URL above, enter the code, then click "Check Status" (auto-check in 30s)');
+                updateAuthProgress(10, 'Visit the URL above, enter the code, then click "Check Status" (auto-check in 30s)');
             }
             
             oneDriveAuthTimer = setInterval(() => {
@@ -5210,7 +5210,7 @@
                 <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
                     <div style="background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;">
                         <div style="margin-bottom: 40px;">
-                            <div style="font-size: 64px; margin-bottom: 20px;">🔐</div>
+                            <div style="font-size: 64px; margin-bottom: 20px;">�</div>
                             <h1 style="color: #333; margin: 0 0 10px 0;">Device Authentication</h1>
                             <p style="color: #666; font-size: 18px;">Complete authentication on your device</p>
                         </div>
@@ -5254,7 +5254,7 @@
                                     font-size: 16px;
                                     font-weight: bold;
                                 ">
-                                    📋 Copy Code
+                                    Copy Code
                                 </button>
                                 <button onclick="window.open('${authFlow.verification_uri}', '_blank')" style="
                                     background: #0078d4;
@@ -5266,7 +5266,7 @@
                                     font-size: 16px;
                                     font-weight: bold;
                                 ">
-                                    🌐 Open Browser
+                                    Open Browser
                                 </button>
                             </div>
                         </div>
@@ -5289,7 +5289,7 @@
                             cursor: pointer;
                             font-size: 16px;
                         ">
-                            ❌ Cancel
+                            Cancel
                         </button>
                         
                         <style>
@@ -5572,7 +5572,7 @@
                     renderNotes();
                     selectNote(notes.length - 1);
                     
-                    showStatus(`Note "${noteName}" loaded from OneDrive ✅`, 'success');
+                    showStatus(`Note "${noteName}" loaded from OneDrive`, 'success');
                 } else {
                     throw new Error(data.error || 'Failed to load note');
                 }
@@ -5603,7 +5603,7 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    showStatus(`Note renamed to "${newName}" ✅`, 'success');
+                    showStatus(`Note renamed to "${newName}"`, 'success');
                     showOneDriveNotes(); // Refresh the notes list
                 } else {
                     throw new Error(data.error || 'Failed to rename note');
@@ -5632,7 +5632,7 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    showStatus(`Note "${noteName}" deleted from OneDrive ✅`, 'success');
+                    showStatus(`Note "${noteName}" deleted from OneDrive`, 'success');
                     showOneDriveNotes(); // Refresh the notes list
                 } else {
                     throw new Error(data.error || 'Failed to delete note');
@@ -5762,12 +5762,12 @@
                 
                 // Show results
                 if (errorCount === 0) {
-                    showStatus(`Successfully deleted ${successCount} notes from OneDrive ✅`, 'success');
+                    showStatus(`Successfully deleted ${successCount} notes from OneDrive`, 'success');
                     showOneDriveNotes(); // Refresh the notes list
                 } else if (successCount === 0) {
                     showOneDrivePage('error', 'Failed to delete notes', `All ${errorCount} notes failed to delete:\n${errors.join('\n')}`);
                 } else {
-                    showStatus(`Deleted ${successCount} notes, ${errorCount} failed ⚠️`, 'warning');
+                    showStatus(`Deleted ${successCount} notes, ${errorCount} failed`, 'warning');
                     showOneDriveNotes(); // Refresh the notes list
                 }
                 
@@ -5851,11 +5851,11 @@
                 hideOneDrivePage();
                 
                 if (errorCount === 0) {
-                    showStatus(`Successfully loaded ${successCount} notes ✅`, 'success');
+                    showStatus(`Successfully loaded ${successCount} notes`, 'success');
                 } else if (successCount === 0) {
-                    showStatus(`Failed to load all ${errorCount} notes ❌`, 'error');
+                    showStatus(`Failed to load all ${errorCount} notes`, 'error');
                 } else {
-                    showStatus(`Loaded ${successCount} notes, ${errorCount} failed ⚠️`, 'warning');
+                    showStatus(`Loaded ${successCount} notes, ${errorCount} failed`, 'warning');
                 }
                 
             } catch (error) {
@@ -6593,7 +6593,7 @@
                 
                 // Find dialog header element for OneDrive panel
                 const header = e.target.closest('.dialog-header');
-                console.log('📋 Header found:', header);
+                console.log('Header found:', header);
                 
                 if (!header) {
                     console.log('❌ No dialog-header found');
