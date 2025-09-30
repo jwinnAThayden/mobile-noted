@@ -804,6 +804,94 @@
             line-height: 1.3;
         }
 
+        /* Collapsible notification system */
+        .notification-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            max-width: 400px;
+            z-index: 9999;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        
+        .notification-panel.collapsed {
+            max-height: 50px;
+        }
+        
+        .notification-header {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .notification-content {
+            max-height: 450px;
+            overflow-y: auto;
+            background: white;
+        }
+        
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        
+        .notification-item.error {
+            background: #fff5f5;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .notification-item.warning {
+            background: #fffbf0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .notification-item.success {
+            background: #f0fff4;
+            border-left: 4px solid #28a745;
+        }
+        
+        .notification-item.info {
+            background: #f0f8ff;
+            border-left: 4px solid #0078d4;
+        }
+        
+        .notification-timestamp {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .notification-count {
+            background: #dc3545;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        /* Hide all original popup elements */
+        .moveable-dialog, .auth-modal, .onedrive-panel {
+            display: none !important;
+        }
+
         /* Setup and error message styles */
         .setup-instructions, .error-message {
             background: #f8f9fa;
@@ -1611,6 +1699,20 @@
 </head>
 
 <body>
+    <!-- Notification Panel -->
+    <div id="notificationPanel" class="notification-panel collapsed">
+        <div class="notification-header" onclick="toggleNotificationPanel()">
+            <span>Messages <span id="notificationCount" class="notification-count" style="display: none;">0</span></span>
+            <span id="notificationToggle">▼</span>
+        </div>
+        <div class="notification-content" id="notificationContent">
+            <div class="notification-item info">
+                <div class="notification-timestamp">App Started</div>
+                <div>Noted web application loaded successfully</div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Mobile-Friendly Integrated Interface -->
         <div class="mobile-interface" id="mobileInterface">
@@ -1790,14 +1892,7 @@
             }
         }
 
-        // Authentication Modal Functions
-        function showAuthModal() {
-            document.getElementById('authModal').style.display = 'flex';
-        }
-
-        function hideAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-        }
+        // Removed authentication modal functions - auth now integrated into notification system
 
         // Copy device code to clipboard
         function copyDeviceCode() {
@@ -1847,6 +1942,51 @@
         // Ensure function is globally accessible for Railway
         window.showOneDrivePanelProperly = showOneDrivePanelProperly;
         
+        function addNotification(message, type = 'info') {
+            const content = document.getElementById('notificationContent');
+            const count = document.getElementById('notificationCount');
+            const panel = document.getElementById('notificationPanel');
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const notification = document.createElement('div');
+            notification.className = `notification-item ${type}`;
+            notification.innerHTML = `
+                <div class="notification-timestamp">${timestamp}</div>
+                <div>${message}</div>
+            `;
+            
+            // Add to top of notifications
+            content.insertBefore(notification, content.firstChild);
+            
+            // Update count
+            const items = content.querySelectorAll('.notification-item');
+            count.textContent = items.length;
+            count.style.display = items.length > 0 ? 'inline' : 'none';
+            
+            // Temporarily expand panel for new errors
+            if (type === 'error' && panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                setTimeout(() => {
+                    if (!panel.classList.contains('collapsed')) {
+                        panel.classList.add('collapsed');
+                    }
+                }, 3000);
+            }
+            
+            // Limit to 50 notifications
+            while (items.length > 50) {
+                content.removeChild(content.lastChild);
+            }
+        }
+        
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
+            const toggle = document.getElementById('notificationToggle');
+            
+            panel.classList.toggle('collapsed');
+            toggle.textContent = panel.classList.contains('collapsed') ? '▼' : '▲';
+        }
+
         // Progress tracking functions
         function showOperationProgress(message, percentage = 0) {
             const container = document.getElementById('onedriveModalStatus') || document.getElementById('onedriveStatus');
@@ -2392,18 +2532,52 @@
         });
 
         function showStatus(message, isError = false) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = `status show ${isError ? 'error' : 'success'}`;
+            // Add to notification panel instead of popup
+            addNotification(message, isError ? 'error' : 'success');
+        }
+        
+        function addNotification(message, type = 'info') {
+            const content = document.getElementById('notificationContent');
+            const count = document.getElementById('notificationCount');
+            const panel = document.getElementById('notificationPanel');
             
-            // Vibrate on Samsung phones for feedback
-            if (navigator.vibrate) {
-                navigator.vibrate(isError ? [200, 100, 200] : [100]);
+            const timestamp = new Date().toLocaleTimeString();
+            const notification = document.createElement('div');
+            notification.className = `notification-item ${type}`;
+            notification.innerHTML = `
+                <div class="notification-timestamp">${timestamp}</div>
+                <div>${message}</div>
+            `;
+            
+            // Add to top of notifications
+            content.insertBefore(notification, content.firstChild);
+            
+            // Update count
+            const items = content.querySelectorAll('.notification-item');
+            count.textContent = items.length;
+            count.style.display = items.length > 0 ? 'inline' : 'none';
+            
+            // Temporarily expand panel for new errors
+            if (type === 'error' && panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                setTimeout(() => {
+                    if (panel.classList.contains('collapsed')) return;
+                    panel.classList.add('collapsed');
+                }, 3000);
             }
             
-            setTimeout(() => {
-                status.classList.remove('show');
-            }, isError ? 5000 : 3000); // Show errors longer
+            // Limit to 50 notifications
+            while (items.length > 50) {
+                content.removeChild(content.lastChild);
+            }
+        }
+        
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
+            const toggle = document.getElementById('notificationToggle');
+            
+            panel.classList.toggle('collapsed');
+            toggle.textContent = panel.classList.contains('collapsed') ? '▼' : '▲';
         }
 
         // Progress bar helper functions
@@ -2452,48 +2626,7 @@
             }
         }
 
-        function showMoveableDialog(title, content, buttons = []) {
-            
-            const dialogId = 'dialog-' + Date.now();
-            const dialog = document.createElement('div');
-            dialog.id = dialogId;
-            dialog.className = 'moveable-dialog dialog-always-visible docked-top-right';
-            
-            let buttonHtml = '';
-            if (buttons.length === 0) {
-                buttonHtml = '<button onclick="closeMoveableDialog(\'' + dialogId + '\')" class="btn">OK</button>';
-            } else {
-                buttonHtml = buttons.map(btn => 
-                    `<button onclick="${btn.onclick}; closeMoveableDialog('${dialogId}')" class="btn ${btn.class || ''}">${btn.text}</button>`
-                ).join(' ');
-            }
-            
-            dialog.innerHTML = `
-                <div class="dialog-header">
-                    <h4>${title}</h4>
-                    <div class="dialog-controls">
-                        <button class="dock-btn" onclick="toggleDockPosition('${dialogId}')" title="Change dock position">📌</button>
-                        <button class="dialog-close" onclick="closeMoveableDialog('${dialogId}')">✕</button>
-                    </div>
-                </div>
-                <div class="dialog-content">
-                    <div>${content}</div>
-                    <div style="margin-top: 15px; text-align: right;">
-                        ${buttonHtml}
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(dialog);
-            return dialogId;
-        }
-
-        function closeMoveableDialog(dialogId) {
-            const dialog = document.getElementById(dialogId);
-            if (dialog) {
-                dialog.remove();
-            }
-        }
+        // Removed showMoveableDialog - now using notification system
 
         async function loadNotes() {
             try {
@@ -4103,13 +4236,30 @@
 
         // Single-Page Navigation System
         function showOneDrivePage(pageType, data = {}) {
-            console.log('🔍 Showing OneDrive page:', pageType);
+            console.log('🔍 OneDrive operation:', pageType);
             
-            // Hide main notes interface
-            const mainInterface = document.querySelector('.container');
-            if (mainInterface) {
-                mainInterface.style.display = 'none';
+            // Convert modal pages to notifications
+            if (pageType === 'error') {
+                const title = typeof data === 'string' ? data : (data.title || 'OneDrive Error');
+                const message = typeof data === 'object' && data.message ? data.message : (typeof data === 'string' ? arguments[2] || '' : JSON.stringify(data));
+                addNotification(`${title}: ${message}`, 'error');
+                return;
             }
+            
+            if (pageType === 'loading') {
+                const message = typeof data === 'string' ? data : (data.message || 'OneDrive operation in progress...');
+                addNotification(message, 'info');
+                return;
+            }
+            
+            if (pageType === 'success') {
+                const message = typeof data === 'string' ? data : (data.message || 'OneDrive operation completed successfully');
+                addNotification(message, 'success');
+                return;
+            }
+            
+            // For other page types, just log and add notification
+            addNotification(`OneDrive: ${pageType}`, 'info');
             
             // Create or show OneDrive interface
             let onedriveInterface = document.getElementById('onedriveInterface');
