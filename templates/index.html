@@ -1895,7 +1895,7 @@
         // Removed authentication modal functions - auth now integrated into notification system
 
         // Copy device code to clipboard
-        function copyDeviceCode() {
+        window.copyDeviceCode = function() {
             const deviceCode = document.getElementById('deviceCode');
             if (deviceCode) {
                 navigator.clipboard.writeText(deviceCode.textContent).then(() => {
@@ -3311,31 +3311,6 @@
             checkAuthStatusPage();
         }
         
-        // Copy device code for single-page navigation
-        function copyDeviceCode() {
-            const codeElement = document.getElementById('deviceCode');
-            if (codeElement) {
-                const cleanCode = codeElement.textContent.trim();
-                console.log('🔍 Copying device code:', cleanCode);
-                
-                navigator.clipboard.writeText(cleanCode).then(() => {
-                    // Visual feedback
-                    const button = document.querySelector('[onclick="copyDeviceCode()"]');
-                    if (button) {
-                        const originalText = button.textContent;
-                        button.textContent = 'SUCCESS Copied!';
-                        button.style.background = '#28a745';
-                        setTimeout(() => {
-                            button.textContent = originalText;
-                            button.style.background = '#28a745';
-                        }, 2000);
-                    }
-                }).catch(err => {
-                    console.error('🔍 Failed to copy device code:', err);
-                });
-            }
-        }
-        
         // Check authentication status for single-page navigation
         async function checkAuthStatusPage() {
             try {
@@ -4655,21 +4630,6 @@
             }
         }
 
-        // Copy device code to clipboard
-        function copyDeviceCode() {
-            const deviceCode = document.getElementById('deviceCode').textContent;
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(deviceCode).then(() => {
-                    showStatus('Device code copied to clipboard!');
-                }).catch(() => {
-                    fallbackCopyTextToClipboard(deviceCode);
-                });
-            } else {
-                fallbackCopyTextToClipboard(deviceCode);
-            }
-        }
-
         function fallbackCopyTextToClipboard(text) {
             const textArea = document.createElement('textarea');
             textArea.value = text;
@@ -5467,23 +5427,9 @@
             `;
         }
         
-        // Copy device code function for auth page
-        function copyDeviceCode() {
-            const deviceCodeElement = document.getElementById('deviceCode');
-            if (deviceCodeElement) {
-                const code = deviceCodeElement.textContent;
-                navigator.clipboard.writeText(code).then(() => {
-                    showStatus(`Device code copied: ${code}`, 'info');
-                }).catch(err => {
-                    console.error('Failed to copy device code:', err);
-                    showStatus('Failed to copy device code', 'error');
-                });
-            }
-        }
-        
         // Polling function for OneDrive authentication
         function pollOneDriveAuth(authFlow) {
-            console.log('🔍 Starting OneDrive auth polling...');
+            console.log('[DEBUG] Starting OneDrive auth polling...');
             
             const checkAuth = async () => {
                 try {
