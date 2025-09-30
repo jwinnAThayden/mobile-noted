@@ -1724,8 +1724,8 @@
             <!-- Main Controls -->
             <div class="main-controls">
                 <button class="btn primary" onclick="addNewNote()">➕ New Note</button>
-                <button class="btn" onclick="saveAllNotes()">💾 Save</button>
-                <button class="btn delete" onclick="deleteAllNotes()">🗑️ Clear</button>
+                <button class="btn" onclick="saveAllNotes()"> Save</button>
+                <button class="btn delete" onclick="deleteAllNotes()"> Clear</button>
             </div>
             
             <!-- Cloud Section -->
@@ -1748,12 +1748,12 @@
                     
                     <!-- OneDrive Controls -->
                     <div id="authSection" class="auth-section" style="display: none;">
-                        <button class="btn cloud-btn" onclick="startOneDriveAuth()">🔗 Connect OneDrive</button>
+                        <button class="btn cloud-btn" onclick="startOneDriveAuth()"> Connect OneDrive</button>
                         
                         <!-- Integrated Device Flow -->
                         <div id="deviceFlowSection" style="display: none; margin-top: 15px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 2px solid #0078d4;">
                             <div class="dialog-header" style="cursor: default; margin-bottom: 15px;">
-                                <h4 style="color: #0078d4; margin: 0; text-align: center;">🔗 OneDrive Authentication</h4>
+                                <h4 style="color: #0078d4; margin: 0; text-align: center;"> OneDrive Authentication</h4>
                             </div>
                             
                             <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
@@ -1770,7 +1770,7 @@
                                         <span id="deviceCode" style="font-family: monospace; font-size: 1.3em; font-weight: bold; color: #0078d4; background: #f0f8ff; padding: 8px 12px; border-radius: 4px; border: 1px solid #0078d4;">
                                             Loading...
                                         </span>
-                                        <button onclick="copyDeviceCode()" class="btn" style="background: #0078d4; color: white; padding: 8px 12px; font-size: 14px;">📋 Copy</button>
+                                        <button onclick="copyDeviceCode()" class="btn" style="background: #0078d4; color: white; padding: 8px 12px; font-size: 14px;"> Copy</button>
                                     </div>
                                 </div>
                                 
@@ -1785,17 +1785,17 @@
                             </div>
                             
                             <div style="text-align: center; margin-top: 15px;">
-                                <button class="btn" onclick="checkAuthProgress()" style="background: #28a745; color: white; margin-right: 10px;">🔄 Check Status</button>
-                                <button class="btn" onclick="cancelOneDriveAuth()" style="background: #dc3545; color: white;">❌ Cancel</button>
+                                <button class="btn" onclick="checkAuthProgress()" style="background: #28a745; color: white; margin-right: 10px;"> Check Status</button>
+                                <button class="btn" onclick="cancelOneDriveAuth()" style="background: #dc3545; color: white;">ERROR Cancel</button>
                             </div>
                         </div>
                     </div>
                     
                     <div id="syncSection" class="sync-section" style="display: none;">
                         <div class="sync-buttons">
-                            <button class="btn cloud-btn" onclick="syncFromOneDrive()">📥 Pull Notes</button>
+                            <button class="btn cloud-btn" onclick="syncFromOneDrive()"> Pull Notes</button>
                             <button class="btn cloud-btn" onclick="syncToOneDrive()">☁️ Push Notes</button>
-                            <button class="btn cloud-btn" onclick="showOneDriveNotes()">📂 Browse</button>
+                            <button class="btn cloud-btn" onclick="showOneDriveNotes()"> Browse</button>
                         </div>
                     </div>
                     
@@ -1812,14 +1812,14 @@
             <!-- Device Management -->
             <div class="device-section">
                 <a href="/devices" class="device-link">
-                    🔒 Device Management
+                     Device Management
                     <span class="link-arrow">→</span>
                 </a>
             </div>
             
             <!-- Settings -->
             <div class="settings-section">
-                <button class="btn logout" onclick="logout()">🚪 Logout</button>
+                <button class="btn logout" onclick="logout()"> Logout</button>
             </div>
         </div>
 
@@ -1842,8 +1842,8 @@
                         <span class="selection-count" id="selectionCount">0 selected</span>
                     </div>
                     <div class="bulk-buttons">
-                        <button class="bulk-btn load" onclick="bulkLoadNotes()" disabled>📄 Load Selected</button>
-                        <button class="bulk-btn delete" onclick="bulkDeleteNotes()" disabled>🗑️ Delete Selected</button>
+                        <button class="bulk-btn load" onclick="bulkLoadNotes()" disabled> Load Selected</button>
+                        <button class="bulk-btn delete" onclick="bulkDeleteNotes()" disabled> Delete Selected</button>
                     </div>
                 </div>
                 <div id="cloudNotesList" class="cloud-notes-list"></div>
@@ -2013,7 +2013,7 @@
             
             container.innerHTML = `
                 <div class="operation-status success">
-                    <span>✅</span>
+                    <span>SUCCESS</span>
                     <div>${message}</div>
                 </div>
             `;
@@ -2025,7 +2025,7 @@
             
             container.innerHTML = `
                 <div class="operation-status error">
-                    <span>❌</span>
+                    <span>ERROR</span>
                     <div>${message}</div>
                 </div>
             `;
@@ -2034,7 +2034,7 @@
         // Auto-load OneDrive notes on successful authentication
         async function loadOneDriveNotesOnStartup() {
             try {
-                console.log('🔄 Auto-loading OneDrive notes after authentication...');
+                console.log(' Auto-loading OneDrive notes after authentication...');
                 showOperationProgress('Loading your notes from OneDrive...', 25);
                 
                 const response = await fetch('/api/simple/onedrive/sync/pull', {
@@ -2199,7 +2199,7 @@
             
             if (data.authenticated) {
                 console.log('🔍 OneDrive is authenticated - updating UI');
-                statusIcon.textContent = '✅';
+                statusIcon.textContent = 'SUCCESS';
                 statusText.textContent = 'OneDrive connected and ready';
                 if (data.user_email && accountEmail) {
                     accountEmail.textContent = data.user_email;
@@ -2209,7 +2209,7 @@
                 if (syncSection) syncSection.style.display = 'block';
             } else if (data.available) {
                 console.log('🔍 OneDrive is available but not authenticated - showing connect button');
-                statusIcon.textContent = '🔗';
+                statusIcon.textContent = '';
                 statusText.textContent = 'OneDrive available - click Connect to authenticate';
                 if (accountInfo) accountInfo.style.display = 'none';
                 if (authSection) {
@@ -2219,7 +2219,7 @@
                 if (syncSection) syncSection.style.display = 'none';
             } else {
                 console.log('🔍 OneDrive is not available');
-                statusIcon.textContent = '❌';
+                statusIcon.textContent = 'ERROR';
                 statusText.textContent = 'OneDrive not available - missing client configuration';
                 if (accountInfo) accountInfo.style.display = 'none';
                 if (authSection) authSection.style.display = 'none';
@@ -2242,7 +2242,7 @@
         }
         
         function hideOneDrivePanel() {
-            console.log('🚪 Closing OneDrive modal...');
+            console.log(' Closing OneDrive modal...');
             const panel = document.getElementById('onedrivePanel');
             if (panel) {
                 panel.style.display = 'none';
@@ -2699,8 +2699,8 @@
                     </div>
                     <div class="note-meta">Modified: ${modifiedDate}</div>
                     <div class="note-actions">
-                        <button class="note-btn" onclick="saveNote('${note.id}')" title="Save">💾</button>
-                        <button class="note-btn delete" onclick="deleteNote('${note.id}')" title="Delete">🗑️</button>
+                        <button class="note-btn" onclick="saveNote('${note.id}')" title="Save"></button>
+                        <button class="note-btn delete" onclick="deleteNote('${note.id}')" title="Delete"></button>
                     </div>
                 </div>
                 <textarea class="note-text" placeholder="Start typing your note..."
@@ -3140,7 +3140,7 @@
                 if (onedriveBtn) {
                     onedriveBtn.className = 'btn';
                     onedriveBtn.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
-                    onedriveBtn.innerHTML = '❌ OneDrive';
+                    onedriveBtn.innerHTML = 'ERROR OneDrive';
                 }
                 
                 if (status.setup_required) {
@@ -3149,7 +3149,7 @@
                     if (statusText) statusText.innerHTML = 'OneDrive Setup Required<br><small>Click to see setup instructions</small>';
                 } else {
                     if (onedriveBtn) onedriveBtn.title = 'OneDrive not available';
-                    if (statusIcon) statusIcon.textContent = '❌';
+                    if (statusIcon) statusIcon.textContent = 'ERROR';
                     if (statusText) statusText.textContent = status.error || 'OneDrive not available';
                 }
                 
@@ -3161,10 +3161,10 @@
                 if (onedriveBtn) {
                     onedriveBtn.className = 'btn connected';
                     onedriveBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-                    onedriveBtn.innerHTML = '✅ OneDrive';
+                    onedriveBtn.innerHTML = 'SUCCESS OneDrive';
                     onedriveBtn.title = 'Connected to OneDrive';
                 }
-                if (statusIcon) statusIcon.textContent = '✅';
+                if (statusIcon) statusIcon.textContent = 'SUCCESS';
                 if (statusText) statusText.textContent = 'Connected to OneDrive';
                 
                 if (status.account_info && status.account_info.username) {
@@ -3225,7 +3225,7 @@
                     } else {
                         authSection.innerHTML = `
                             <div class="error-message">
-                                <h4>❌ OneDrive Unavailable</h4>
+                                <h4>ERROR OneDrive Unavailable</h4>
                                 <p>${statusData ? statusData.error : 'OneDrive integration is not available.'}</p>
                             </div>
                         `;
@@ -3233,7 +3233,7 @@
                     }
                     break;
                 case 'unauthenticated':
-                    authSection.innerHTML = '<button class="btn onedrive-btn" onclick="startOneDriveAuth()">🔗 Connect OneDrive</button>';
+                    authSection.innerHTML = '<button class="btn onedrive-btn" onclick="startOneDriveAuth()"> Connect OneDrive</button>';
                     authSection.style.display = 'block';
                     break;
                 case 'authenticating':
@@ -3329,7 +3329,7 @@
                     const button = document.querySelector('[onclick="copyDeviceCode()"]');
                     if (button) {
                         const originalText = button.textContent;
-                        button.textContent = '✅ Copied!';
+                        button.textContent = 'SUCCESS Copied!';
                         button.style.background = '#28a745';
                         setTimeout(() => {
                             button.textContent = originalText;
@@ -3364,7 +3364,7 @@
                 if (data.success && data.authenticated) {
                     // Authentication successful!
                     showOneDrivePage('success', 'Authentication Successful!', 
-                        '<div style="text-align: center; padding: 20px;"><div style="font-size: 48px; margin-bottom: 15px;">✅</div><div style="color: #28a745; font-size: 18px;">OneDrive connected successfully!</div></div>');
+                        '<div style="text-align: center; padding: 20px;"><div style="font-size: 48px; margin-bottom: 15px;">SUCCESS</div><div style="color: #28a745; font-size: 18px;">OneDrive connected successfully!</div></div>');
                     
                     // Refresh OneDrive status and return to main page
                     setTimeout(() => {
@@ -3390,7 +3390,7 @@
             const deviceContent = `
                 <div style="text-align: center; padding: 20px;">
                     <div style="margin-bottom: 30px;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">🔐</div>
+                        <div style="font-size: 48px; margin-bottom: 15px;">AUTH</div>
                         <div style="font-size: 24px; color: #333; margin-bottom: 10px;">Device Authentication</div>
                         <div style="color: #666;">Complete authentication on your device</div>
                     </div>
@@ -3525,7 +3525,7 @@
                                 font-size: 28px;
                                 font-weight: bold;
                             ">
-                                🔐 OneDrive Authentication
+                                AUTH OneDrive Authentication
                             </h1>
                             
                             <p style="
@@ -3607,7 +3607,7 @@
                                         box-shadow: 0 4px 12px rgba(0,120,212,0.3);
                                         transition: all 0.2s ease;
                                     " onmouseover="this.style.background='#106ebe'" onmouseout="this.style.background='#0078d4'">
-                                        📋 Copy Code
+                                         Copy Code
                                     </button>
                                 </div>
                             </div>
@@ -3630,7 +3630,7 @@
                                 box-shadow: 0 4px 12px rgba(40,167,69,0.3);
                                 transition: all 0.2s ease;
                             " onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">
-                                ✅ Check Status
+                                SUCCESS Check Status
                             </button>
                             
                             <button onclick="restoreOriginalContent()" style="
@@ -3645,7 +3645,7 @@
                                 box-shadow: 0 4px 12px rgba(220,53,69,0.3);
                                 transition: all 0.2s ease;
                             " onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
-                                ❌ Cancel
+                                ERROR Cancel
                             </button>
                         </div>
                         
@@ -3706,7 +3706,7 @@
                                     <span id="modalDeviceCode" style="font-family: monospace; font-size: 1.5em; font-weight: bold; color: #0078d4; background: #ffffff; padding: 12px 16px; border-radius: 8px; border: 2px solid #0078d4; letter-spacing: 2px;">
                                         ${authFlow.user_code}
                                     </span>
-                                    <button onclick="copyModalDeviceCode(event)" style="background: #0078d4; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">📋 Copy Code</button>
+                                    <button onclick="copyModalDeviceCode(event)" style="background: #0078d4; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;"> Copy Code</button>
                                 </div>
                             </div>
                         </div>
@@ -3740,7 +3740,7 @@
                     const button = event ? event.target : document.querySelector('[onclick="copyModalDeviceCode()"]');
                     if (button) {
                         const originalText = button.textContent;
-                        button.textContent = '✅ Copied!';
+                        button.textContent = 'SUCCESS Copied!';
                         button.style.background = '#28a745';
                         setTimeout(() => {
                             button.textContent = originalText;
@@ -3753,7 +3753,7 @@
                     const button = event ? event.target : document.querySelector('[onclick="copyModalDeviceCode()"]');
                     if (button) {
                         const originalText = button.textContent;
-                        button.textContent = '❌ Copy Failed';
+                        button.textContent = 'ERROR Copy Failed';
                         button.style.background = '#dc3545';
                         setTimeout(() => {
                             button.textContent = originalText;
@@ -3861,7 +3861,7 @@
                 window.checkDialogVisibility = function() {
                     const el = document.getElementById('deviceFlowSection');
                     if (!el) {
-                        console.log('❌ deviceFlowSection not found in DOM');
+                        console.log('ERROR deviceFlowSection not found in DOM');
                         return false;
                     }
                     
@@ -3928,7 +3928,7 @@
                     
                     if (syncSection) {
                         syncSection.style.display = 'block';
-                        console.log('  ✅ Sync section force shown');
+                        console.log('  SUCCESS Sync section force shown');
                         
                         // Also ensure parent containers are visible
                         let parent = syncSection.parentElement;
@@ -3943,7 +3943,7 @@
                     
                     if (authSection) {
                         authSection.style.display = 'none';
-                        console.log('  ✅ Auth section hidden');
+                        console.log('  SUCCESS Auth section hidden');
                     }
                     
                     // Force refresh OneDrive status
@@ -3956,10 +3956,10 @@
                             console.log('  📊 Auth status:', data.authenticated);
                             if (data.authenticated && syncSection) {
                                 syncSection.style.display = 'block';
-                                console.log('  ✅ Confirmed sync section restored');
+                                console.log('  SUCCESS Confirmed sync section restored');
                             }
                         })
-                        .catch(err => console.log('  ❌ Failed to check auth status:', err));
+                        .catch(err => console.log('  ERROR Failed to check auth status:', err));
                 };
                 
                 // Store observer for cleanup
@@ -4121,7 +4121,7 @@
                     emergencySection.innerHTML = `
                         <div style="text-align: center;">
                             <div style="margin-bottom: 15px;">
-                                <span style="font-size: 24px; margin-right: 8px;">🔗</span>
+                                <span style="font-size: 24px; margin-right: 8px;"></span>
                                 <strong style="color: #0078d4;">OneDrive Authentication</strong>
                             </div>
                             <p style="margin-bottom: 15px; color: #666;">Please complete authentication on Microsoft's website:</p>
@@ -4138,7 +4138,7 @@
                                     <span id="deviceCode" style="font-family: monospace; font-size: 1.3em; font-weight: bold; color: #0078d4; background: #f0f8ff; padding: 8px 12px; border-radius: 4px; border: 1px solid #0078d4;">
                                         ${authFlow.user_code}
                                     </span>
-                                    <button onclick="copyDeviceCode()" style="background: #0078d4; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 14px;">📋 Copy</button>
+                                    <button onclick="copyDeviceCode()" style="background: #0078d4; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 14px;"> Copy</button>
                                 </div>
                             </div>
                             
@@ -4158,11 +4158,11 @@
                     // Insert at the end of OneDrive panel
                     onedrivePanel.appendChild(emergencySection);
                     
-                    console.log('🔍 ✅ Emergency device flow section created successfully!');
+                    console.log('🔍 SUCCESS Emergency device flow section created successfully!');
                     console.log('🔍 Emergency section display:', emergencySection.style.display);
                     console.log('🔍 Emergency section computed display:', window.getComputedStyle(emergencySection).display);
                 } else {
-                    console.error('❌ CRITICAL: OneDrive panel not found either! Complete UI failure!');
+                    console.error('ERROR CRITICAL: OneDrive panel not found either! Complete UI failure!');
                 }
             }
             
@@ -4331,7 +4331,7 @@
                     const button = document.querySelector('[onclick="copyFullPageDeviceCode()"]');
                     if (button) {
                         const originalText = button.textContent;
-                        button.textContent = '✅ Copied!';
+                        button.textContent = 'SUCCESS Copied!';
                         button.style.background = '#28a745';
                         setTimeout(() => {
                             button.textContent = originalText;
@@ -4343,7 +4343,7 @@
                     const button = document.querySelector('[onclick="copyFullPageDeviceCode()"]');
                     if (button) {
                         const originalText = button.textContent;
-                        button.textContent = '❌ Copy Failed';
+                        button.textContent = 'ERROR Copy Failed';
                         button.style.background = '#dc3545';
                         setTimeout(() => {
                             button.textContent = originalText;
@@ -4398,7 +4398,7 @@
                 switch (data.status) {
                     case 'success':
                         if (progressText) {
-                            progressText.textContent = '✅ Authentication successful! Redirecting...';
+                            progressText.textContent = 'SUCCESS Authentication successful! Redirecting...';
                         }
                         if (progressFill) {
                             progressFill.style.width = '100%';
@@ -4430,7 +4430,7 @@
                     case 'error':
                     case 'expired':
                         if (progressText) {
-                            progressText.textContent = '❌ ' + (data.message || 'Authentication failed');
+                            progressText.textContent = 'ERROR ' + (data.message || 'Authentication failed');
                         }
                         if (progressFill) {
                             progressFill.style.background = '#dc3545';
@@ -4447,7 +4447,7 @@
                 console.error('🔍 Auth status check failed:', error);
                 const progressText = document.getElementById('authProgressText');
                 if (progressText) {
-                    progressText.textContent = '❌ Error checking status: ' + error.message;
+                    progressText.textContent = 'ERROR Error checking status: ' + error.message;
                 }
             }
         }
@@ -4496,9 +4496,9 @@
                         
                         // Enhanced success feedback
                         // Update progress in both integrated section and modal
-                        updateAuthProgress(100, '✅ Authentication successful! Connecting...', '#28a745');
+                        updateAuthProgress(100, 'SUCCESS Authentication successful! Connecting...', '#28a745');
                         
-                        showStatus('OneDrive connected successfully! ✅');
+                        showStatus('OneDrive connected successfully! SUCCESS');
                         
                         // Close the device flow modal
                         closeDeviceFlowModal();
@@ -4508,7 +4508,7 @@
                         
                         // Clear cached auth state to force fresh fetch
                         localStorage.removeItem('oneDriveAuthState');
-                        console.log('💾 Cleared cached auth state after successful authentication');
+                        console.log(' Cleared cached auth state after successful authentication');
                         
                         // IMMEDIATELY restore sync functionality
                         console.log('🔧 Restoring OneDrive sync buttons...');
@@ -4517,12 +4517,12 @@
                         
                         if (syncSection) {
                             syncSection.style.display = 'block';
-                            console.log('✅ Sync section restored');
+                            console.log('SUCCESS Sync section restored');
                         }
                         
                         if (authSection) {
                             authSection.style.display = 'none';
-                            console.log('✅ Auth section hidden');
+                            console.log('SUCCESS Auth section hidden');
                         }
                         
                         // Force immediate status update to show sync buttons
@@ -4571,7 +4571,7 @@
                         break;
                         
                     case 'not_found':
-                        console.log('🔄 Authentication flow lost, attempting to restart...');
+                        console.log(' Authentication flow lost, attempting to restart...');
                         if (oneDriveAuthTimer) {
                             clearInterval(oneDriveAuthTimer);
                             oneDriveAuthTimer = null;
@@ -4594,7 +4594,7 @@
                     console.log(`⏱️ Auth progress check timed out (${authTimeoutCount}/5), will retry on next poll`);
                     
                     if (authTimeoutCount >= 5) {
-                        console.log('❌ Too many auth timeouts, stopping retry attempts');
+                        console.log('ERROR Too many auth timeouts, stopping retry attempts');
                         if (oneDriveAuthTimer) {
                             clearInterval(oneDriveAuthTimer);
                             oneDriveAuthTimer = null;
@@ -4704,11 +4704,11 @@
                 if (statusCheck.ok) {
                     const statusData = await statusCheck.json();
                     if (!statusData.available) {
-                        showStatus('❌ OneDrive not configured. Please set up OneDrive in Settings.', true);
+                        showStatus('ERROR OneDrive not configured. Please set up OneDrive in Settings.', true);
                         return;
                     }
                     if (!statusData.authenticated) {
-                        showStatus('🔐 Please authenticate with OneDrive first. Click "Cloud Sync" to sign in.', true);
+                        showStatus('AUTH Please authenticate with OneDrive first. Click "Cloud Sync" to sign in.', true);
                         return;
                     }
                 }
@@ -4784,11 +4784,11 @@
                 if (statusCheck.ok) {
                     const statusData = await statusCheck.json();
                     if (!statusData.available) {
-                        showStatus('❌ OneDrive not configured. Please set up OneDrive in Settings.', true);
+                        showStatus('ERROR OneDrive not configured. Please set up OneDrive in Settings.', true);
                         return;
                     }
                     if (!statusData.authenticated) {
-                        showStatus('🔐 Please authenticate with OneDrive first. Click "Cloud Sync" to sign in.', true);
+                        showStatus('AUTH Please authenticate with OneDrive first. Click "Cloud Sync" to sign in.', true);
                         return;
                     }
                 }
@@ -5033,7 +5033,7 @@
                                 gap: 15px;
                                 transition: transform 0.2s;
                             " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                                🔐 Authenticate with OneDrive
+                                AUTH Authenticate with OneDrive
                             </button>
                             
                             <button onclick="showOneDriveNotes()" style="
@@ -5051,7 +5051,7 @@
                                 gap: 15px;
                                 transition: transform 0.2s;
                             " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                                📂 Browse Cloud Notes
+                                 Browse Cloud Notes
                             </button>
                             
                             <button onclick="uploadCurrentNote()" style="
@@ -5114,7 +5114,7 @@
             
             if (notes.length === 0) {
                 notesHtml = '<div style="text-align: center; padding: 60px 20px;">' +
-                           '<div style="font-size: 64px; margin-bottom: 20px;">📔</div>' +
+                           '<div style="font-size: 64px; margin-bottom: 20px;">AUTH</div>' +
                            '<h2 style="color: #666;">No notes found</h2>' +
                            '<p style="color: #999;">Your OneDrive doesn\'t contain any notes yet</p>' +
                            '</div>';
@@ -5137,9 +5137,9 @@
                            '</div>' +
                            '</div>' +
                            '<div style="display: flex; gap: 10px; flex-wrap: wrap;">' +
-                           '<button onclick="loadCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #0078d4; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">📄 Load</button>' +
+                           '<button onclick="loadCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #0078d4; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;"> Load</button>' +
                            '<button onclick="renameCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #ffc107; color: black; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">✏️ Rename</button>' +
-                           '<button onclick="deleteCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">🗑️ Delete</button>' +
+                           '<button onclick="deleteCloudNote(\'' + note.id + '\', \'' + escapedName + '\')" style="background: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;"> Delete</button>' +
                            '</div>' +
                            '</div>' +
                            '</div>';
@@ -5154,8 +5154,8 @@
                            '<span id="selectedCount" style="color: #666; font-size: 14px;">0 selected</span>' +
                            '</div>' +
                            '<div id="bulkOperations" style="display: flex; gap: 10px; flex-wrap: wrap;">' +
-                           '<button id="bulkLoadBtn" onclick="loadSelectedNotes()" disabled style="background: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; opacity: 0.5;">📄 Load Selected</button>' +
-                           '<button id="bulkDeleteBtn" onclick="deleteSelectedNotes()" disabled style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; opacity: 0.5;">🗑️ Delete Selected</button>' +
+                           '<button id="bulkLoadBtn" onclick="loadSelectedNotes()" disabled style="background: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; opacity: 0.5;"> Load Selected</button>' +
+                           '<button id="bulkDeleteBtn" onclick="deleteSelectedNotes()" disabled style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; opacity: 0.5;"> Delete Selected</button>' +
                            '</div>' +
                            '</div>' +
                            '<div style="display: grid; gap: 15px;">' +
@@ -5171,7 +5171,7 @@
                    '<p style="margin: 5px 0 0 0; color: #666;">Found ' + notes.length + ' notes in OneDrive</p>' +
                    '</div>' +
                    '<div style="display: flex; gap: 10px; flex-wrap: wrap;">' +
-                   '<button onclick="showOneDriveNotes()" style="background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;">🔄 Refresh</button>' +
+                   '<button onclick="showOneDriveNotes()" style="background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;"> Refresh</button>' +
                    '<button onclick="hideOneDrivePage()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;">← Back</button>' +
                    '</div>' +
                    '</div>' +
@@ -5210,7 +5210,7 @@
                 <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
                     <div style="background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;">
                         <div style="margin-bottom: 40px;">
-                            <div style="font-size: 64px; margin-bottom: 20px;">�</div>
+                            <div style="font-size: 64px; margin-bottom: 20px;">AUTH</div>
                             <h1 style="color: #333; margin: 0 0 10px 0;">Device Authentication</h1>
                             <p style="color: #666; font-size: 18px;">Complete authentication on your device</p>
                         </div>
@@ -5308,7 +5308,7 @@
                 <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
                     <div style="background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
                         <div style="text-align: center; margin-bottom: 40px;">
-                            <div style="font-size: 64px; margin-bottom: 20px;">${status.authenticated ? '✅' : '❌'}</div>
+                            <div style="font-size: 64px; margin-bottom: 20px;">${status.authenticated ? 'Connected' : 'Disconnected'}</div>
                             <h1 style="color: #333; margin: 0 0 10px 0;">OneDrive Status</h1>
                             <p style="color: ${status.authenticated ? '#28a745' : '#dc3545'}; font-size: 18px; font-weight: bold;">
                                 ${status.authenticated ? 'Connected' : 'Not Connected'}
@@ -5318,16 +5318,16 @@
                         <div style="background: #f8f9fa; border-radius: 12px; padding: 30px; margin-bottom: 30px;">
                             ${status.authenticated ? `
                                 <div style="margin-bottom: 20px;">
-                                    <strong>👤 User:</strong> ${status.user_name || 'Unknown'}
+                                    <strong>User:</strong> ${status.user_name || 'Unknown'}
                                 </div>
                                 <div style="margin-bottom: 20px;">
-                                    <strong>👤 Email:</strong> ${status.user_email || 'Unknown'}
+                                    <strong>Email:</strong> ${status.user_email || 'Unknown'}
                                 </div>
                                 <div style="margin-bottom: 20px;">
-                                    <strong>⏰ Last Check:</strong> ${new Date().toLocaleString()}
+                                    <strong>Last Check:</strong> ${new Date().toLocaleString()}
                                 </div>
                                 <div>
-                                    <strong>🔗 Connection:</strong> <span style="color: #28a745;">Active</span>
+                                    <strong>Connection:</strong> <span style="color: #28a745;">Active</span>
                                 </div>
                             ` : `
                                 <div style="text-align: center; color: #666;">
@@ -5347,7 +5347,7 @@
                                 cursor: pointer;
                                 font-size: 16px;
                             ">
-                                🔄 Refresh Status
+                                 Refresh Status
                             </button>
                             ${status.authenticated ? `
                                 <button onclick="showOneDriveNotes()" style="
@@ -5359,7 +5359,7 @@
                                     cursor: pointer;
                                     font-size: 16px;
                                 ">
-                                    📂 Browse Notes
+                                     Browse Notes
                                 </button>
                             ` : `
                                 <button onclick="startOneDriveAuth()" style="
@@ -5371,7 +5371,7 @@
                                     cursor: pointer;
                                     font-size: 16px;
                                 ">
-                                    🔐 Authenticate
+                                    AUTH Authenticate
                                 </button>
                             `}
                             <button onclick="hideOneDrivePage()" style="
@@ -5433,7 +5433,7 @@
             return `
                 <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
                     <div style="background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;">
-                        <div style="font-size: 64px; margin-bottom: 30px;">❌</div>
+                        <div style="font-size: 64px; margin-bottom: 30px;">ERROR</div>
                         <h1 style="color: #dc3545; margin: 0 0 20px 0;">Error</h1>
                         <h2 style="color: #333; margin: 0 0 30px 0; font-weight: normal;">${error}</h2>
                         
@@ -5454,7 +5454,7 @@
                                 cursor: pointer;
                                 font-size: 16px;
                             ">
-                                🔄 Try Again
+                                 Try Again
                             </button>
                             <button onclick="hideOneDrivePage()" style="
                                 background: #dc3545;
@@ -5509,7 +5509,7 @@
                         
                         if (data.success) {
                             // Authentication successful
-                            showStatus('OneDrive connected successfully! ✅', 'success');
+                            showStatus('OneDrive connected successfully! SUCCESS', 'success');
                             hideOneDrivePage();
                             return true; // Stop polling
                         } else if (data.error === 'authorization_pending') {
@@ -5901,7 +5901,7 @@
             // First, try to find existing device flow section
             let deviceFlowSection = document.getElementById('deviceFlowSection');
             if (deviceFlowSection) {
-                console.log('✅ Device flow section found, forcing visibility...');
+                console.log('SUCCESS Device flow section found, forcing visibility...');
                 deviceFlowSection.style.cssText = 'display: block !important; margin-top: 15px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 2px solid #0078d4; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 10000 !important;';
                 return true;
             }
@@ -5909,7 +5909,7 @@
             // If not found, create emergency one
             const onedrivePanel = document.querySelector('.onedrive-panel');
             if (!onedrivePanel) {
-                console.error('❌ OneDrive panel not found!');
+                console.error('ERROR OneDrive panel not found!');
                 return false;
             }
             
@@ -5921,7 +5921,7 @@
             emergencySection.innerHTML = `
                 <div style="text-align: center;">
                     <div style="margin-bottom: 15px;">
-                        <span style="font-size: 24px; margin-right: 8px;">🔗</span>
+                        <span style="font-size: 24px; margin-right: 8px;"></span>
                         <strong style="color: #0078d4;">OneDrive Authentication</strong>
                     </div>
                     <p style="margin-bottom: 15px; color: #666;">Click "Connect to OneDrive" to start authentication</p>
@@ -5933,7 +5933,7 @@
             `;
             
             onedrivePanel.appendChild(emergencySection);
-            console.log('✅ Emergency device flow section created!');
+            console.log('SUCCESS Emergency device flow section created!');
             return true;
         };
 
@@ -6017,7 +6017,7 @@
             const selectAllCheckbox = document.getElementById('selectAllNotes');
             const checkboxes = document.querySelectorAll('.note-checkbox');
             
-            console.log('🔄 Toggle select all:', selectAllCheckbox.checked);
+            console.log(' Toggle select all:', selectAllCheckbox.checked);
             
             checkboxes.forEach((checkbox, index) => {
                 checkbox.checked = selectAllCheckbox.checked;
@@ -6059,7 +6059,7 @@
             const selected = document.querySelectorAll('.note-checkbox:checked');
             if (selected.length === 0) return;
             
-            console.log(`🗑️ Bulk deleting ${selected.length} notes`);
+            console.log(` Bulk deleting ${selected.length} notes`);
             let deletedCount = 0;
             
             for (const checkbox of selected) {
@@ -6067,24 +6067,24 @@
                 const noteName = checkbox.dataset.noteName;
                 
                 try {
-                    console.log(`🗑️ Deleting: ${noteName} (${noteId})`);
+                    console.log(` Deleting: ${noteName} (${noteId})`);
                     const response = await authenticatedFetch(`/api/onedrive/note/${noteId}`, {
                         method: 'DELETE'
                     });
                     
                     if (response) {
                         const data = await response.json();
-                        console.log(`🗑️ Delete response for ${noteName}:`, data);
+                        console.log(` Delete response for ${noteName}:`, data);
                         if (data.success) {
                             deletedCount++;
                         }
                     }
                 } catch (error) {
-                    console.error(`❌ Error deleting ${noteName}:`, error);
+                    console.error(`ERROR Error deleting ${noteName}:`, error);
                 }
             }
             
-            console.log(`✅ Bulk delete completed: ${deletedCount}/${selected.length} notes deleted`);
+            console.log(`SUCCESS Bulk delete completed: ${deletedCount}/${selected.length} notes deleted`);
             // Always refresh the notes list
             showOneDriveNotes();
         }
@@ -6104,7 +6104,7 @@
                     
                     // Clear cached auth state immediately
                     localStorage.removeItem('oneDriveAuthState');
-                    console.log('💾 Cleared cached auth state after logout');
+                    console.log(' Cleared cached auth state after logout');
                     
                     checkOneDriveStatus();
                     
@@ -6596,7 +6596,7 @@
                 console.log('Header found:', header);
                 
                 if (!header) {
-                    console.log('❌ No dialog-header found');
+                    console.log('ERROR No dialog-header found');
                     return;
                 }
                 
@@ -6605,7 +6605,7 @@
                 console.log('🎯 OneDrive panel found:', draggableElement);
                 
                 if (!draggableElement) {
-                    console.log('❌ No OneDrive panel found');
+                    console.log('ERROR No OneDrive panel found');
                     return;
                 }
                 
@@ -6615,7 +6615,7 @@
                 console.log('👁️ Element visible:', isVisible);
                 
                 if (!isVisible) {
-                    console.log('❌ Element not visible for drag');
+                    console.log('ERROR Element not visible for drag');
                     return;
                 }
                 
@@ -6624,7 +6624,7 @@
                 console.log('🔘 Clicked on button:', isButton);
                 
                 if (isButton) {
-                    console.log('❌ Clicked on button, not dragging');
+                    console.log('ERROR Clicked on button, not dragging');
                     return;
                 }
                 
@@ -6659,7 +6659,7 @@
                         document.body.style.cursor = 'move';
                         document.body.style.userSelect = 'none';
                         
-                        console.log('✅ Drag started after movement');
+                        console.log('SUCCESS Drag started after movement');
                     }
                 }
                 
