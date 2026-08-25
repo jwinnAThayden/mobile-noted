@@ -81,3 +81,6 @@ web_notes/
 
 # Trusted devices file (contains sensitive device info)
 trusted_devices.json
+
+# Local Copilot ignore file (per-machine, not shared)
+.copilotignore
