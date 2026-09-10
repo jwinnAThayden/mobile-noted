@@ -23,7 +23,7 @@ phones home, and no app is required beyond whatever plays an MP3.
 | `playlist.m3u` | — | Correct playing order |
 | `narration/*.txt` | — | The exact spoken text, for proofreading |
 
-**Total: 105 minutes, 36 MB.**
+**Total: 105 minutes, 24 MB.**
 
 ### The flashcard drill is the good one
 

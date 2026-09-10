@@ -383,7 +383,8 @@ def main() -> None:
     parser.add_argument("--rate", type=int, default=155, help="words per minute")
     parser.add_argument("--gap", type=float, default=3.0,
                         help="thinking pause between flashcard Q and A, seconds")
-    parser.add_argument("--bitrate", default="48k")
+    parser.add_argument("--bitrate", default="32k",
+                        help="MP3 bitrate; 32k mono is transparent for speech")
     parser.add_argument("--out", type=Path, default=HERE / "audio")
     parser.add_argument("--only", help="build one track by filename stem")
     parser.add_argument("--text-only", action="store_true",
