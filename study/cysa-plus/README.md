@@ -1,14 +1,24 @@
 # CompTIA CySA+ (CS0-003) — Offline Study Pack
 
 Self-contained study material for the CompTIA Cybersecurity Analyst (CySA+)
-exam. Everything here is plain Markdown with **no external links required** —
-clone once, read anywhere, no connection needed.
+exam. **No connection required** — clone once, read anywhere.
 
-> **Note on sources.** This pack is written from the publicly published CS0-003
-> exam objectives and general security-domain knowledge. It is *not* a copy of
-> CompTIA's CertMaster course, and it is not a substitute for your licensed
-> course material. Cross-check the domain/objective numbering against the free
-> official objectives PDF from CompTIA when you next have a connection.
+## Start here
+
+Open **[`cysa-offline.html`](cysa-offline.html)** in any browser. It's a single
+file with no CDN links, no external scripts, and no network calls: sidebar
+contents, dark mode, phone-friendly layout, and it prints cleanly. Copy it to a
+phone, tablet, or USB stick and it just works.
+
+The Markdown files are the editable source; the HTML is generated from them.
+
+Not set up as a repository yet? See **[`SETUP.md`](SETUP.md)** — about three minutes.
+
+> **Note on sources.** Written from the publicly published CS0-003 exam
+> objectives and general security-domain knowledge. It is *not* a copy of
+> CompTIA's CertMaster course and is not a substitute for licensed course
+> material. Cross-check the domain/objective numbering against the free
+> official objectives PDF from CompTIA.
 
 ## Exam at a glance
 
@@ -23,7 +33,7 @@ clone once, read anywhere, no connection needed.
 
 ## Domains and weighting
 
-| # | Domain | Weight | File |
+| # | Domain | Weight | Source file |
 |---|---|---|---|
 | 1 | Security Operations | 33% | [`01-security-operations.md`](01-security-operations.md) |
 | 2 | Vulnerability Management | 30% | [`02-vulnerability-management.md`](02-vulnerability-management.md) |
@@ -35,31 +45,29 @@ clone once, read anywhere, no connection needed.
 - [`acronyms.md`](acronyms.md) — every acronym the exam expects you to expand
 - [`tools-reference.md`](tools-reference.md) — what each named tool does and when an analyst reaches for it
 - [`commands-cheatsheet.md`](commands-cheatsheet.md) — the CLI you must be able to read under time pressure
-- [`flashcards.md`](flashcards.md) — Q/A drill deck, one fact per line
+- [`flashcards.md`](flashcards.md) — 92-card Q/A drill deck
 - [`frameworks.md`](frameworks.md) — kill chain, Diamond Model, ATT&CK, OWASP, and friends side by side
-- [`study-plan.md`](study-plan.md) — a 6-week schedule with checkpoints
+- [`study-plan.md`](study-plan.md) — a six-week schedule with checkpoints
 
-## Reading it offline
+## Rebuilding the HTML
 
-**In Noted (this repo's app):** these are ordinary `.md` files. Open the desktop
-app and use *File → Import* on any of them, or point the mobile app's storage
-directory at `study/cysa-plus/`.
+After editing any Markdown file:
 
-**Single-file HTML:** run `python study/cysa-plus/build_offline_html.py` to bundle
-everything into `cysa-offline.html` — one file, no CDN, no JavaScript
-dependencies, opens in any browser on a plane.
+```bash
+python3 build_offline_html.py
+```
 
-**On a phone:** `git clone` the repo once over Wi-Fi; every file is text and the
-whole pack is well under a megabyte.
+Standard library only — nothing to install, works offline. Use `-o PATH` to
+write somewhere else.
 
 ## How to use this pack
 
 1. Read the domain file end to end once, slowly. Don't take notes yet.
-2. Re-read with `flashcards.md` open; anything you can't answer cold, mark it.
+2. Re-read with `flashcards.md` open; mark anything you can't answer cold.
 3. Drill the marked cards daily until they're automatic.
-4. Performance-based questions (PBQs) are where people lose time — practise
-   reading log excerpts and `nmap`/`tcpdump` output from
-   `commands-cheatsheet.md` until parsing them is reflexive.
+4. Performance-based questions are where people lose time — practise reading
+   log excerpts and `nmap`/`tcpdump` output from `commands-cheatsheet.md` until
+   parsing them is reflexive.
 
 ## Exam-day mechanics worth knowing
 

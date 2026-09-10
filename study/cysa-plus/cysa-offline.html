@@ -53,31 +53,35 @@ color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;
 <div id="wrap">
 <nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations">1. Security Operations</a><a href="#02-vulnerability-management">2. Vulnerability Management</a><a href="#03-incident-response">3. Incident Response</a><a href="#04-reporting-communication">4. Reporting &amp; Communication</a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav>
 <main><section class="section" id="readme"><h1 id="comptia-cysa-cs0-003-offline-study-pack">CompTIA CySA+ (CS0-003) — Offline Study Pack</h1>
-<p>Self-contained study material for the CompTIA Cybersecurity Analyst (CySA+) exam. Everything here is plain Markdown with <strong>no external links required</strong> — clone once, read anywhere, no connection needed.</p>
-<blockquote><strong>Note on sources.</strong> This pack is written from the publicly published CS0-003 exam objectives and general security-domain knowledge. It is <em>not</em> a copy of CompTIA&#x27;s CertMaster course, and it is not a substitute for your licensed course material. Cross-check the domain/objective numbering against the free official objectives PDF from CompTIA when you next have a connection.</blockquote>
+<p>Self-contained study material for the CompTIA Cybersecurity Analyst (CySA+) exam. <strong>No connection required</strong> — clone once, read anywhere.</p>
+<h2 id="start-here">Start here</h2>
+<p>Open **<a href="cysa-offline.html"><code>cysa-offline.html</code></a>** in any browser. It&#x27;s a single file with no CDN links, no external scripts, and no network calls: sidebar contents, dark mode, phone-friendly layout, and it prints cleanly. Copy it to a phone, tablet, or USB stick and it just works.</p>
+<p>The Markdown files are the editable source; the HTML is generated from them.</p>
+<p>Not set up as a repository yet? See **<a href="#setup"><code>SETUP.md</code></a>** — about three minutes.</p>
+<blockquote><strong>Note on sources.</strong> Written from the publicly published CS0-003 exam objectives and general security-domain knowledge. It is <em>not</em> a copy of CompTIA&#x27;s CertMaster course and is not a substitute for licensed course material. Cross-check the domain/objective numbering against the free official objectives PDF from CompTIA.</blockquote>
 <h2 id="exam-at-a-glance">Exam at a glance</h2>
 <div class="tw"><table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody><tr><td>Exam code</td><td>CS0-003</td></tr><tr><td>Questions</td><td>Max 85 (multiple choice + performance-based)</td></tr><tr><td>Time</td><td>165 minutes</td></tr><tr><td>Passing score</td><td>750 (scale 100–900)</td></tr><tr><td>Recommended experience</td><td>4+ years hands-on IR / security analyst work</td></tr><tr><td>Prerequisite</td><td>None formally; Security+ and Network+ knowledge assumed</td></tr></tbody></table></div>
 <h2 id="domains-and-weighting">Domains and weighting</h2>
-<div class="tw"><table><thead><tr><th>#</th><th>Domain</th><th>Weight</th><th>File</th></tr></thead><tbody><tr><td>1</td><td>Security Operations</td><td>33%</td><td><a href="#01-security-operations"><code>01-security-operations.md</code></a></td></tr><tr><td>2</td><td>Vulnerability Management</td><td>30%</td><td><a href="#02-vulnerability-management"><code>02-vulnerability-management.md</code></a></td></tr><tr><td>3</td><td>Incident Response and Management</td><td>20%</td><td><a href="#03-incident-response"><code>03-incident-response.md</code></a></td></tr><tr><td>4</td><td>Reporting and Communication</td><td>17%</td><td><a href="#04-reporting-communication"><code>04-reporting-communication.md</code></a></td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>#</th><th>Domain</th><th>Weight</th><th>Source file</th></tr></thead><tbody><tr><td>1</td><td>Security Operations</td><td>33%</td><td><a href="#01-security-operations"><code>01-security-operations.md</code></a></td></tr><tr><td>2</td><td>Vulnerability Management</td><td>30%</td><td><a href="#02-vulnerability-management"><code>02-vulnerability-management.md</code></a></td></tr><tr><td>3</td><td>Incident Response and Management</td><td>20%</td><td><a href="#03-incident-response"><code>03-incident-response.md</code></a></td></tr><tr><td>4</td><td>Reporting and Communication</td><td>17%</td><td><a href="#04-reporting-communication"><code>04-reporting-communication.md</code></a></td></tr></tbody></table></div>
 <h2 id="supporting-references">Supporting references</h2>
 <ul>
 <li><a href="#acronyms"><code>acronyms.md</code></a> — every acronym the exam expects you to expand</li>
 <li><a href="#tools-reference"><code>tools-reference.md</code></a> — what each named tool does and when an analyst reaches for it</li>
 <li><a href="#commands-cheatsheet"><code>commands-cheatsheet.md</code></a> — the CLI you must be able to read under time pressure</li>
-<li><a href="#flashcards"><code>flashcards.md</code></a> — Q/A drill deck, one fact per line</li>
+<li><a href="#flashcards"><code>flashcards.md</code></a> — 92-card Q/A drill deck</li>
 <li><a href="#frameworks"><code>frameworks.md</code></a> — kill chain, Diamond Model, ATT&amp;CK, OWASP, and friends side by side</li>
-<li><a href="#study-plan"><code>study-plan.md</code></a> — a 6-week schedule with checkpoints</li>
+<li><a href="#study-plan"><code>study-plan.md</code></a> — a six-week schedule with checkpoints</li>
 </ul>
-<h2 id="reading-it-offline">Reading it offline</h2>
-<p><strong>In Noted (this repo&#x27;s app):</strong> these are ordinary <code>.md</code> files. Open the desktop app and use <em>File → Import</em> on any of them, or point the mobile app&#x27;s storage directory at <code>study/cysa-plus/</code>.</p>
-<p><strong>Single-file HTML:</strong> run <code>python study/cysa-plus/build_offline_html.py</code> to bundle everything into <code>cysa-offline.html</code> — one file, no CDN, no JavaScript dependencies, opens in any browser on a plane.</p>
-<p><strong>On a phone:</strong> <code>git clone</code> the repo once over Wi-Fi; every file is text and the whole pack is well under a megabyte.</p>
+<h2 id="rebuilding-the-html">Rebuilding the HTML</h2>
+<p>After editing any Markdown file:</p>
+<pre><code class="lang-bash">python3 build_offline_html.py</code></pre>
+<p>Standard library only — nothing to install, works offline. Use <code>-o PATH</code> to write somewhere else.</p>
 <h2 id="how-to-use-this-pack">How to use this pack</h2>
 <ol>
 <li>Read the domain file end to end once, slowly. Don&#x27;t take notes yet.</li>
-<li>Re-read with <code>flashcards.md</code> open; anything you can&#x27;t answer cold, mark it.</li>
+<li>Re-read with <code>flashcards.md</code> open; mark anything you can&#x27;t answer cold.</li>
 <li>Drill the marked cards daily until they&#x27;re automatic.</li>
-<li>Performance-based questions (PBQs) are where people lose time — practise reading log excerpts and <code>nmap</code>/<code>tcpdump</code> output from <code>commands-cheatsheet.md</code> until parsing them is reflexive.</li>
+<li>Performance-based questions are where people lose time — practise reading log excerpts and <code>nmap</code>/<code>tcpdump</code> output from <code>commands-cheatsheet.md</code> until parsing them is reflexive.</li>
 </ol>
 <h2 id="exam-day-mechanics-worth-knowing">Exam-day mechanics worth knowing</h2>
 <ul>
