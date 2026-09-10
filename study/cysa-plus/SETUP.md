@@ -69,7 +69,9 @@ The page makes **zero** network requests by design, so nothing should degrade.
 
 # Part 2 — Stand it up as your own private repo
 
-Optional. Gives you version history and an off-device backup.
+Optional for reading the notes; **required** if you want the web app on your
+phone, since Android only installs a PWA from an https origin. For that path
+do Step 1 below, then follow [`DEPLOY.md`](DEPLOY.md).
 
 Everything you need is in this folder. It does **not** depend on any other
 repository, and the study material works right now without doing any of this.

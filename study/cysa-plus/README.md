@@ -70,6 +70,8 @@ Not set up as a repository yet? See **[`SETUP.md`](SETUP.md)** — about three m
 - [`AUDIO.md`](AUDIO.md) — the narrated version: 105 minutes of offline MP3s
 - [`MOBILE.md`](MOBILE.md) — getting the pack onto an Android phone for offline use
 - [`TESTING.md`](TESTING.md) — a six-test checklist to prove the offline copy actually works
+- [`DEPLOY.md`](DEPLOY.md) — put the web app on Railway and install it on Android
+- [`webapp/README.md`](webapp/README.md) — the app itself: voice, flashcards, architecture
 
 ## Rebuilding the HTML
 
