@@ -5,7 +5,7 @@
  * VERSION is rewritten by build_content.py from a hash of the content, so a
  * rebuild invalidates the old cache automatically.
  */
-var VERSION = '7807515d3d';
+var VERSION = '0c78efb068';
 var CACHE = 'cysa-' + VERSION;
 var SHELL = [
   './', 'index.html', 'content.json',

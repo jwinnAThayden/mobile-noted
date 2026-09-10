@@ -151,6 +151,9 @@ li{margin:.32em 0}
 <li><a href="#audio"><code>AUDIO.md</code></a> — the narrated version: 105 minutes of offline MP3s</li>
 <li><a href="#mobile"><code>MOBILE.md</code></a> — getting the pack onto an Android phone for offline use</li>
 <li><a href="#testing"><code>TESTING.md</code></a> — a six-test checklist to prove the offline copy actually works</li>
+<li><a href="#deploy"><code>DEPLOY.md</code></a> — put the web app on Railway and install it on Android</li>
+<li><a href="#webapp-readme"><code>webapp/README.md</code></a> — the app itself: voice, flashcards, architecture</li>
+<li><a href="#developing"><code>DEVELOPING.md</code></a> — VS Code setup, how the build pipeline fits together, tests</li>
 </ul>
 <h2 id="rebuilding-the-html">Rebuilding the HTML</h2>
 <p>After editing any Markdown file:</p>
@@ -195,7 +198,7 @@ li{margin:.32em 0}
 <blockquote><p><strong>A note on what a Claude Code session can and cannot do here.</strong> These sessions run in an ephemeral cloud container, not on your device. Nothing can be written to your local disk directly. The download has to be initiated from your end — via the chat attachment, a clone, or a browser download. That is why this project is packaged as a single zip and a single self-contained HTML file rather than as something that installs itself.</p></blockquote>
 <hr>
 <h1 id="part-2-stand-it-up-as-your-own-private-repo">Part 2 — Stand it up as your own private repo</h1>
-<p>Optional. Gives you version history and an off-device backup.</p>
+<p>Optional for reading the notes; <strong>required</strong> if you want the web app on your phone, since Android only installs a PWA from an https origin. For that path do Step 1 below, then follow <a href="#deploy"><code>DEPLOY.md</code></a>.</p>
 <p>Everything you need is in this folder. It does <strong>not</strong> depend on any other repository, and the study material works right now without doing any of this.</p>
 <p><strong>Time required: about 3 minutes.</strong></p>
 <hr>

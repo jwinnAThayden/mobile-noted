@@ -72,6 +72,7 @@ Not set up as a repository yet? See **[`SETUP.md`](SETUP.md)** — about three m
 - [`TESTING.md`](TESTING.md) — a six-test checklist to prove the offline copy actually works
 - [`DEPLOY.md`](DEPLOY.md) — put the web app on Railway and install it on Android
 - [`webapp/README.md`](webapp/README.md) — the app itself: voice, flashcards, architecture
+- [`DEVELOPING.md`](DEVELOPING.md) — VS Code setup, how the build pipeline fits together, tests
 
 ## Rebuilding the HTML
 

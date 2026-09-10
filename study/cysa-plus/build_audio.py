@@ -90,7 +90,7 @@ SPEECH_FIXES = {
     "RDP": "R D P", "NTP": "N T P", "DNS": "D N S", "URL": "U R L",
     "WAF": "WAF", "IPS": "I P S", "IDS": "I D S", "VPN": "V P N",
     "IAM": "I A M", "PAM": "PAM", "CASB": "CAS-B", "SASE": "SASS-ee",
-    "SBOM": "S BOM", "OWASP": "OH-wasp", "CISA": "SIS-ah",
+    "OWASP": "OH-wasp", "CISA": "SIS-ah",
     "OSINT": "OH-sint", "ISAC": "EYE-sack", "SOC": "sock",
     "RCE": "R C E", "LFI": "L F I", "RFI": "R F I", "IDS/IPS": "I D S, I P S",
 }
@@ -171,7 +171,8 @@ def table_to_prose(rows: list[str]) -> list[str]:
             out.append(f"{left.rstrip('.')}: {right}.")
         else:
             parts = []
-            for name, value in zip(header, values):
+            # A row with the wrong cell count is read as far as it goes.
+            for name, value in zip(header, values, strict=False):
                 if not value or value == "-":
                     continue
                 parts.append(f"{speechify(name).rstrip('.')}: {speechify(value).rstrip('.')}")

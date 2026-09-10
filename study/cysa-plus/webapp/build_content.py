@@ -20,8 +20,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
 
-import build_audio as speech          # noqa: E402
-import build_offline_html as page     # noqa: E402
+import build_audio as speech  # noqa: E402
+import build_offline_html as page  # noqa: E402
 
 # group: "study" drives the main nav; "project" is the how-this-works material.
 PAGES = [
