@@ -68,7 +68,8 @@ Not set up as a repository yet? See **[`SETUP.md`](SETUP.md)** — about three m
 - [`frameworks.md`](frameworks.md) — kill chain, Diamond Model, ATT&CK, OWASP, and friends side by side
 - [`study-plan.md`](study-plan.md) — a six-week schedule with checkpoints
 - [`AUDIO.md`](AUDIO.md) — the narrated version: 105 minutes of offline MP3s
-- [`MOBILE.md`](MOBILE.md) — getting the pack onto a phone or tablet for offline use
+- [`MOBILE.md`](MOBILE.md) — getting the pack onto an Android phone for offline use
+- [`TESTING.md`](TESTING.md) — a six-test checklist to prove the offline copy actually works
 
 ## Rebuilding the HTML
 

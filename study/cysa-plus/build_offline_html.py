@@ -22,6 +22,7 @@ PAGES = [
     ("SETUP.md", "Setup & Offline Access"),
     ("AUDIO.md", "Audio Version"),
     ("MOBILE.md", "On Your Phone"),
+    ("TESTING.md", "Testing It Works"),
     ("study-plan.md", "Study Plan"),
     ("01-security-operations.md", "1. Security Operations"),
     ("02-vulnerability-management.md", "2. Vulnerability Management"),

@@ -57,7 +57,7 @@ color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;
 </head><body>
 <button class="toggle" aria-label="Toggle contents">&#9776; Contents</button>
 <div id="wrap">
-<nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#setup">Setup &amp; Offline Access</a><a href="#audio">Audio Version</a><a href="#mobile">On Your Phone</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations">1. Security Operations</a><a href="#02-vulnerability-management">2. Vulnerability Management</a><a href="#03-incident-response">3. Incident Response</a><a href="#04-reporting-communication">4. Reporting &amp; Communication</a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav>
+<nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#setup">Setup &amp; Offline Access</a><a href="#audio">Audio Version</a><a href="#mobile">On Your Phone</a><a href="#testing">Testing It Works</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations">1. Security Operations</a><a href="#02-vulnerability-management">2. Vulnerability Management</a><a href="#03-incident-response">3. Incident Response</a><a href="#04-reporting-communication">4. Reporting &amp; Communication</a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav>
 <main><section class="section" id="readme"><h1 id="comptia-cysa-cs0-003-offline-study-pack">CompTIA CySA+ (CS0-003) — Offline Study Pack</h1>
 <p>Self-contained study material for the CompTIA Cybersecurity Analyst (CySA+) exam. <strong>No connection required</strong> — clone once, read anywhere.</p>
 <blockquote><h2 id="goal">Goal</h2>
@@ -83,7 +83,8 @@ color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;
 <li><a href="#frameworks"><code>frameworks.md</code></a> — kill chain, Diamond Model, ATT&amp;CK, OWASP, and friends side by side</li>
 <li><a href="#study-plan"><code>study-plan.md</code></a> — a six-week schedule with checkpoints</li>
 <li><a href="#audio"><code>AUDIO.md</code></a> — the narrated version: 105 minutes of offline MP3s</li>
-<li><a href="#mobile"><code>MOBILE.md</code></a> — getting the pack onto a phone or tablet for offline use</li>
+<li><a href="#mobile"><code>MOBILE.md</code></a> — getting the pack onto an Android phone for offline use</li>
+<li><a href="#testing"><code>TESTING.md</code></a> — a six-test checklist to prove the offline copy actually works</li>
 </ul>
 <h2 id="rebuilding-the-html">Rebuilding the HTML</h2>
 <p>After editing any Markdown file:</p>
@@ -305,7 +306,75 @@ python3 build_audio.py --only 01        # rebuild one track</code></pre>
 <hr>
 <h2 id="note-for-ios">Note for iOS</h2>
 <p>Not the target here, but if the repo gets shared: the Files app can uncompress the zip and preview the HTML, though local HTML is fiddlier than on Android —</p>
-<p><strong>Documents by Readdle</strong> handles it properly. VLC works the same on both.</p></section><section class="section" id="study-plan"><h1 id="six-week-cysa-study-plan">Six-Week CySA+ Study Plan</h1>
+<p><strong>Documents by Readdle</strong> handles it properly. VLC works the same on both.</p></section><section class="section" id="testing"><h1 id="testing-the-pack-on-an-android-device">Testing the pack on an Android device</h1>
+<p>Run this once, after copying the files across, before you depend on it. Roughly ten minutes. Each test has a <strong>concrete checkpoint</strong> — a number to match, not a vague &quot;does it seem OK&quot;.</p>
+<p>Tests are ordered so that a failure tells you where the problem is. <strong>If a test fails, stop and fix it before moving on</strong> — later tests assume the earlier ones passed.</p>
+<hr>
+<h2 id="test-1-the-transfer-completed">Test 1 — The transfer completed</h2>
+<p><strong>Why first:</strong> a truncated download or a partial extract explains almost every later symptom, and looks like something else.</p>
+<p>In your file manager, open <code>Download/cysa-plus-study/</code> and check:</p>
+<div class="tw"><table><thead><tr><th>Check</th><th>Expected</th></tr></thead><tbody><tr><td>Visible files in the root folder</td><td><strong>19</strong> — 15 <code>.md</code>, 2 <code>.py</code>, 1 <code>.html</code>, 1 <code>.sha256</code> — plus the <code>audio</code> folder</td></tr><tr><td><code>cysa-offline.html</code></td><td>~160 KB</td></tr><tr><td><code>audio/</code> contains</td><td>8 <code>.mp3</code>, <code>playlist.m3u</code>, and a <code>narration/</code> folder</td></tr><tr><td><code>audio/</code> total size</td><td>~24 MB</td></tr></tbody></table></div>
+<p><strong>Fails if:</strong> the folder is missing files, or <code>cysa-offline.html</code> is under 150 KB. Re-download the zip and extract again — most likely the extract was interrupted.</p>
+<h3 id="optional-verify-byte-for-byte">Optional: verify byte-for-byte</h3>
+<p>If you have <strong>Termux</strong> installed:</p>
+<pre><code class="lang-bash">cd /sdcard/Download/cysa-plus-study
+sha256sum -c checksums.sha256</code></pre>
+<p>Every line should read <code>OK</code>. This is the only test that proves the files are</p>
+<p><em>identical</em>, not merely present. Skip it if you don&#x27;t already use Termux — the size checks above catch real-world corruption.</p>
+<hr>
+<h2 id="test-2-audio-plays-and-is-complete">Test 2 — Audio plays, and is complete</h2>
+<p>Open <code>audio/</code> in VLC or AntennaPod. Check each track&#x27;s total length against this table — a track that plays but is short was truncated in transfer.</p>
+<div class="tw"><table><thead><tr><th>Track</th><th>Expected length</th></tr></thead><tbody><tr><td><code>01-security-operations.mp3</code></td><td>22:04</td></tr><tr><td><code>02-vulnerability-management.mp3</code></td><td>20:42</td></tr><tr><td><code>03-incident-response.mp3</code></td><td>11:14</td></tr><tr><td><code>04-reporting-communication.mp3</code></td><td>8:58</td></tr><tr><td><code>frameworks.mp3</code></td><td>4:01</td></tr><tr><td><code>tools-reference.mp3</code></td><td>6:34</td></tr><tr><td><code>acronyms.mp3</code></td><td>7:32</td></tr><tr><td><code>flashcards.mp3</code></td><td>24:02</td></tr><tr><td><strong>Total</strong></td><td><strong>1:45:11</strong></td></tr></tbody></table></div>
+<p><strong>Fails if:</strong> tracks don&#x27;t appear at all → Android&#x27;s media scanner hasn&#x27;t indexed them. Open the folder once in VLC, or reboot. This is not a file problem.</p>
+<hr>
+<h2 id="test-3-the-flashcard-drill-has-its-gaps">Test 3 — The flashcard drill has its gaps</h2>
+<p>This is the one feature that can break silently, so it gets its own test.</p>
+<p>Play <code>audio/flashcards.mp3</code> from the start. You should hear:</p>
+<ol>
+<li>An intro: <em>&quot;Flashcard Drill. 92 cards…&quot;</em></li>
+<li>At about <strong>0:12</strong>, the first question ends and a <strong>3-second silence</strong> begins</li>
+<li>At about <strong>0:16</strong>, the answer starts: <em>&quot;Answer. Four six two four…&quot;</em></li>
+<li>The next question at roughly <strong>0:29</strong>, the one after at <strong>0:43</strong></li>
+</ol>
+<p><strong>Fails if:</strong> the answer follows the question immediately with no pause. The file was re-encoded by something in transit, or you&#x27;re playing a different build. Re-copy from the zip.</p>
+<p><strong>Also check:</strong> playback speed is at <strong>1.0×</strong>. At 1.5× the gap is 2 seconds, which isn&#x27;t long enough to retrieve an answer — the drill stops working as a drill.</p>
+<hr>
+<h2 id="test-4-the-written-pack-renders">Test 4 — The written pack renders</h2>
+<p>Tap <code>cysa-offline.html</code> → <strong>Open with → Chrome</strong>.</p>
+<div class="tw"><table><thead><tr><th>Check</th><th>Expected</th></tr></thead><tbody><tr><td>Contents button</td><td>A <strong>☰ Contents</strong> button, top-left</td></tr><tr><td>Tapping it</td><td>A sidebar slides in listing 13 sections</td></tr><tr><td>Tap &quot;3. Incident Response&quot;</td><td>Jumps to that section</td></tr><tr><td>The order-of-volatility list</td><td>Numbered 1–7, readable</td></tr><tr><td>Domain 1&#x27;s logging table</td><td>Scrolls sideways on its own without the page scrolling</td></tr><tr><td>Command Cheatsheet section</td><td>Code blocks in a monospace font, scrolling sideways</td></tr><tr><td>Page body</td><td>Does <strong>not</strong> scroll sideways at any point</td></tr></tbody></table></div>
+<p><strong>Fails if:</strong> the page is unstyled black-on-white text → the file is truncated; recheck its size in Test 1.</p>
+<h3 id="dark-mode">Dark mode</h3>
+<p>Switch the phone to dark theme (<strong>Settings → Display → Dark theme</strong>) and reload. The page should follow — dark background, light text, tables still legible. Switch back and it should follow again.</p>
+<hr>
+<h2 id="test-5-it-genuinely-works-offline">Test 5 — It genuinely works offline</h2>
+<p>The test that matters. Everything above can pass while the files are still cloud placeholders that fetch on open.</p>
+<ol>
+<li><strong>Turn on airplane mode.</strong> Confirm Wi-Fi and mobile data are both off.</li>
+<li>Play one minute of <code>flashcards.mp3</code>. It should start instantly.</li>
+<li>Open <code>cysa-offline.html</code> in Chrome. Scroll to Domain 3 and confirm the tables still render.</li>
+<li>Tap two sidebar links.</li>
+<li><strong>Turn airplane mode off.</strong></li>
+</ol>
+<p><strong>Fails if:</strong> anything spins, stalls, or shows an error. The files aren&#x27;t local. If you used OneDrive, mark them <strong>Make available offline</strong>; better, copy them into device storage directly.</p>
+<blockquote><p>Chrome may show a &quot;no internet&quot; banner on a <code>file://</code> page. That&#x27;s Chrome being noisy about the network, not about the page. If the content renders, the test passed.</p></blockquote>
+<hr>
+<h2 id="test-6-it-survives-a-reboot">Test 6 — It survives a reboot</h2>
+<p>Cheap and worth doing. Some file managers extract to a cache directory that Android clears on its own.</p>
+<ol>
+<li>Reboot the phone.</li>
+<li>Open <code>Download/cysa-plus-study/</code> — everything should still be there.</li>
+<li>Play ten seconds of any track.</li>
+</ol>
+<p><strong>Fails if:</strong> the folder is gone or thinned out → it was extracted somewhere temporary. Re-extract to <code>Internal Storage/Download/</code>, not to an app&#x27;s cache.</p>
+<hr>
+<h2 id="quick-pass-fail-record">Quick pass/fail record</h2>
+<div class="tw"><table><thead><tr><th>#</th><th>Test</th><th>Pass</th></tr></thead><tbody><tr><td>1</td><td>Transfer complete — 19 root files, HTML ~160 KB, audio ~24 MB</td><td>☐</td></tr><tr><td>2</td><td>All 8 tracks present, total 1:45:11</td><td>☐</td></tr><tr><td>3</td><td>Flashcard gaps: first pause at ~0:12, ~3 seconds long</td><td>☐</td></tr><tr><td>4</td><td>HTML renders — sidebar, tables scroll, dark mode follows</td><td>☐</td></tr><tr><td>5</td><td>Airplane mode: audio and HTML both work</td><td>☐</td></tr><tr><td>6</td><td>Survives reboot</td><td>☐</td></tr></tbody></table></div>
+<p>All six pass and the pack is genuinely yours, offline, permanently.</p>
+<hr>
+<h2 id="if-you-rebuild-the-audio">If you rebuild the audio</h2>
+<p>Regenerating with a better voice (see <a href="#audio"><code>AUDIO.md</code></a>) changes every track&#x27;s length and every checksum, so Tests 1–3 no longer match this document. Regenerate the checksums at the same time:</p>
+<pre><code class="lang-bash">find . -type f ! -path &#x27;./.git/*&#x27; ! -name &#x27;checksums.sha256&#x27; | sort | xargs sha256sum &gt; checksums.sha256</code></pre>
+<p>Tests 4–6 are unaffected.</p></section><section class="section" id="study-plan"><h1 id="six-week-cysa-study-plan">Six-Week CySA+ Study Plan</h1>
 <p>Assumes ~8–10 hours per week. Adjust the calendar, keep the sequence.</p>
 <h2 id="week-1-foundations-and-security-operations-part-1">Week 1 — Foundations and Security Operations, part 1</h2>
 <ul>
