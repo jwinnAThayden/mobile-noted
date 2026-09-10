@@ -1,0 +1,229 @@
+Domain 1, Security Operations.
+
+The largest domain. It covers what you look at, what "bad" looks like, and how you make the looking repeatable.
+
+1.1 System and network architecture concepts.
+
+
+Logging, the analyst's raw material.
+
+Source: Windows Event Log. What it proves: Auth, process creation, service installs. Watch for: 4 6 2 4 logon, 4 6 2 5 failed logon, 4 6 8 8 process create, 4 6 7 2 special privileges, 7 0 4 5 service install.
+Source: Sys-mon. What it proves: Deep process or network or file telemetry. Watch for: Event ID 1 (process create with hashes plus command line), 3 (network connect), 7 (image load), 8 (Create Remote Thread), 11 (file create), 22 (D N S query).
+Source: Syslog (RFC 5424). What it proves: Unix or network device events. Watch for: Facility plus severity 0 to 7; severity 0 equals emergency, 7 equals debug.
+Source: Firewall or NGFW. What it proves: Allow or deny by 5-tuple. Watch for: Egress denies are more interesting than ingress denies.
+Source: Proxy or web filter. What it proves: Full U R L, user agent, bytes. Watch for: Long POST bodies to rare domains equals exfil.
+Source: D N S. What it proves: Every name resolution. Watch for: N X domain storms, long labels, high-entropy subdomains.
+Source: Net Flow or I P fix. What it proves: Who talked to whom, how much, how long. Watch for: No payload, volume and timing only.
+Source: E D R. What it proves: Process trees, parent-child lineage. Watch for: The single richest host source.
+Key distinctions the exam tests:
+Net Flow equals metadata (5-tuple plus counters). Full packet capture equals payload. Flow scales; P cap does not. You keep flow for months, P cap for days.
+Logging levels trade fidelity for volume. Debug logging in production is a storage and privacy problem, not a security win.
+Time synchronisation (N T P) is non-negotiable. Correlating three sources with skewed clocks produces a false timeline, and a timeline is evidence.
+Log retention is driven by regulation (P C I D S S: 1 year, 3 months immediately available) and by dwell time, if attackers sit undetected for 200 days, 30-day retention means you can never reconstruct the intrusion.
+
+Operating system concepts.
+
+Windows Registry, configuration and persistence. Autorun keys: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run, RunOnce, HKLM\SYSTEM\CurrentControlSet\Services, and Winlogon Shell or Userinit.
+System hardening, remove what you don't need before you defend what's left. Disable unused services, close ports, remove default accounts, apply a benchmark (CIS, DISA STIG).
+File structure or permissions, Linux rwx octal, set U I D or set G I D (a set U I D root binary in a user-writable directory is a privesc waiting to happen), Windows ACLs and inheritance.
+Configuration file locations, or etc or passwd, or etc or shadow, or etc or crontab, ~ or.ssh or authorized_keys, or var or log or auth.log.
+Processes and services, a service running as SYSTEM with a binary path in a writable folder is unquoted service path privesc.
+Hardware architecture, TPM (sealed key storage, measured boot), HSM (tamper-resistant key operations), Secure Boot, UEFI versus legacy BIOS.
+
+Infrastructure concepts.
+
+Serverless, no OS to patch, but you inherit function-level I A M risk and dependency risk. The blast radius is the function's role.
+Virtualisation, hypervisor Type 1 (bare metal) versus Type 2 (hosted). The nightmare case is VM escape: guest leads to hypervisor leads to every other guest.
+Containerisation, shared kernel means a kernel exploit crosses container boundaries. Image provenance and registry signing matter more than in VMs.
+On-prem versus cloud versus hybrid, the shared responsibility model decides who patches what. IaaS: you patch the OS. PaaS: provider does. SaaS: you own only configuration and data.
+
+Network architecture.
+
+Segmentation, the single highest-value control against lateral movement. Flat networks turn one compromised laptop into domain-wide compromise.
+Zero trust, never trust, always verify. Policy Decision Point (PDP) decides; Policy Enforcement Point (PEP) enforces. Identity replaces network location as the perimeter.
+SDN, control plane separated from data plane; policy pushed centrally.
+SASS-ee, network plus security delivered as a cloud edge service.
+Secured zones, screened subnet (DMZ), jump box or bastion for admin access, air gap for the truly sensitive.
+V P N, site-to-site versus remote access; split tunnel sends only corporate traffic through the V P N (faster, less visibility) versus full tunnel (all traffic inspected, more load).
+
+Identity and access management.
+
+M F A, something you know or have or are. Push fatigue is a real attack; number matching and FIDO2 hardware tokens resist it. SMS OTP is the weakest common factor (SIM swap, SS7).
+single sign-on, one authentication, many services. SAML (XML assertions, enterprise web single sign-on), OAuth 2.0 (authorisation delegation, not authentication), OpenID Connect (authentication layer on top of OAuth).
+Federation, trust relationship across organisational boundaries.
+Privileged access management (PAM), vaulted credentials, session recording, just-in-time elevation, automatic rotation.
+Passwordless, FIDO2 or Web Auth-n; phishing-resistant because the credential is origin-bound.
+Cloud access security broker (CAS-B), policy enforcement point between users and cloud services; discovers shadow IT.
+
+Encryption and sensitive data protection.
+
+Public key infrastructure (PKI), CA, RA, CRL, OCSP. Certificate pinning breaks MITM inspection (and breaks your proxy).
+SSL or TLS inspection, you must decrypt to inspect, which creates a privacy and compliance obligation and a single point of interception.
+Data loss prevention (DLP), at rest, in transit, in use. Detection by pattern (regex), fingerprint (exact document match), or classification label.
+Personally identifiable information (P I I) or protected health information (P H I) or cardholder data (CHD), know which regime governs which: G D P R leads to personal data, HIP-uh leads to P H I, P C I D S S leads to CHD.
+Data masking or tokenisation or de-identification, tokenisation replaces the value with a reference; masking obscures part of it; encryption is reversible with a key.
+
+1.2 Analysing indicators of potentially malicious activity.
+
+
+Network-related indicators.
+
+Bandwidth consumption spike (outbound): Data exfiltration or DDoS participation.
+Beaconing, regular interval callbacks: command and control channel. Look for low jitter and consistent byte counts.
+Irregular peer-to-peer communication: Lateral movement; workstations should rarely talk to each other.
+Rogue device on the network: Unmanaged asset, possible pivot point.
+Scan or sweep: Reconnaissance, internal scans are far more alarming than external.
+Unusual traffic spike: Could be legitimate; correlate with change tickets first.
+Activity on unexpected ports: Tunnelling, SSH on 443, D N S on 53 carrying non-D N S payloads.
+Non-standard port usage: Protocol or port mismatch is a strong signal.
+Beaconing detection: compute the interval between successive connections from one host to one destination. Malware command and control shows tight clustering (for example every 60s plus or minus 5s). Legitimate software (update checkers) beacons too, the discriminator is destination reputation, not periodicity alone.
+
+Host-related indicators.
+
+Processor consumption, sustained 100 percent CPU on an idle workstation: cryptomining is the usual suspect.
+Memory consumption, memory-resident (fileless) malware lives here and leaves nothing on disk.
+Drive capacity consumption, staging area for exfil, often a.rar or.7z archive in C:\Windows\Temp or percentAPPDATA percent.
+Unauthorised software, RATs, remote-access tools (AnyDesk, TeamViewer) installed outside a change window.
+Malicious processes, the tell is lineage, not name. winword dot E X E leads to cmd dot E X E leads to powershell dot E X E is malicious regardless of what the binary is called. A svchost dot E X E whose parent is not services dot E X E is masquerading.
+Unauthorised changes or privileges, new local admin, new service, new scheduled task, modified registry autorun.
+Data exfiltration, large outbound transfers, especially to cloud storage or newly registered domains.
+Abnormal OS process behaviour, L SASS dot E X E being read by another process is credential dumping (Mimikatz).
+File system changes or anomalies, mass rename with a new extension equals ransomware in progress; shadow copy deletion (V S S admin delete shadows) is the precursor.
+Registry changes or anomalies, persistence, defence evasion (disabling Defender via registry policy).
+Unauthorised scheduled tasks, S C H tasks or create running from a temp path.
+
+Application-related indicators.
+
+Anomalous activity, an app making outbound connections it has never made.
+Introduction of new accounts, especially service accounts with interactive logon rights.
+Unexpected output, SQL errors leaking schema, stack traces to users.
+Unexpected outbound communication, a database server initiating internet connections should never happen.
+Service interruption, could be DoS, could be the attacker disabling logging or AV.
+Application logs, HT T P 500 bursts, authentication failures, unusual user agents, very long query strings (injection attempts).
+
+Other indicators.
+
+Social engineering attacks, pretexting, phishing, vishing, smishing, BEC.
+Obfuscated links, U R L shorteners, homoglyph or punycode domains (раypal.com with a Cyrillic а), open redirects on trusted domains.
+
+1.3 Tools and techniques for determining malicious activity.
+
+
+Packet capture.
+
+Wireshark, GUI analysis. Follow TCP Stream reconstructs a conversation; Statistics leads to Conversations finds the top talkers; Export Objects pulls transferred files out of a capture.
+T C P dump, capture on headless boxes. Always write to a file (-w) and analyse later; analysing live drops packets.
+WireEdit or Network Miner, extract artefacts and reassemble sessions.
+
+Log analysis and correlation.
+
+SEEM, aggregation, normalisation, correlation, alerting. The value is correlation across sources, not storage.
+Rule writing, a rule that fires 400 times a day is a rule nobody reads. Tune to the environment, then tune again.
+Search languages, Splunk SPL, Elastic KQL or Lucene, Sentinel KQL.
+Sigma, vendor-neutral detection rule format; converts to whatever your SEEM speaks.
+
+Endpoint.
+
+E D R, process trees, isolate-host action, retrospective search.
+Reputation analysis, hash lookups (VirusTotal), file or IP or domain scoring.
+File analysis, static (strings, PE headers, imports, entropy) versus dynamic (execute and observe).
+Sandboxing, detonate in isolation. Modern malware is sandbox-aware: it checks for VM artefacts, low core counts, no mouse movement, and sleeps past the analysis window.
+
+Network.
+
+D N S and IP reputation, WHOIS age (a domain registered yesterday is suspicious), AbuseIPDB-style scoring.
+D G A (domain generation algorithm) detection, high-entropy names, N X domain floods as malware cycles through candidates.
+Flow analysis, long-duration, low-bandwidth sessions are the classic command and control shape.
+
+Email analysis.
+
+S P F: Is the sending IP authorised for that domain? Checks the envelope sender.
+D KIM: Cryptographic signature, was the message altered in transit?.
+D MARK: Policy (none or quarantine or reject) + alignment plus reporting. Ties S P F or D KIM to the visible From header.
+Received: chain: Read bottom to top, the bottom-most is the origin.
+Reply-To mismatch: Classic BEC tell: From looks internal, Reply-To is external.
+Message ID or X-headers: Sending infrastructure fingerprint.
+Embedded links: Check the href, not the display text.
+Attachments: Macro-enabled Office, ISO or IMG (bypasses mark-of-the-web), double extensions.
+Impersonation techniques: display-name spoofing, lookalike domains (rnicrosoft.com), compromised legitimate accounts (hardest to detect, S P F and D KIM both pass).
+
+Programming and scripting for analysts.
+
+You are not expected to write production code, but you must read it:
+Python, the automation default; requests, pandas, re for log parsing.
+Power Shell, both the admin tool and the attacker's tool. Recognise -EncodedCommand (base64), -nop -w hidden -ExecutionPolicy Bypass, IEX (New-Object Net.WebClient).DownloadString(.), that last one is a download-and-execute cradle, memorise it.
+Shell or Bash, pipeline literacy: grep | awk | sort | uniq -c | sort -rn is the analyst's most-used idiom.
+Regular expressions, extracting IPs, hashes, and domains from log text.
+JSON or XML, every modern API and log format.
+
+1.4 Threat intelligence and threat hunting.
+
+
+Intelligence fundamentals.
+
+Levels: strategic (board-level, risk trends), operational (campaigns, actor intent), tactical (T T Ps, immediately actionable).
+Confidence levels, never treat a feed as fact. Use the Admiralty Code (source reliability A, F, information credibility 1 to 6).
+Indicator lifecycle, I O Cs decay. An IP burns in days; a T T P lasts years. This is the Pyramid of Pain: hash values leads to IP addresses leads to domain names leads to network or host artefacts leads to tools leads to T T Ps. The higher you detect, the more it costs the adversary to adapt.
+
+Collection sources.
+
+Open source (OH-sint), free, broad, noisy.
+Closed or proprietary, paid feeds, vetted, timelier.
+EYE-sack (Information Sharing and Analysis Center), sector-specific (FS-EYE-sack for finance, H-EYE-sack for health).
+Internal telemetry, your own past incidents are your highest-fidelity feed.
+
+Sharing standards.
+
+STIX, the language for describing threat information (objects, relationships).
+TAXY, the transport that moves STIX around.
+MISP, an open sharing platform.
+Traffic Light Protocol (T L P):
+T L P:RED, named recipients only.
+T L P:AMBER, recipient's organisation, need-to-know (AMBER plus STRICT equals org only).
+T L P:GREEN, the community, not public.
+T L P:CLEAR, unrestricted Handling T L P correctly is exam-favourite material.
+
+Threat actors.
+
+Actor: Nation-state or A P T. Motivation: Espionage, disruption. Sophistication: Very high; long dwell time, custom tooling.
+Actor: Organised crime. Motivation: Financial. Sophistication: High; ransomware, RaaS affiliates.
+Actor: Hacktivist. Motivation: Ideological. Sophistication: Variable; defacement, DDoS, leaks.
+Actor: Insider. Motivation: Grievance, money, or accident. Sophistication: Low technical, high access.
+Actor: Script kiddie. Motivation: Notoriety. Sophistication: Low; known exploits, off-the-shelf tools.
+Actor: Supply chain. Motivation: Varies. Sophistication: Access through a trusted third party.
+
+Threat hunting.
+
+Hunting is hypothesis-driven and proactive, it starts without an alert. That distinction is the exam's favourite hunting question.
+Form a hypothesis ("if an adversary used Kerber-oasting, I'd see TGS requests with RC4 encryption for service accounts").
+Decide the data required and confirm you actually collect it.
+Hunt, query, pivot, correlate.
+Outcome is a win either way: you find evidence, or you find a visibility gap, or you produce a new detection rule.
+Concepts: focus on critical assets first; bundling critical assets into protection groups; attack vectors; integrated intelligence; improving detection capabilities is the real deliverable, a hunt that finds nothing but produces a durable detection was still successful.
+
+1.5 Efficiency and process improvement.
+
+
+Standardising processes.
+
+Identification of tasks suitable for automation, repeatable, high-volume, low-judgement, well-defined inputs. Enrichment, ticket creation, and I O C lookups qualify. Containment decisions on production systems do not, at least not without approval gating.
+Team coordination, a documented, repeatable process means results don't depend on which analyst caught the ticket.
+
+Streamlining operations.
+
+Automation and orchestration (SOAR), orchestration connects tools; automation executes without a human; a playbook encodes the decision tree.
+Orchestration playbooks, codify triage so tier-1 handles more, faster.
+Minimising human engagement, reserve analyst attention for judgement.
+Single pane of glass, one console instead of twelve; reduces context switching and missed alerts.
+Technology and tool integration, APIs, webhooks, and workflow orchestration are the plumbing.
+Benefits to cite in an exam answer: reduced M T T D and M T T R, lower analyst fatigue and turnover, consistent handling, better metrics, and scale without linear headcount growth.
+Risks of over-automation: an automated containment action that isolates a production database at month-end close causes the outage the attacker wanted. Always ask what the automation does when it's wrong.
+
+Domain 1 self-check.
+
+Why is a process's parent more diagnostic than its name?
+What does D MARK add that S P F and D KIM alone cannot provide?
+Where does "tools" sit on the Pyramid of Pain, and why does that matter?
+You see 60-second-interval outbound connections of identical size. What do you check next before calling it command and control?
+Which T L P marking permits sharing with your whole organisation?
+Name three tasks that are good automation candidates and one that is not.

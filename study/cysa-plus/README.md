@@ -14,6 +14,9 @@ exam. **No connection required** — clone once, read anywhere.
 > plain text plus one generated HTML file, and it is intended to be *held
 > locally* — a copy on the device is the primary artefact, not a convenience.
 > See [`SETUP.md`](SETUP.md) for how to get it there.
+>
+> The pack is also fully **narrated** — 105 minutes of offline audio, including
+> a 92-card spoken drill. See [`AUDIO.md`](AUDIO.md).
 
 ## Start here
 
@@ -23,6 +26,10 @@ contents, dark mode, phone-friendly layout, and it prints cleanly. Copy it to a
 phone, tablet, or USB stick and it just works.
 
 The Markdown files are the editable source; the HTML is generated from them.
+
+Prefer to listen? `audio/` holds the whole pack as MP3s — start with
+`audio/flashcards.mp3`, a 92-card spoken drill that pauses after each question.
+See **[`AUDIO.md`](AUDIO.md)**.
 
 Not set up as a repository yet? See **[`SETUP.md`](SETUP.md)** — about three minutes.
 
@@ -60,6 +67,7 @@ Not set up as a repository yet? See **[`SETUP.md`](SETUP.md)** — about three m
 - [`flashcards.md`](flashcards.md) — 92-card Q/A drill deck
 - [`frameworks.md`](frameworks.md) — kill chain, Diamond Model, ATT&CK, OWASP, and friends side by side
 - [`study-plan.md`](study-plan.md) — a six-week schedule with checkpoints
+- [`AUDIO.md`](AUDIO.md) — the narrated version: 105 minutes of offline MP3s
 
 ## Rebuilding the HTML
 

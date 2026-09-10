@@ -1,0 +1,107 @@
+Tools Reference.
+
+What each named tool does, and the sentence an exam answer wants.
+
+Network scanning and discovery.
+
+Nmap: Host discovery, port or service or version detection, OS fingerprinting, NSE scripting.
+Angry IP Scanner: Fast, simple host or port sweep.
+Masscan: Internet-scale port scanning.
+hping3: Custom packet crafting, firewall rule testing, traceroute over arbitrary protocols.
+Responder: LLMNR or NBT-NS poisoning to capture hashes (offensive).
+
+Vulnerability scanning.
+
+Nessus or Tenable.io: Commercial general vulnerability scanning.
+Qualys: Cloud-delivered vulnerability management.
+OpenVAS or Greenbone: Open-source vulnerability scanner.
+Rapid7 Nexpose or InsightVM: Vulnerability management with risk scoring.
+Nikto: Web server misconfiguration and dangerous-file checks.
+OpenSCAP: SCAP-based compliance or configuration scanning.
+
+Web application.
+
+Burp Suite: Intercepting proxy, repeater, intruder, scanner, the standard web testing toolkit.
+OH-wasp ZAP: Open-source intercepting proxy and DAST scanner.
+Arachni or w3af: Automated web application scanning.
+sqlmap: Automated SQL injection detection and exploitation.
+Gobuster or dirb or ffuf: Content and directory brute-forcing.
+wpscan: WordPress-specific enumeration.
+
+Packet capture and network analysis.
+
+Wireshark: GUI packet analysis, stream reassembly, object export.
+T C P dump: CLI capture on servers and headless hosts.
+tshark: Wireshark's CLI, scriptable capture analysis.
+NetworkMiner: Network forensic artefact extraction from P cap.
+Zeek (Bro): Network security monitoring, turns traffic into rich structured logs.
+Suricata or Snort: Signature-based I D S or I P S.
+SiLK or nfdump: Net Flow collection and analysis.
+p0f: Passive OS fingerprinting.
+
+Endpoint and forensics.
+
+Volatility: Memory forensics, process lists, injected code, network connections from a RAM image.
+Autopsy or The Sleuth Kit: Disk forensics, timeline, deleted file recovery.
+FTK Imager or dd or dc3dd: Forensic imaging.
+Sysinternals (Procmon, Procexp, Autoruns, TCPView): Live Windows triage; Autoruns is the persistence-hunting tool.
+Velociraptor or GRR: Endpoint hunting at scale.
+YARA: Pattern-matching rules to classify malware families.
+Sys-mon: Enhanced Windows telemetry (deploy it; the default log is too thin).
+
+Malware and binary analysis.
+
+Cuckoo Sandbox or Any.Run or Joe Sandbox: Dynamic analysis by detonation.
+Ghidra or IDA Pro or radare2: Disassembly and decompilation.
+GDB or WinDbg or OllyDbg or Immunity: Debugging.
+PEStudio or pefile: Static PE inspection: imports, sections, entropy.
+strings or floss: Extract readable strings, including obfuscated ones.
+CyberChef: Decode, deobfuscate, and transform data, "the cyber Swiss Army knife".
+
+SEEM, SOAR, and monitoring.
+
+Splunk: SEEM with SPL query language.
+Elastic Stack or ELK: Open search-based log analytics.
+Microsoft Sentinel: Cloud-native SEEM, KQL.
+QRadar or ArcSight or LogRhythm: Enterprise SEEM platforms.
+Wazuh or OSSEC: Open-source HI D S with FIM and log analysis.
+Security Onion: Free NSM or I D S distribution bundling Zeek, Suricata, Elastic.
+TheHive or Cortex: Case management and observable analysis.
+Shuffle or Tines or Phantom: SOAR playbook automation.
+Grafana or Kibana: Dashboards and visualisation.
+
+Threat intelligence.
+
+MISP: Threat intelligence sharing platform.
+OpenCTI: Threat intelligence knowledge management.
+VirusTotal: Multi-engine file or U R L or hash reputation.
+Shodan or Censys: Internet-wide device and service search, attack surface discovery.
+Maltego: Link analysis and OH-sint graphing.
+Recon-ng or theHarvester or SpiderFoot: OH-sint collection frameworks.
+urlscan.io: Safe U R L detonation and page analysis.
+
+Cloud and container.
+
+Prowler: AWS or Azure or GCP security posture assessment.
+ScoutSuite: Multi-cloud auditing.
+Pacu: Offensive AWS exploitation framework.
+Trivy or Grype or Clair or Anchore: Container image and dependency vulnerability scanning.
+Falco: Runtime container threat detection.
+kube-bench or kube-hunter: Kubernetes CIS benchmark and vulnerability testing.
+
+Exploitation and offensive.
+
+Metasploit Framework: Exploit development and delivery; module availability changes prioritisation.
+Cobalt Strike: Commercial command and control, heavily abused by real adversaries; know its Beacon traffic.
+Empire or Sliver or Mythic: Post-exploitation command and control frameworks.
+Blood Hound: Maps Active Directory attack paths, "shortest path to Domain Admin".
+Mimikatz: Credential dumping from LSASS.
+Hashcat or John the Ripper: Password cracking.
+Aircrack-ng or Reaver: Wireless assessment.
+Social-Engineer Toolkit (SET): Phishing and social engineering simulation.
+
+Email security.
+
+MXToolbox: S P F or D KIM or D MARK and blocklist checks.
+Message header analysers: Parse and visualise the Received chain.
+Proofpoint or Mimecast or Defender for Office 365: Secure email gateways.

@@ -20,6 +20,7 @@ HERE = Path(__file__).resolve().parent
 PAGES = [
     ("README.md", "Overview"),
     ("SETUP.md", "Setup & Offline Access"),
+    ("AUDIO.md", "Audio Version"),
     ("study-plan.md", "Study Plan"),
     ("01-security-operations.md", "1. Security Operations"),
     ("02-vulnerability-management.md", "2. Vulnerability Management"),

@@ -1,0 +1,369 @@
+Flashcard Drill. 92 cards. After each question, pause and answer before the answer is read.
+
+Question. Which Windows Event ID records a successful logon?
+[pause 3.0s]
+Answer. 4 6 2 4 (check Logon Type: 2 equals interactive, 3 equals network, 10 equals R D P).
+
+Question. Which Event ID records process creation?
+[pause 3.0s]
+Answer. 4 6 8 8, and command-line auditing must be explicitly enabled.
+
+Question. Which Event ID means the audit log was cleared?
+[pause 3.0s]
+Answer. 1 1 0 2, always investigate; it's a defence-evasion signal.
+
+Question. Which Sys-mon event ID logs process creation with hashes and command line?
+[pause 3.0s]
+Answer. Event ID 1.
+
+Question. Which Sys-mon event ID logs D N S queries?
+[pause 3.0s]
+Answer. Event ID 22.
+
+Question. Net Flow versus full packet capture, what's the difference?
+[pause 3.0s]
+Answer. Net Flow is metadata (5-tuple, counters, timing); P cap includes payload. Flow scales for months, P cap for days.
+
+Question. What makes a process suspicious even when the name is legitimate?
+[pause 3.0s]
+Answer. Its parent. winword dot E X E leads to powershell dot E X E is malicious regardless of names; svchost dot E X E not parented by services dot E X E is masquerading.
+
+Question. What is beaconing and how do you spot it?
+[pause 3.0s]
+Answer. Regular-interval callbacks to command and control. Look for tight interval clustering and consistent byte counts; discriminate from update checkers by destination reputation.
+
+Question. What does S P F verify?
+[pause 3.0s]
+Answer. That the sending IP is authorised to send for the envelope-sender domain.
+
+Question. What does D KIM verify?
+[pause 3.0s]
+Answer. A cryptographic signature proving the message wasn't altered in transit.
+
+Question. What does D MARK add over S P F and D KIM?
+[pause 3.0s]
+Answer. Alignment with the visible From header, a policy (none or quarantine or reject), and reporting.
+
+Question. Which direction do you read a Received: header chain?
+[pause 3.0s]
+Answer. Bottom to top, the bottom-most Received is the origin.
+
+Question. What's the classic BEC header tell?
+[pause 3.0s]
+Answer. Reply-To differs from From, the display name looks internal, replies go external.
+
+Question. Name the Pyramid of Pain levels bottom to top.
+[pause 3.0s]
+Answer. Hash values, IP addresses, domain names, network or host artefacts, tools, T T Ps.
+
+Question. Why detect at the T T P level?
+[pause 3.0s]
+Answer. T T Ps are expensive for the adversary to change; hashes and IPs are trivially rotated.
+
+Question. STIX versus TAXY?
+[pause 3.0s]
+Answer. STIX is the language for describing threat intel; TAXY is the transport that moves it.
+
+Question. T L P:AMBER means you can share with.?
+[pause 3.0s]
+Answer. Your organisation and clients on a need-to-know basis (AMBER plus STRICT equals your organisation only).
+
+Question. T L P:GREEN means?
+[pause 3.0s]
+Answer. The peer community, but not public.
+
+Question. What makes threat hunting different from alert triage?
+[pause 3.0s]
+Answer. Hunting is proactive and hypothesis-driven; it begins without an alert.
+
+Question. A hunt finds nothing. Was it a failure?
+[pause 3.0s]
+Answer. No, a hunt that produces a new detection rule or exposes a visibility gap succeeded.
+
+Question. What is the Admiralty Code used for?
+[pause 3.0s]
+Answer. Rating threat intel: source reliability (A, F) and information credibility (1 to 6).
+
+Question. Which tasks are good automation candidates?
+[pause 3.0s]
+Answer. Repeatable, high-volume, low-judgement tasks with well-defined inputs, enrichment, I O C lookups, ticket creation.
+
+Question. What's the danger of over-automation?
+[pause 3.0s]
+Answer. An automated containment action that fires on a false positive can cause the outage the attacker wanted.
+
+Question. Recognise: powershell -nop -w hidden -enc <base64>.
+[pause 3.0s]
+Answer. Malicious download-and-execute cradle, no profile, hidden window, encoded command.
+
+Question. SAML versus OAuth versus OIDC?
+[pause 3.0s]
+Answer. SAML equals XML-based enterprise single sign-on; OAuth 2.0 equals authorisation delegation (not authentication); OIDC equals authentication layer on top of OAuth.
+
+Question. What is a CAS-B?
+[pause 3.0s]
+Answer. Cloud Access Security Broker, a policy enforcement point between users and cloud services; discovers shadow IT.
+
+Question. Split tunnel versus full tunnel V P N?
+[pause 3.0s]
+Answer. Split sends only corporate traffic through the V P N (faster, less visibility); full tunnel inspects everything.
+
+Question. Why does a credentialed scan produce fewer false positives?
+[pause 3.0s]
+Answer. It authenticates and reads actual patch level and configuration rather than inferring from banners.
+
+Question. RHEL reports a vulnerable OpenSSH version but the patch is applied. Why?
+[pause 3.0s]
+Answer. Back-ported patches, the vendor fixes the flaw without changing the version banner. It's a false positive.
+
+Question. Which finding type is most dangerous?
+[pause 3.0s]
+Answer. False negative, a real vulnerability the scanner missed.
+
+Question. SAST versus DAST?
+[pause 3.0s]
+Answer. SAST reads source without running it (early, more false positives); DAST attacks the running app (finds runtime or config issues, no source needed).
+
+Question. What does SCA produce?
+[pause 3.0s]
+Answer. An inventory of third-party dependencies against known C V Es, an S BOM.
+
+Question. Expand the C V S S base metrics.
+[pause 3.0s]
+Answer. AV (Attack Vector), AC (Attack Complexity), PR (Privileges Required), UI (User Interaction), S (Scope), C or I or A impacts.
+
+Question. What does S:C mean in a C V S S vector?
+[pause 3.0s]
+Answer. Scope Changed, the vulnerability affects resources beyond its own security authority. Always worse.
+
+Question. What's the score band for Critical?
+[pause 3.0s]
+Answer. 9.0 to 10.0.
+
+Question. What does AV:N or AC:L or PR:N or UI:N describe?
+[pause 3.0s]
+Answer. Network-reachable, low complexity, no privileges, no user interaction, the worst possible reachability.
+
+Question. What does E P S S measure?
+[pause 3.0s]
+Answer. Probability the vulnerability will be exploited in the wild in the next 30 days.
+
+Question. What is SIS-ah KEV?
+[pause 3.0s]
+Answer. The Known Exploited Vulnerabilities catalogue, confirmed in-the-wild exploitation. A KEV-listed medium can outrank a non-KEV critical.
+
+Question. Does C V S S measure risk?
+[pause 3.0s]
+Answer. No, severity only. Risk requires asset value, exposure, exploitability, and compensating controls.
+
+Question. Correct fix for SQL injection?
+[pause 3.0s]
+Answer. Parameterised queries or prepared statements (input validation alone is not the exam's answer).
+
+Question. Reflected versus stored versus DOM-based X S S?
+[pause 3.0s]
+Answer. Reflected equals in the response to a crafted request; stored equals persisted and served to every viewer (most severe); DOM-based equals client-side only, never reaches the server.
+
+Question. Primary X S S mitigation?
+[pause 3.0s]
+Answer. Context-appropriate output encoding, plus CSP and HttpOnly cookies.
+
+Question. What is S S R F and what's the cloud-specific target?
+[pause 3.0s]
+Answer. Server fetches an attacker-controlled U R L; in cloud it targets the metadata endpoint 169.254.169.254 to steal instance credentials. I M D S version 2 mitigates.
+
+Question. What is eye-door?
+[pause 3.0s]
+Answer. Insecure Direct Object Reference, changing an identifier in a request to access another user's data. A broken access control failure.
+
+Question. What's #1 on the OH-wasp Top 10 (2021)?
+[pause 3.0s]
+Answer. Broken Access Control.
+
+Question. Buffer overflow mitigations?
+[pause 3.0s]
+Answer. ASLR, DEP or NX, stack canaries, bounds checking, memory-safe languages.
+
+Question. What is TOCTOU?
+[pause 3.0s]
+Answer. Time of Check to Time of Use, a race condition where state changes between validation and use.
+
+Question. Vertical versus horizontal privilege escalation?
+[pause 3.0s]
+Answer. Vertical equals user to admin; horizontal equals user to another user's data at the same level.
+
+Question. You cannot patch a medical device. What now?
+[pause 3.0s]
+Answer. Compensating controls: network segmentation, virtual patching at I P S or WAF, disabling the vulnerable feature, restricting access, enhanced monitoring.
+
+Question. Name the four risk responses.
+[pause 3.0s]
+Answer. Mitigate, transfer, avoid, accept, and residual risk always remains.
+
+Question. When can a remediation ticket close?
+[pause 3.0s]
+Answer. Only after a verification rescan confirms the fix. Remediation isn't complete until verified.
+
+Question. A vulnerability keeps reappearing after remediation. What's the real problem?
+[pause 3.0s]
+Answer. Process, a stale golden image or config drift, not patching diligence.
+
+Question. Why is scan coverage the metric that gates all the others?
+[pause 3.0s]
+Answer. Metrics computed over a fraction of your estate misrepresent risk entirely.
+
+Question. Why not actively scan I C S or SKAY-dah?
+[pause 3.0s]
+Answer. Active probing can cause physical process disruption. Use passive discovery, or a test environment.
+
+Question. SLE and ALE formulas?
+[pause 3.0s]
+Answer. SLE equals Asset Value times Exposure Factor; ALE equals SLE times ARO.
+
+Question. Name the seven Cyber Kill Chain stages.
+[pause 3.0s]
+Answer. Reconnaissance, Weaponisation, Delivery, Exploitation, Installation, Command and Control, Actions on Objectives.
+
+Question. Main weakness of the Cyber Kill Chain?
+[pause 3.0s]
+Answer. Linear and malware or perimeter-centric, poor fit for insider threat or credential-only attacks.
+
+Question. Name the four Diamond Model vertices.
+[pause 3.0s]
+Answer. Adversary, Capability, Infrastructure, Victim.
+
+Question. What is the Diamond Model actually for?
+[pause 3.0s]
+Answer. Pivoting, from one known vertex you discover the others.
+
+Question. ATT and CK structure?
+[pause 3.0s]
+Answer. Tactics (the goal) times Techniques (how) times Sub-techniques times Procedures (observed implementations).
+
+Question. What is MITRE D3FEND?
+[pause 3.0s]
+Answer. A knowledge base of defensive countermeasures, the counterpart to ATT and CK.
+
+Question. NIST SP 800 to 61 phases?
+[pause 3.0s]
+Answer. Preparation; Detection and Analysis; Containment, Eradication and Recovery; Post-Incident Activity.
+
+Question. Order of volatility, most to least?
+[pause 3.0s]
+Answer. Registers or cache leads to routing table, ARP cache, process table, RAM leads to temp filesystems leads to disk leads to remote logs leads to physical config leads to archival media.
+
+Question. Why capture memory before powering off?
+[pause 3.0s]
+Answer. Encryption keys, injected code, and live network connections exist only in RAM.
+
+Question. What is chain of custody and why does it matter?
+[pause 3.0s]
+Answer. An unbroken documented record of who handled evidence, when, and why. Gaps can render evidence inadmissible.
+
+Question. What does a write blocker do?
+[pause 3.0s]
+Answer. Prevents any write to original media during acquisition, you analyse the image, never the original.
+
+Question. I O C versus I O A?
+[pause 3.0s]
+Answer. I O C equals evidence something already happened; I O A equals behaviour indicating an attack in progress. I O As catch novel attacks.
+
+Question. Why isolate with E D R rather than power off?
+[pause 3.0s]
+Answer. It stops network-borne spread while preserving volatile memory evidence and keeping the host analysable.
+
+Question. Trade-off of immediate containment?
+[pause 3.0s]
+Answer. Stops damage but may alert the adversary and destroy volatile evidence; delayed containment preserves intelligence but risks further loss.
+
+Question. Eradication removed the malware but the host was reinfected. What was skipped?
+[pause 3.0s]
+Answer. Closing the vulnerability that allowed entry, eradication must remove the vector, not just the payload.
+
+Question. When is reimaging the only trustworthy option?
+[pause 3.0s]
+Answer. Root-level or kernel-level compromise (rootkits), you cannot verifiably clean it.
+
+Question. What must be true of a backup before restoring?
+[pause 3.0s]
+Answer. It must predate the compromise. Attacker dwell time is often weeks, so recent backups may already contain the backdoor.
+
+Question. What must be rotated after a domain compromise?
+[pause 3.0s]
+Answer. Every credential the adversary could reach, including service accounts and K R B T G T (twice, for Golden Ticket).
+
+Question. Why run incident communications out-of-band?
+[pause 3.0s]
+Answer. If the adversary is in your email or chat, coordinating there hands them your response plan.
+
+Question. R T O versus R P O?
+[pause 3.0s]
+Answer. R T O equals how long until service is restored; R P O equals how much data loss is tolerable.
+
+Question. What is a tabletop exercise?
+[pause 3.0s]
+Answer. A discussion-based walkthrough of a scenario, cheapest way to find process and authority gaps.
+
+Question. What are the three incident impact dimensions?
+[pause 3.0s]
+Answer. Functional impact, information impact, and recoverability.
+
+Question. What is dwell time?
+[pause 3.0s]
+Answer. How long the adversary was present before detection, the headline IR metric.
+
+Question. What makes lessons-learned productive?
+[pause 3.0s]
+Answer. Held promptly, blameless, and producing tracked actions with owners and due dates.
+
+Question. Root cause analysis: "the user clicked the link", is that a root cause?
+[pause 3.0s]
+Answer. No. Ask why the link arrived, why it executed, why it reached the internet, and why nothing alerted.
+
+Question. Name four inhibitors to remediation.
+[pause 3.0s]
+Answer. MOU, S L A, organisational governance, business process interruption, degrading functionality, legacy systems, proprietary systems.
+
+Question. Correct analyst response to an inhibitor?
+[pause 3.0s]
+Answer. Document the risk, propose compensating controls, and escalate the risk-acceptance decision to the business owner.
+
+Question. How long does G D P R give you to notify the supervisory authority?
+[pause 3.0s]
+Answer. 72 hours from becoming aware of the breach.
+
+Question. What belongs in an incident report executive summary?
+[pause 3.0s]
+Answer. Plain language: what happened, what was affected, what you did, what it means, what's next. No C V Es, no jargon.
+
+Question. What's the spine of an incident report?
+[pause 3.0s]
+Answer. The timeline, timestamps with time zones, correlated across sources.
+
+Question. Who decides breach notification obligations?
+[pause 3.0s]
+Answer. Legal counsel, not the analyst.
+
+Question. Why involve legal early?
+[pause 3.0s]
+Answer. Regulatory duties, and to establish attorney, client privilege over the investigation where applicable.
+
+Question. What does a high ratio of externally-reported incidents indicate?
+[pause 3.0s]
+Answer. A serious internal detection and visibility failure.
+
+Question. What does an exception without an expiry date represent?
+[pause 3.0s]
+Answer. Unmanaged risk, exceptions must be time-bounded with a review date and named owner.
+
+Question. How do you pitch remediation to an executive audience?
+[pause 3.0s]
+Answer. Business risk, trend direction, and cost, one page, no C V S S vectors.
+
+Question. What does recurrence in vulnerability reporting tell you?
+[pause 3.0s]
+Answer. A process failure (golden image, config drift), not an individual's negligence.
+
+Question. Why does cyber insurance matter during an incident?
+[pause 3.0s]
+Answer. Carriers often require prompt notification and may mandate their own IR firm; failing to notify can void coverage.

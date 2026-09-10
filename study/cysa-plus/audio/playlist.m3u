@@ -1,0 +1,17 @@
+#EXTM3U
+#EXTINF:1324,Domain 1, Security Operations
+01-security-operations.mp3
+#EXTINF:1242,Domain 2, Vulnerability Management
+02-vulnerability-management.mp3
+#EXTINF:674,Domain 3, Incident Response and Management
+03-incident-response.mp3
+#EXTINF:538,Domain 4, Reporting and Communication
+04-reporting-communication.mp3
+#EXTINF:241,Frameworks Side by Side
+frameworks.mp3
+#EXTINF:394,Tools Reference
+tools-reference.mp3
+#EXTINF:452,Acronyms
+acronyms.mp3
+#EXTINF:1442,Flashcard Drill
+flashcards.mp3

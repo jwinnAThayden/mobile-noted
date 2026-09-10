@@ -57,15 +57,17 @@ color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;
 </head><body>
 <button class="toggle" aria-label="Toggle contents">&#9776; Contents</button>
 <div id="wrap">
-<nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#setup">Setup &amp; Offline Access</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations">1. Security Operations</a><a href="#02-vulnerability-management">2. Vulnerability Management</a><a href="#03-incident-response">3. Incident Response</a><a href="#04-reporting-communication">4. Reporting &amp; Communication</a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav>
+<nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#setup">Setup &amp; Offline Access</a><a href="#audio">Audio Version</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations">1. Security Operations</a><a href="#02-vulnerability-management">2. Vulnerability Management</a><a href="#03-incident-response">3. Incident Response</a><a href="#04-reporting-communication">4. Reporting &amp; Communication</a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav>
 <main><section class="section" id="readme"><h1 id="comptia-cysa-cs0-003-offline-study-pack">CompTIA CySA+ (CS0-003) — Offline Study Pack</h1>
 <p>Self-contained study material for the CompTIA Cybersecurity Analyst (CySA+) exam. <strong>No connection required</strong> — clone once, read anywhere.</p>
 <blockquote><h2 id="goal">Goal</h2>
 <p><strong>Download this entire project onto the local device so the full study pack is available offline, with no network connection and no dependency on any hosted service.</strong></p>
-<p>Every design decision here serves that goal: no CDN links, no external fonts or scripts, no build toolchain, no package installs. The whole project is plain text plus one generated HTML file, and it is intended to be <em>held locally</em> — a copy on the device is the primary artefact, not a convenience. See <a href="#setup"><code>SETUP.md</code></a> for how to get it there.</p></blockquote>
+<p>Every design decision here serves that goal: no CDN links, no external fonts or scripts, no build toolchain, no package installs. The whole project is plain text plus one generated HTML file, and it is intended to be <em>held locally</em> — a copy on the device is the primary artefact, not a convenience. See <a href="#setup"><code>SETUP.md</code></a> for how to get it there.</p>
+<p>The pack is also fully <strong>narrated</strong> — 105 minutes of offline audio, including a 92-card spoken drill. See <a href="#audio"><code>AUDIO.md</code></a>.</p></blockquote>
 <h2 id="start-here">Start here</h2>
 <p>Open **<a href="cysa-offline.html"><code>cysa-offline.html</code></a>** in any browser. It&#x27;s a single file with no CDN links, no external scripts, and no network calls: sidebar contents, dark mode, phone-friendly layout, and it prints cleanly. Copy it to a phone, tablet, or USB stick and it just works.</p>
 <p>The Markdown files are the editable source; the HTML is generated from them.</p>
+<p>Prefer to listen? <code>audio/</code> holds the whole pack as MP3s — start with <code>audio/flashcards.mp3</code>, a 92-card spoken drill that pauses after each question. See **<a href="#audio"><code>AUDIO.md</code></a>**.</p>
 <p>Not set up as a repository yet? See **<a href="#setup"><code>SETUP.md</code></a>** — about three minutes.</p>
 <blockquote><p><strong>Note on sources.</strong> Written from the publicly published CS0-003 exam objectives and general security-domain knowledge. It is <em>not</em> a copy of CompTIA&#x27;s CertMaster course and is not a substitute for licensed course material. Cross-check the domain/objective numbering against the free official objectives PDF from CompTIA.</p></blockquote>
 <h2 id="exam-at-a-glance">Exam at a glance</h2>
@@ -80,6 +82,7 @@ color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;
 <li><a href="#flashcards"><code>flashcards.md</code></a> — 92-card Q/A drill deck</li>
 <li><a href="#frameworks"><code>frameworks.md</code></a> — kill chain, Diamond Model, ATT&amp;CK, OWASP, and friends side by side</li>
 <li><a href="#study-plan"><code>study-plan.md</code></a> — a six-week schedule with checkpoints</li>
+<li><a href="#audio"><code>AUDIO.md</code></a> — the narrated version: 105 minutes of offline MP3s</li>
 </ul>
 <h2 id="rebuilding-the-html">Rebuilding the HTML</h2>
 <p>After editing any Markdown file:</p>
@@ -118,7 +121,7 @@ color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;
   https://github.com/jwinnAThayden/mobile-noted.git</code></pre>
 <p>The pack is under <code>study/cysa-plus/</code>.</p>
 <h3 id="verify-you-actually-have-offline-access">Verify you actually have offline access</h3>
-<p>Turn the network off, open <code>cysa-offline.html</code>, and click through the sidebar. If everything renders — tables, code blocks, all eleven sections — you&#x27;re done. The page makes <strong>zero</strong> network requests by design, so nothing should degrade.</p>
+<p>Turn the network off, open <code>cysa-offline.html</code>, and click through the sidebar. Then play <code>audio/flashcards.mp3</code> to confirm the narrated version came across too. If everything renders — tables, code blocks, all eleven sections — you&#x27;re done. The page makes <strong>zero</strong> network requests by design, so nothing should degrade.</p>
 <blockquote><p><strong>A note on what a Claude Code session can and cannot do here.</strong> These sessions run in an ephemeral cloud container, not on your device. Nothing can be written to your local disk directly. The download has to be initiated from your end — via the chat attachment, a clone, or a browser download. That is why this project is packaged as a single zip and a single self-contained HTML file rather than as something that installs itself.</p></blockquote>
 <hr>
 <h1 id="part-2-stand-it-up-as-your-own-private-repo">Part 2 — Stand it up as your own private repo</h1>
@@ -175,14 +178,67 @@ git commit -m &quot;Offline CySA+ (CS0-003) study pack&quot;</code></pre>
 <hr>
 <h2 id="keeping-it-accessible-on-the-device">Keeping it accessible on the device</h2>
 <p>The repo is your durable, versioned copy. For actually <em>reading</em> it offline, pick whichever of these fits how you study:</p>
-<div class="tw"><table><thead><tr><th>Where</th><th>How</th><th>Offline?</th></tr></thead><tbody><tr><td><strong>Phone / tablet</strong></td><td>Put <code>cysa-offline.html</code> in OneDrive or Google Drive and mark it <strong>Available offline</strong>. Open it with any browser.</td><td>Yes</td></tr><tr><td><strong>Laptop</strong></td><td>Clone the repo, or just keep <code>cysa-offline.html</code> on the desktop.</td><td>Yes</td></tr><tr><td><strong>Any device, quick look</strong></td><td>Browse the Markdown on github.com — renders tables and all.</td><td>No</td></tr><tr><td><strong>Printed</strong></td><td>Open <code>cysa-offline.html</code>, Ctrl/Cmd-P. The sidebar is hidden automatically in print styles.</td><td>Yes</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>Where</th><th>How</th><th>Offline?</th></tr></thead><tbody><tr><td><strong>Phone / tablet</strong></td><td>Put <code>cysa-offline.html</code> in OneDrive or Google Drive and mark it <strong>Available offline</strong>. Open it with any browser.</td><td>Yes</td></tr><tr><td><strong>Laptop</strong></td><td>Clone the repo, or just keep <code>cysa-offline.html</code> on the desktop.</td><td>Yes</td></tr><tr><td><strong>Any device, quick look</strong></td><td>Browse the Markdown on github.com — renders tables and all.</td><td>No</td></tr><tr><td><strong>Audio, offline</strong></td><td>Copy <code>audio/</code> to the phone (OneDrive marked <em>Available offline</em>, or straight onto the device). 105 minutes of MP3s, including a 92-card spoken drill. See <a href="#audio"><code>AUDIO.md</code></a>.</td><td>Yes</td></tr><tr><td><strong>Printed</strong></td><td>Open <code>cysa-offline.html</code>, Ctrl/Cmd-P. The sidebar is hidden automatically in print styles.</td><td>Yes</td></tr></tbody></table></div>
 <p><code>cysa-offline.html</code> makes <strong>zero network requests</strong> — no CDN, no fonts, no analytics, no external scripts. Copy it to a USB stick and it works on a machine that has never been online.</p>
 <hr>
 <h2 id="editing-it-later">Editing it later</h2>
 <p>The Markdown files are the source of truth. After changing any of them:</p>
 <pre><code class="lang-bash">python3 build_offline_html.py</code></pre>
 <p>Python 3, standard library only — nothing to install, works offline. The script regenerates <code>cysa-offline.html</code> from every <code>.md</code> file. Then commit and push as normal.</p>
-<p>To add a section, create a new <code>.md</code> file and add it to the <code>PAGES</code> list near the top of <code>build_offline_html.py</code>.</p></section><section class="section" id="study-plan"><h1 id="six-week-cysa-study-plan">Six-Week CySA+ Study Plan</h1>
+<p>To add a section, create a new <code>.md</code> file and add it to the <code>PAGES</code> list near the top of <code>build_offline_html.py</code>.</p></section><section class="section" id="audio"><h1 id="audio-digesting-this-pack-by-listening-offline">Audio — digesting this pack by listening, offline</h1>
+<p><strong>Goal: consume the whole study pack as synthesized speech on the local device, with no network connection.</strong></p>
+<p>Everything in <code>audio/</code> is pre-built and ready to play. Nothing streams, nothing phones home, and no app is required beyond whatever plays an MP3.</p>
+<hr>
+<h2 id="what-s-in-audio">What&#x27;s in <code>audio/</code></h2>
+<div class="tw"><table><thead><tr><th>Track</th><th>Length</th><th>Content</th></tr></thead><tbody><tr><td><code>01-security-operations.mp3</code></td><td>22 min</td><td>Domain 1 (33% of the exam)</td></tr><tr><td><code>02-vulnerability-management.mp3</code></td><td>21 min</td><td>Domain 2 (30%)</td></tr><tr><td><code>03-incident-response.mp3</code></td><td>11 min</td><td>Domain 3 (20%)</td></tr><tr><td><code>04-reporting-communication.mp3</code></td><td>9 min</td><td>Domain 4 (17%)</td></tr><tr><td><code>frameworks.mp3</code></td><td>4 min</td><td>Kill chain, Diamond, ATT&amp;CK, TLP, OWASP</td></tr><tr><td><code>tools-reference.mp3</code></td><td>7 min</td><td>What each tool is for</td></tr><tr><td><code>acronyms.mp3</code></td><td>8 min</td><td>Every acronym, expanded</td></tr><tr><td><code>flashcards.mp3</code></td><td>24 min</td><td><strong>92-card spoken drill</strong></td></tr><tr><td><code>playlist.m3u</code></td><td>—</td><td>Correct playing order</td></tr><tr><td><code>narration/*.txt</code></td><td>—</td><td>The exact spoken text, for proofreading</td></tr></tbody></table></div>
+<p><strong>Total: 105 minutes, 36 MB.</strong></p>
+<h3 id="the-flashcard-drill-is-the-good-one">The flashcard drill is the good one</h3>
+<p><code>flashcards.mp3</code> reads a question, leaves a <strong>3-second gap</strong> for you to answer out loud, then reads the answer. 92 cards. It&#x27;s built for commutes, walking, and the gym — the places you can&#x27;t read but can still study. Retrieval practice works better than re-reading, and this is the only format that forces it on you while your hands are busy.</p>
+<p>Change the thinking gap:</p>
+<pre><code class="lang-bash">python3 build_audio.py --only flashcards --gap 5</code></pre>
+<hr>
+<h2 id="getting-it-onto-a-device">Getting it onto a device</h2>
+<p>The MP3s are ordinary files. Whatever you already do with music or podcasts works here.</p>
+<div class="tw"><table><thead><tr><th>Device</th><th>How</th></tr></thead><tbody><tr><td><strong>Phone</strong></td><td>Copy <code>audio/</code> into OneDrive or Google Drive, mark <strong>Available offline</strong>. Any music app will see the files; VLC and Musicolet read <code>playlist.m3u</code> directly.</td></tr><tr><td><strong>iPhone</strong></td><td>Drop the folder into the Files app, or add the MP3s to Apple Music and sync.</td></tr><tr><td><strong>Car</strong></td><td>Copy <code>audio/</code> to a USB stick. Most head units read the folder and play in filename order — which is why the domains are numbered.</td></tr><tr><td><strong>Laptop</strong></td><td>Open <code>playlist.m3u</code> in VLC, Winamp, foobar2000, or anything else.</td></tr><tr><td><strong>Podcast-style</strong></td><td>Some apps import a local folder as a &quot;podcast&quot; so you get resume-where-you-left-off and playback speed.</td></tr></tbody></table></div>
+<p>Play at 1.25× or 1.5× on a second pass — the narration is written to survive it.</p>
+<hr>
+<h2 id="rebuilding-with-a-better-voice">Rebuilding with a better voice</h2>
+<p>The committed audio was generated with <strong>espeak-ng</strong>, which is fully offline and runs anywhere, but sounds robotic. Your own machine almost certainly has something better. Same script, one flag:</p>
+<h3 id="macos-built-in-genuinely-good">macOS — built-in, genuinely good</h3>
+<pre><code class="lang-bash">python3 build_audio.py --engine say --voice Daniel --rate 180</code></pre>
+<p><code>say -v ?</code> lists installed voices. The &quot;Enhanced&quot; and &quot;Premium&quot; voices in</p>
+<p><strong>System Settings → Accessibility → Spoken Content → System Voice</strong> are a large step up and download once for permanent offline use. Ava, Serena, and Daniel are good for long-form listening.</p>
+<h3 id="windows-built-in">Windows — built-in</h3>
+<pre><code class="lang-bash">python3 build_audio.py --engine sapi --rate 170</code></pre>
+<p>Add more voices under <strong>Settings → Time &amp; Language → Speech</strong>. The neural &quot;Natural&quot; voices are much better than the legacy David/Zira pair.</p>
+<h3 id="piper-best-quality-fully-offline-any-platform">Piper — best quality, fully offline, any platform</h3>
+<pre><code class="lang-bash">pip install piper-tts
+python3 -m piper.download_voices en_US-lessac-medium
+python3 build_audio.py --engine piper --voice en_US-lessac-medium.onnx</code></pre>
+<p>Piper is neural, runs on CPU, and needs no connection once the voice model is downloaded. <code>en_US-lessac-medium</code> is a good default; <code>libritts_r-medium</code> is better still and larger.</p>
+<blockquote><p>The voice model download is the <em>only</em> step in this whole project that needs a connection, and it is one-time. It could not be done in the environment where this pack was built, because that network policy blocked <code>huggingface.co</code> — which is why the committed audio uses espeak-ng.</p></blockquote>
+<h3 id="any-engine">Any engine</h3>
+<pre><code class="lang-bash">python3 build_audio.py --text-only      # narration text only, no synthesis
+python3 build_audio.py --rate 170       # faster
+python3 build_audio.py --bitrate 64k    # better quality, larger files
+python3 build_audio.py --only 01        # rebuild one track</code></pre>
+<p>Requires <code>ffmpeg</code> for MP3 encoding and joining.</p>
+<hr>
+<h2 id="how-the-narration-is-produced">How the narration is produced</h2>
+<p>Reading raw Markdown aloud is unbearable, so <code>build_audio.py</code> rewrites it first. The output lands in <code>audio/narration/*.txt</code> — read it if a track sounds wrong, since the fix is almost always there rather than in the audio settings.</p>
+<p>What the transform does:</p>
+<ul>
+<li><strong>Tables become sentences.</strong> A row of a three-column table is read as <code>&quot;Source: Windows Event Log. What it proves: auth, process creation. Watch for: ...&quot;</code> rather than as disconnected fragments.</li>
+<li><strong>Symbols become words.</strong> <code>=</code> → &quot;equals&quot;, <code>+</code> → &quot;plus&quot;, <code>/</code> → &quot;or&quot;, <code>→</code> → &quot;leads to&quot;, <code>%</code> → &quot;percent&quot;, <code>0–7</code> → &quot;zero to seven&quot;.</li>
+<li><strong>Event IDs are spelled digit by digit.</strong> <code>4624</code> is read &quot;four six two four&quot;, not &quot;four thousand six hundred and twenty-four&quot;.</li>
+<li><strong>Acronyms get a spoken form.</strong> <code>SIEM</code> → &quot;seem&quot;, <code>SCADA</code> → &quot;SKAY-dah&quot;, <code>TAXII</code> → &quot;TAXY&quot;, <code>IDOR</code> → &quot;eye-door&quot;, <code>NXDOMAIN</code> → &quot;N X domain&quot;.</li>
+<li><strong>Camel case is split.</strong> <code>CreateRemoteThread</code> → &quot;Create Remote Thread&quot;.</li>
+<li><strong>Code blocks are dropped.</strong> Shell commands don&#x27;t survive being spoken, so <code>commands-cheatsheet.md</code> has no audio track at all — it&#x27;s a lookup reference, not something you digest by ear. Same for <code>README.md</code> and <code>SETUP.md</code>.</li>
+</ul>
+<p>To adjust pronunciation, edit the <code>SPEECH_FIXES</code> dictionary near the top of <code>build_audio.py</code> and rebuild. To add a section to the audio, add its filename to the <code>TRACKS</code> list.</p>
+<hr>
+<h2 id="a-caveat-worth-stating">A caveat worth stating</h2>
+<p>Synthesized speech is good for <strong>review and reinforcement</strong>, not first contact with hard material. Concepts like reading a CVSS vector, parsing an email header chain, or working through <code>nmap</code> output need your eyes. Use the audio to keep the material warm between reading sessions, and to turn dead time into retrieval practice — not as a replacement for the written pack.</p></section><section class="section" id="study-plan"><h1 id="six-week-cysa-study-plan">Six-Week CySA+ Study Plan</h1>
 <p>Assumes ~8–10 hours per week. Adjust the calendar, keep the sequence.</p>
 <h2 id="week-1-foundations-and-security-operations-part-1">Week 1 — Foundations and Security Operations, part 1</h2>
 <ul>

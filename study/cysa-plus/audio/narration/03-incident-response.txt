@@ -1,0 +1,137 @@
+Domain 3, Incident Response and Management.
+
+Frameworks for understanding attacks, and the disciplined process for handling them. Heavy on order of operations, the exam loves "what do you do first".
+
+3.1 Attack methodology frameworks.
+
+
+Cyber Kill Chain (Lockheed Martin), 7 linear stages.
+
+Reconnaissance, target research, OH-sint, scanning.
+Weaponisation, pair exploit with payload (malicious doc, loader).
+Delivery, email, web, USB, supply chain.
+Exploitation, trigger the vulnerability.
+Installation, persistence (backdoor, service, scheduled task).
+Command and Control (command and control), the channel back to the operator.
+Actions on Objectives, exfiltration, encryption, destruction.
+Strength: simple, communicates well to management.
+Weakness: linear and perimeter or malware-centric; poor fit for insider threat or credential-only attacks with no malware at all.
+
+MITRE ATT and CK.
+
+A matrix, not a sequence: Tactics (the adversary's goal, the columns) times Techniques (how they achieve it) times Sub-techniques times Procedures (actual observed implementations).
+Enterprise tactics in rough order: Reconnaissance, Resource Development, Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Discovery, Lateral Movement, Collection, Command and Control, Exfiltration, Impact.
+Why analysts use it: a shared vocabulary (T1059.001 equals Power Shell), detection coverage mapping (where are my blind spots?), threat-actor profiling, and purple team planning. Related: D3FEND (defensive countermeasures),
+MITRE Engage (adversary engagement or deception), CAR (analytics).
+
+Diamond Model of Intrusion Analysis.
+
+Four vertices, every event connects all four:
+Pivoting is the point: from one known vertex you discover the others. Found malware (Capability)? Pivot to the command and control domain (Infrastructure), then to every other victim contacting it, then to the actor behind it.
+
+Open Source Security Testing Methodology Manual (OSSTMM).
+
+A peer-reviewed methodology for security testing and metrics; defines operational security measurement across channels (human, physical, wireless, telecom, data networks).
+
+OH-wasp Testing Guide or Web Security Testing Guide.
+
+Structured methodology for testing web applications, the counterpart to the Top 10 risk list.
+
+Others worth recognising.
+
+Unified Kill Chain, 18 phases; merges kill chain and ATT and CK, fixes the linearity problem.
+NIST SP 800 to 115, technical guide to information security testing.
+Pyramid of Pain, how much it hurts the adversary when you detect at each indicator level (see Domain 1).
+
+3.2 Incident response activities.
+
+The exam follows NIST SP 800 to 61, four phases, and note that the middle phase loops back:
+(SANS teaches six: Preparation, Identification, Containment, Eradication, Recovery, Lessons Learned. Same content, different partitioning.).
+
+Detection and analysis.
+
+I O C (Indicator of Compromise), evidence something already happened.
+I O A (Indicator of Attack), behaviour suggesting an attack in progress. I O As catch novel attacks; I O Cs catch known ones.
+Evidence acquisition, the order matters enormously.
+Order of volatility (RFC 3227), collect most volatile first:
+CPU registers and cache.
+Routing table, ARP cache, process table, kernel statistics, memory (RAM).
+Temporary file systems.
+Disk.
+Remote logging and monitoring data.
+Physical configuration and network topology.
+Archival media.
+Pulling the plug destroys 1 to 3. If you need memory, capture memory before powering down, encryption keys, injected code, and network connections live only there.
+Chain of custody, an unbroken documented record of who had the evidence, when, and why. Every transfer is signed. A gap can render evidence inadmissible. Include: collector, date or time, description, hash, storage location, every handoff.
+Hashing, hash evidence at acquisition and verify after; a matching hash proves integrity. Use SHA-256.
+Write blockers, hardware devices preventing any write to the original media. Always image the copy, never analyse the original.
+Legal hold, suspends routine deletion when litigation is anticipated.
+Data and log analysis, build the timeline; the timeline is the investigation.
+Validating an incident: confirm it is real (not a false positive), determine scope (how many hosts, which accounts, what data), establish.
+patient zero and the initial access vector, and identify what the adversary did.
+
+Containment.
+
+Stop the bleeding without destroying evidence or tipping off the adversary.
+Segmentation or isolation, network-isolate the host (E D R isolation keeps the box up and forensically intact, usually the right first move on a workstation).
+Short-term versus long-term containment, quick isolation now; a rebuilt, hardened, monitored environment later.
+Disabling accounts, for credential compromise.
+Trade-off to name in an answer: immediate containment stops damage but may alert the adversary and destroy volatile evidence. Delayed containment preserves intelligence but risks further loss. The business decides the balance; you present the options.
+
+Eradication and recovery.
+
+Eradication, remove the adversary's footholds: malware, backdoors, persistence mechanisms, unauthorised accounts, and the vulnerability that allowed entry. Eradication without closing the entry point guarantees reinfection.
+Reconstruction or reimaging, the only trustworthy remediation for a root-level or kernel-level compromise. You cannot "clean" a rootkitted host with confidence.
+Secure disposal, sanitise media that held sensitive data.
+Patching, apply the fix that closes the vector.
+Restoration of permissions and credential rotation, rotate every credential the adversary could have touched, including service accounts, the K R B T G T account (twice, for Golden Ticket), and API keys.
+Verification of logging or communication to security monitoring, confirm the rebuilt host is reporting into the SEEM before you call it recovered.
+Validation, scan and monitor the restored system before returning it to production; then monitor it more closely than normal for a period.
+Restoring from backup: verify the backup predates the compromise. Restoring a backup that already contains the backdoor is a classic mistake, and with ransomware, the dwell time before encryption is often weeks.
+
+Incident response phases in practice, first actions.
+
+The exam's recurring pattern: the first step is almost always verify or identify scope or preserve evidence, not "reimage" and not "notify the press". When containment is the question, isolation beats power-off.
+
+3.3 Preparation and post-incident activity.
+
+
+Preparation.
+
+Incident response plan, roles, authority, decision thresholds, escalation paths. Written before you need it.
+Playbooks or runbooks, per-scenario procedures (ransomware, BEC, data breach, insider, DDoS). A playbook is the tested version of good intentions.
+Tooling, jump bag or kit, forensic workstation, write blockers, imaging tools, out-of-band communications.
+Training and testing, tabletop exercises (discussion-based, cheapest, finds process gaps), simulations, red or blue or purple teaming, penetration testing.
+Business continuity (BCP) and disaster recovery (DR), with R T O (how long until restored) and R P O (how much data loss is tolerable).
+Communication plan, including out-of-band channels. If the adversary is in your email and Teams, coordinating the response there hands them your playbook. This is a favourite exam point.
+Documentation and evidence handling procedures defined in advance.
+
+Post-incident activity.
+
+Forensic analysis, the full technical reconstruction.
+Root cause analysis, not "the user clicked the link" but why the link arrived, why the attachment executed, why it reached the internet, and why nothing alerted. Ask why until you reach something you can fix structurally.
+Lessons learned, held promptly (while memory is fresh), blameless, and producing assigned actions with owners and dates. A lessons-learned meeting that generates no tracked actions was a meeting, not an improvement.
+Incident report, the durable record (see Domain 4).
+Indicator of compromise generation, turn what you learned into detections and share them.
+Monitoring, enhanced watch on affected systems post-recovery.
+
+Incident classification and severity.
+
+Score incidents on functional impact (effect on operations), information impact (data confidentiality or integrity affected), and recoverability (effort and time to recover). Those three drive severity, which drives who gets woken up.
+
+Metrics.
+
+M T T D, mean time to detect.
+M T T A, mean time to acknowledge.
+M T T R, mean time to respond or recover or remediate (define which you mean).
+Dwell time, attacker presence before detection; the headline number.
+Alert volume, escalation rate, false positive rate.
+
+Domain 3 self-check.
+
+Order these by volatility: disk, ARP cache, archival backups, RAM.
+Why does the Cyber Kill Chain fit a credential-stuffing attack poorly?
+You isolate a host with E D R rather than powering it off. Why?
+What must be true of a backup before you restore from it?
+What is the risk of running the incident bridge on corporate email?
+Eradication removed the malware but the host was reinfected in a week. Which step was skipped?

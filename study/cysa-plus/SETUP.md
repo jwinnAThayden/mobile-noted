@@ -54,6 +54,7 @@ The pack is under `study/cysa-plus/`.
 ### Verify you actually have offline access
 
 Turn the network off, open `cysa-offline.html`, and click through the sidebar.
+Then play `audio/flashcards.mp3` to confirm the narrated version came across too.
 If everything renders — tables, code blocks, all eleven sections — you're done.
 The page makes **zero** network requests by design, so nothing should degrade.
 
@@ -172,6 +173,7 @@ pick whichever of these fits how you study:
 | **Phone / tablet** | Put `cysa-offline.html` in OneDrive or Google Drive and mark it **Available offline**. Open it with any browser. | Yes |
 | **Laptop** | Clone the repo, or just keep `cysa-offline.html` on the desktop. | Yes |
 | **Any device, quick look** | Browse the Markdown on github.com — renders tables and all. | No |
+| **Audio, offline** | Copy `audio/` to the phone (OneDrive marked *Available offline*, or straight onto the device). 105 minutes of MP3s, including a 92-card spoken drill. See [`AUDIO.md`](AUDIO.md). | Yes |
 | **Printed** | Open `cysa-offline.html`, Ctrl/Cmd-P. The sidebar is hidden automatically in print styles. | Yes |
 
 `cysa-offline.html` makes **zero network requests** — no CDN, no fonts, no

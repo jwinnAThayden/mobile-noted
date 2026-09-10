@@ -1,0 +1,72 @@
+Frameworks Side by Side.
+
+A single page for the comparison questions.
+
+Attack frameworks.
+
+: Shape. Cyber Kill Chain: 7 linear stages. Diamond Model: 4 connected vertices. MITRE ATT and CK: Matrix of tactics times techniques. Unified Kill Chain: 18 phases.
+: Best for. Cyber Kill Chain: Explaining an intrusion to leadership. Diamond Model: Pivoting during analysis; actor clustering. MITRE ATT and CK: Detection coverage; shared vocabulary. Unified Kill Chain: End-to-end incl. internal movement.
+: Weakness. Cyber Kill Chain: Linear, malware or perimeter-centric. Diamond Model: Not a process; no defensive guidance. MITRE ATT and CK: Large; not a narrative. Unified Kill Chain: Complex.
+: Use it when. Cyber Kill Chain: Reporting. Diamond Model: Investigating. MITRE ATT and CK: Mapping detections. Unified Kill Chain: Modelling full campaigns.
+
+Kill Chain ↔ ATT and CK rough mapping.
+
+Reconnaissance: Reconnaissance, Resource Development.
+Weaponisation: Resource Development.
+Delivery: Initial Access.
+Exploitation: Execution.
+Installation: Persistence, Privilege Escalation, Defense Evasion.
+command and control: Command and Control.
+Actions on Objectives: Credential Access, Discovery, Lateral Movement, Collection, Exfiltration, Impact.
+
+Incident response process.
+
+Preparation: Preparation.
+Detection and Analysis: Identification.
+Containment, Eradication, and Recovery: Containment.
+": Eradication.
+": Recovery.
+Post-Incident Activity: Lessons Learned.
+
+NIST Cybersecurity Framework functions.
+
+Govern (CSF 2.0) · Identify · Protect · Detect · Respond · Recover.
+
+Threat modelling.
+
+STRIDE: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege.
+DREAD: Damage, Reproducibility, Exploitability, Affected users, Discoverability (risk rating).
+PASTA: Process for Attack Simulation and Threat Analysis, 7 risk-centric stages.
+Attack trees: Goal at the root, attack paths as branches.
+
+Pyramid of Pain (bottom equals easy for adversary to change).
+
+Detect higher up and you force the adversary to retool, not just re-register.
+
+Traffic Light Protocol.
+
+T L P:RED: Named recipients only, no onward sharing.
+T L P:AMBER: Recipient's organisation and clients, need-to-know.
+T L P:AMBER plus STRICT: Recipient's organisation only.
+T L P:GREEN: The community or peer organisations, not public.
+T L P:CLEAR: Unrestricted; public release permitted.
+
+OH-wasp Top 10 (2021).
+
+Broken Access Control.
+Cryptographic Failures.
+Injection (incl. X S S).
+Insecure Design.
+Security Misconfiguration.
+Vulnerable and Outdated Components.
+Identification and Authentication Failures.
+Software and Data Integrity Failures.
+Security Logging and Monitoring Failures.
+Server-Side Request Forgery (S S R F).
+
+Risk formulas.
+
+
+Risk response options.
+
+Mitigate (apply controls) · Transfer (insure or contract) · Avoid (stop the activity) · Accept (document and own it).

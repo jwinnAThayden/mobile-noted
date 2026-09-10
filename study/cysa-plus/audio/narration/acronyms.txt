@@ -1,0 +1,149 @@
+Acronyms.
+
+Expand every one of these cold. The exam uses acronyms without definitions.
+
+Frameworks, standards, governance.
+
+ASVS: Application Security Verification Standard.
+CIS: Center for Internet Security.
+CSF: Cybersecurity Framework (NIST).
+DISA: Defense Information Systems Agency.
+G D P R: General Data Protection Regulation.
+HIP-uh: Health Insurance Portability and Accountability Act.
+EYE-sack: Information Sharing and Analysis Center.
+ISO: International Organization for Standardization.
+NIST: National Institute of Standards and Technology.
+OSSTMM: Open Source Security Testing Methodology Manual.
+OH-wasp: Open Worldwide Application Security Project.
+P C I D S S: Payment Card Industry Data Security Standard.
+SOX: Sarbanes-Oxley Act.
+STIG: Security Technical Implementation Guide.
+
+Vulnerability and risk.
+
+C V E: Common Vulnerabilities and Exposures.
+C V S S: Common Vulnerability Scoring System.
+C W E: Common Weakness Enumeration.
+CPE: Common Platform Enumeration.
+CCE: Common Configuration Enumeration.
+E P S S: Exploit Prediction Scoring System.
+KEV: Known Exploited Vulnerabilities (SIS-ah catalogue).
+SCAP: Security Content Automation Protocol.
+OVAL: Open Vulnerability and Assessment Language.
+XCCDF: Extensible Configuration Checklist Description Format.
+S BOM: Software Bill of Materials.
+ARO: Annualised Rate of Occurrence.
+ALE: Annualised Loss Expectancy (ALE equals SLE times ARO).
+SLE: Single Loss Expectancy (SLE equals Asset Value times Exposure Factor).
+
+Testing and analysis.
+
+SAST: Static Application Security Testing.
+DAST: Dynamic Application Security Testing.
+IAST: Interactive Application Security Testing.
+RASP: Runtime Application Self-Protection.
+SCA: Software Composition Analysis.
+OH-sint: Open Source Intelligence.
+POC: Proof of Concept.
+RE: Reverse Engineering.
+
+Operations and architecture.
+
+SEEM: Security Information and Event Management.
+SOAR: Security Orchestration, Automation, and Response.
+E D R: Endpoint Detection and Response.
+X D R: Extended Detection and Response.
+MDR: Managed Detection and Response.
+NDR: Network Detection and Response.
+UEBA: User and Entity Behaviour Analytics.
+DLP: Data Loss Prevention.
+CAS-B: Cloud Access Security Broker.
+SASS-ee: Secure Access Service Edge.
+SDN: Software-Defined Networking.
+SDLC: Software Development Life Cycle.
+WAF: Web Application Firewall.
+NGFW: Next-Generation Firewall.
+I D S or I P S: Intrusion Detection or Prevention System.
+HI D S or NI D S: Host-based or Network-based I D S.
+FIM: File Integrity Monitoring.
+MSSP: Managed Security Service Provider.
+NAC: Network Access Control.
+PAM: Privileged Access Management.
+I A M: Identity and Access Management.
+PKI: Public Key Infrastructure.
+HSM: Hardware Security Module.
+TPM: Trusted Platform Module.
+CRL or OCSP: Certificate Revocation List or Online Certificate Status Protocol.
+
+Threat intelligence.
+
+A P T: Advanced Persistent Threat.
+T T P: Tactics, Techniques, and Procedures.
+I O C: Indicator of Compromise.
+I O A: Indicator of Attack.
+STIX: Structured Threat Information eXpression.
+TAXY: Trusted Automated eXchange of Intelligence Information.
+MISP: Malware Information Sharing Platform.
+T L P: Traffic Light Protocol.
+command and control or CnC: Command and Control.
+D G A: Domain Generation Algorithm.
+RaaS: Ransomware as a Service.
+ATT and CK: Adversarial Tactics, Techniques, and Common Knowledge.
+
+Incident response.
+
+CSIRT: Computer Security Incident Response Team.
+CERT: Computer Emergency Response Team.
+IR: Incident Response.
+M T T D: Mean Time to Detect.
+M T T A: Mean Time to Acknowledge.
+M T T R: Mean Time to Respond or Recover or Remediate.
+R T O: Recovery Time Objective.
+R P O: Recovery Point Objective.
+MTBF: Mean Time Between Failures.
+MTTF: Mean Time to Failure.
+BCP or DRP: Business Continuity Plan or Disaster Recovery Plan.
+BIA: Business Impact Analysis.
+RCA: Root Cause Analysis.
+
+Attacks and vulnerabilities.
+
+X S S: Cross-Site Scripting.
+C S R F or XSRF: Cross-Site Request Forgery.
+S S R F: Server-Side Request Forgery.
+X X E: XML External Entity.
+S Q L injection: SQL Injection.
+eye-door: Insecure Direct Object Reference.
+R C E: Remote Code Execution.
+L F I or R F I: Local or Remote File Inclusion.
+MITM: Man-in-the-Middle (on-path attack).
+DoS or DDoS: Denial of Service or Distributed DoS.
+BEC: Business Email Compromise.
+TOCTOU: Time of Check to Time of Use.
+ASLR: Address Space Layout Randomisation.
+DEP or NX: Data Execution Prevention or No-eXecute.
+PtH or PtT: Pass-the-Hash or Pass-the-Ticket.
+UAC: User Account Control.
+
+Email and identity.
+
+S P F: Sender Policy Framework.
+D KIM: DomainKeys Identified Mail.
+D MARK: Domain-based Message Authentication, Reporting and Conformance.
+SAML: Security Assertion Markup Language.
+OIDC: OpenID Connect.
+M F A or 2FA: Multi-Factor or Two-Factor Authentication.
+single sign-on: Single Sign-On.
+TOTP or HOTP: Time-based or HMAC-based One-Time Password.
+FIDO: Fast IDentity Online.
+LDAP: Lightweight Directory Access Protocol.
+RBAC or ABAC: Role-Based or Attribute-Based Access Control.
+MAC or DAC: Mandatory or Discretionary Access Control.
+
+Data protection.
+
+P I I: Personally Identifiable Information.
+P H I: Protected Health Information.
+CHD: Cardholder Data.
+SPI: Sensitive Personal Information.
+IP: Intellectual Property.
