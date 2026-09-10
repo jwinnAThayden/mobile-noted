@@ -4,71 +4,137 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CySA+ (CS0-003) Offline Study Pack</title>
 <style>
-:root{--bg:#fbfaf8;--fg:#22201d;--muted:#6b655d;--line:#e2ded6;--accent:#8a4b2a;
---code-bg:#f2efe9;--card:#fff;}
-@media (prefers-color-scheme:dark){:root{--bg:#16151a;--fg:#e6e2db;--muted:#9a938a;
---line:#2e2b33;--accent:#d59a6a;--code-bg:#1f1d24;--card:#1b1a20;}}
+:root{
+  --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --serif:Charter,"Bitstream Charter","Iowan Old Style",Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+:root{
+  --bg:#F5F6F8; --surface:#FFFFFF; --ink:#14171C; --muted:#59616E;
+  --line:#DCE0E7; --accent:#1F5C7A; --accent-soft:#E3EEF3; --code-bg:#EDF0F4;
+  --shadow:0 1px 2px rgba(20,23,28,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1216; --surface:#161A20; --ink:#E4E7EC; --muted:#949CA8;
+    --line:#262C35; --accent:#6FB3D2; --accent-soft:#17303C; --code-bg:#191E25;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1216; --surface:#161A20; --ink:#E4E7EC; --muted:#949CA8;
+  --line:#262C35; --accent:#6FB3D2; --accent-soft:#17303C; --code-bg:#191E25;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);
-font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-#wrap{display:flex;min-height:100vh}
-nav{width:260px;flex:0 0 260px;border-right:1px solid var(--line);padding:24px 16px;
-position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--card)}
-nav h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px}
-nav a{display:block;padding:7px 10px;border-radius:6px;color:var(--fg);text-decoration:none;font-size:14px}
-nav a:hover{background:var(--code-bg)}
-main{flex:1;min-width:0;padding:40px 32px 120px;max-width:900px;margin:0 auto}
-h1{font-size:1.9rem;line-height:1.25;margin:0 0 .6em;padding-bottom:.3em;border-bottom:2px solid var(--accent)}
-h2{font-size:1.4rem;margin:2em 0 .6em;padding-bottom:.25em;border-bottom:1px solid var(--line)}
-h3{font-size:1.15rem;margin:1.6em 0 .5em;color:var(--accent)}
-h4{font-size:1rem;margin:1.3em 0 .4em}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--serif);font-size:17px;line-height:1.68;
+  -webkit-text-size-adjust:100%}
+#wrap{display:flex;align-items:flex-start;min-height:100vh}
+
+nav{width:270px;flex:0 0 270px;position:sticky;top:0;height:100vh;overflow-y:auto;
+  background:var(--surface);border-right:1px solid var(--line);
+  padding:26px 18px;display:flex;flex-direction:column;gap:2px}
+nav h2{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+nav a{font-family:var(--sans);font-size:14px;line-height:1.35;color:var(--ink);
+  text-decoration:none;padding:8px 10px;border-radius:6px;display:block}
+nav a:hover{background:var(--accent-soft)}
+nav a .w{display:block;height:3px;margin-top:6px;border-radius:2px;
+  background:var(--accent);opacity:.75}
+nav a .pct{font-size:11px;color:var(--muted);float:right;
+  font-variant-numeric:tabular-nums}
+
+main{flex:1;min-width:0;max-width:70ch;margin:0 auto;padding:46px 28px 140px;
+  overflow-wrap:break-word}
+
+h1{font-family:var(--sans);font-weight:700;font-size:2rem;line-height:1.15;
+  text-wrap:balance;margin:0 0 .5em;letter-spacing:-.02em}
+h2{font-family:var(--sans);font-weight:600;font-size:1.35rem;line-height:1.25;
+  text-wrap:balance;margin:2.2em 0 .5em;padding-bottom:.3em;
+  border-bottom:1px solid var(--line);letter-spacing:-.01em}
+h3{font-family:var(--sans);font-weight:600;font-size:1.08rem;margin:1.7em 0 .4em;
+  color:var(--accent);text-wrap:balance}
+h4{font-family:var(--sans);font-weight:600;font-size:.97rem;margin:1.4em 0 .3em}
+p{margin:0 0 1.05em}
 a{color:var(--accent)}
-code{background:var(--code-bg);padding:.12em .35em;border-radius:4px;
-font:.87em/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-pre{background:var(--code-bg);padding:14px 16px;border-radius:8px;overflow-x:auto;
-border:1px solid var(--line)}
-pre code{background:none;padding:0;font-size:.85rem;line-height:1.55}
-.tw{overflow-x:auto;margin:1.1em 0}
-table{border-collapse:collapse;width:100%;font-size:.92rem}
-th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
-th{background:var(--code-bg);font-weight:600}
-blockquote{margin:1.1em 0;padding:.8em 1.1em;border-left:3px solid var(--accent);
-background:var(--code-bg);border-radius:0 6px 6px 0;color:var(--muted)}
+strong{font-weight:600}
+
+code{font-family:var(--mono);font-size:.85em;background:var(--code-bg);
+  padding:.14em .38em;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:14px 16px;overflow-x:auto;margin:1.2em 0}
+pre code{background:none;padding:0;font-size:.83rem;line-height:1.6}
+
+.tw{overflow-x:auto;margin:1.3em 0;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.87rem;
+  font-variant-numeric:tabular-nums}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;
+  border-bottom:1px solid var(--line)}
+th{background:var(--code-bg);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+
+blockquote{margin:1.3em 0;padding:.9em 1.1em;background:var(--accent-soft);
+  border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
 blockquote>*:first-child{margin-top:0}
 blockquote>*:last-child{margin-bottom:0}
-blockquote h1,blockquote h2,blockquote h3,blockquote h4{border:0;padding:0;color:var(--fg);
-font-size:1.08rem;margin:.1em 0 .5em}
-blockquote strong{color:var(--fg)}
-blockquote table{background:var(--card)}
-hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
-ul,ol{padding-left:1.5em}
-li{margin:.3em 0}
-.section{scroll-margin-top:20px}
-.toggle{display:none;position:fixed;top:12px;left:12px;z-index:10;background:var(--card);
-color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-size:14px}
-@media(max-width:820px){
-  nav{display:none;position:fixed;z-index:9;width:80%;max-width:300px}
-  nav.open{display:block}
+blockquote h1,blockquote h2,blockquote h3,blockquote h4{border:0;padding:0;
+  color:var(--ink);font-size:1.02rem;margin:.1em 0 .45em}
+
+hr{border:0;border-top:1px solid var(--line);margin:2.6em 0}
+ul,ol{padding-left:1.35em;margin:0 0 1.05em}
+li{margin:.32em 0}
+.section{scroll-margin-top:16px}
+
+/* Flashcard drill */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:16px 18px;margin:0 0 12px;box-shadow:var(--shadow)}
+.card .q{font-family:var(--sans);font-weight:600;font-size:.98rem;margin:0 0 12px}
+.card .a{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line);
+  color:var(--ink)}
+.reveal{font-family:var(--sans);font-size:.8rem;font-weight:500;cursor:pointer;
+  background:var(--accent-soft);color:var(--accent);border:1px solid transparent;
+  padding:6px 12px;border-radius:999px}
+.reveal:hover{border-color:var(--accent)}
+.reveal[aria-expanded="true"]{background:transparent;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.toggle{display:none;position:fixed;top:10px;left:10px;z-index:20;
+  font-family:var(--sans);font-size:13px;font-weight:500;
+  background:var(--surface);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:9px 13px;box-shadow:var(--shadow);cursor:pointer}
+.scrim{display:none;position:fixed;inset:0;z-index:9;background:rgba(0,0,0,.45)}
+.scrim.on{display:block}
+
+@media(max-width:860px){
+  nav{display:none;position:fixed;z-index:10;width:84%;max-width:310px;
+    box-shadow:0 0 40px rgba(0,0,0,.3)}
+  nav.open{display:flex}
   .toggle{display:block}
-  main{padding:64px 16px 100px}
+  #wrap{display:block}
+  main{max-width:none;width:100%;margin:0;padding:62px 16px 120px}
+  body{font-size:16px}
+  h1{font-size:1.6rem}
 }
-@media print{nav,.toggle{display:none}main{max-width:none;padding:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{nav,.toggle,.reveal,.scrim{display:none}
+  main{max-width:none;padding:0}.card .a[hidden]{display:block!important}}
 </style>
 </head><body>
-<button class="toggle" aria-label="Toggle contents">&#9776; Contents</button>
-<div id="wrap">
-<nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#setup">Setup &amp; Offline Access</a><a href="#audio">Audio Version</a><a href="#mobile">On Your Phone</a><a href="#testing">Testing It Works</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations">1. Security Operations</a><a href="#02-vulnerability-management">2. Vulnerability Management</a><a href="#03-incident-response">3. Incident Response</a><a href="#04-reporting-communication">4. Reporting &amp; Communication</a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav>
-<main><section class="section" id="readme"><h1 id="comptia-cysa-cs0-003-offline-study-pack">CompTIA CySA+ (CS0-003) — Offline Study Pack</h1>
+<button class="toggle" type="button" aria-label="Toggle contents">☰ Contents</button>
+<div class="scrim"></div>
+<div id="wrap"><nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#setup">Setup &amp; Offline Access</a><a href="#audio">Audio Version</a><a href="#mobile">On Your Phone</a><a href="#testing">Testing It Works</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations"><span class="pct">33%</span>1. Security Operations<span class="w" style="width:79%"></span></a><a href="#02-vulnerability-management"><span class="pct">30%</span>2. Vulnerability Management<span class="w" style="width:72%"></span></a><a href="#03-incident-response"><span class="pct">20%</span>3. Incident Response<span class="w" style="width:48%"></span></a><a href="#04-reporting-communication"><span class="pct">17%</span>4. Reporting &amp; Communication<span class="w" style="width:41%"></span></a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav><main><section class="section" id="readme"><h1 id="comptia-cysa-cs0-003-offline-study-pack">CompTIA CySA+ (CS0-003) — Offline Study Pack</h1>
 <p>Self-contained study material for the CompTIA Cybersecurity Analyst (CySA+) exam. <strong>No connection required</strong> — clone once, read anywhere.</p>
 <blockquote><h2 id="goal">Goal</h2>
 <p><strong>Download this entire project onto the local device so the full study pack is available offline, with no network connection and no dependency on any hosted service.</strong></p>
 <p>Every design decision here serves that goal: no CDN links, no external fonts or scripts, no build toolchain, no package installs. The whole project is plain text plus one generated HTML file, and it is intended to be <em>held locally</em> — a copy on the device is the primary artefact, not a convenience. See <a href="#setup"><code>SETUP.md</code></a> for how to get it there.</p>
 <p>The pack is also fully <strong>narrated</strong> — 105 minutes of offline audio, including a 92-card spoken drill. See <a href="#audio"><code>AUDIO.md</code></a>.</p></blockquote>
 <h2 id="start-here">Start here</h2>
-<p>Open **<a href="cysa-offline.html"><code>cysa-offline.html</code></a>** in any browser. It&#x27;s a single file with no CDN links, no external scripts, and no network calls: sidebar contents, dark mode, phone-friendly layout, and it prints cleanly. Copy it to a phone, tablet, or USB stick and it just works.</p>
+<p>Open <strong><a href="cysa-offline.html"><code>cysa-offline.html</code></a></strong> in any browser. It&#x27;s a single file with no CDN links, no external scripts, and no network calls: sidebar contents, dark mode, phone-friendly layout, and it prints cleanly. Copy it to a phone, tablet, or USB stick and it just works.</p>
 <p>The Markdown files are the editable source; the HTML is generated from them.</p>
-<p>Prefer to listen? <code>audio/</code> holds the whole pack as MP3s — start with <code>audio/flashcards.mp3</code>, a 92-card spoken drill that pauses after each question. See **<a href="#audio"><code>AUDIO.md</code></a>**.</p>
-<p>Not set up as a repository yet? See **<a href="#setup"><code>SETUP.md</code></a>** — about three minutes.</p>
+<p>Prefer to listen? <code>audio/</code> holds the whole pack as MP3s — start with <code>audio/flashcards.mp3</code>, a 92-card spoken drill that pauses after each question. See <strong><a href="#audio"><code>AUDIO.md</code></a></strong>.</p>
+<p>Not set up as a repository yet? See <strong><a href="#setup"><code>SETUP.md</code></a></strong> — about three minutes.</p>
 <blockquote><p><strong>Note on sources.</strong> Written from the publicly published CS0-003 exam objectives and general security-domain knowledge. It is <em>not</em> a copy of CompTIA&#x27;s CertMaster course and is not a substitute for licensed course material. Cross-check the domain/objective numbering against the free official objectives PDF from CompTIA.</p></blockquote>
 <h2 id="exam-at-a-glance">Exam at a glance</h2>
 <div class="tw"><table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody><tr><td>Exam code</td><td>CS0-003</td></tr><tr><td>Questions</td><td>Max 85 (multiple choice + performance-based)</td></tr><tr><td>Time</td><td>165 minutes</td></tr><tr><td>Passing score</td><td>750 (scale 100–900)</td></tr><tr><td>Recommended experience</td><td>4+ years hands-on IR / security analyst work</td></tr><tr><td>Prerequisite</td><td>None formally; Security+ and Network+ knowledge assumed</td></tr></tbody></table></div>
@@ -90,6 +156,8 @@ color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;
 <p>After editing any Markdown file:</p>
 <pre><code class="lang-bash">python3 build_offline_html.py</code></pre>
 <p>Standard library only — nothing to install, works offline. Use <code>-o PATH</code> to write somewhere else.</p>
+<p><code>--artifact</code> emits a body-only fragment for publishing as a hosted page instead of a standalone file:</p>
+<pre><code class="lang-bash">python3 build_offline_html.py --artifact</code></pre>
 <h2 id="how-to-use-this-pack">How to use this pack</h2>
 <ol>
 <li>Read the domain file end to end once, slowly. Don&#x27;t take notes yet.</li>
@@ -283,7 +351,7 @@ python3 build_audio.py --only 01        # rebuild one track</code></pre>
 <li>variable playback speed</li>
 <li>a queue, so the domains play in order</li>
 </ul>
-<p>Add it as: **☰ → Add Podcast → Add Local Folder → pick <code>cysa-plus-study/audio</code>.**</p>
+<p>Add it as: <strong>☰ → Add Podcast → Add Local Folder → pick <code>cysa-plus-study/audio</code>.</strong></p>
 <h3 id="simpler-vlc">Simpler: VLC</h3>
 <p>Also free, also fine. Opens the folder directly, reads <code>playlist.m3u</code>, remembers position. Less setup than AntennaPod, slightly worse for a 24-minute drill track.</p>
 <h3 id="folder-players">Folder players</h3>
@@ -1298,205 +1366,115 @@ curl -s https://example.com | grep -i &#x27;X-Powered-By&#x27;</code></pre></sec
 <p>Format: <strong>Q</strong> on one line, <strong>A</strong> on the next. Cover the answers with your hand, or split on <code>|</code> if you want to import into Anki (<code>Q | A</code>).</p>
 <hr>
 <h2 id="domain-1-security-operations">Domain 1 — Security Operations</h2>
-<p><strong>Q</strong> Which Windows Event ID records a successful logon?</p>
-<p><strong>A</strong> 4624 (check Logon Type: 2 = interactive, 3 = network, 10 = RDP)</p>
-<p><strong>Q</strong> Which Event ID records process creation?</p>
-<p><strong>A</strong> 4688 — and command-line auditing must be explicitly enabled</p>
-<p><strong>Q</strong> Which Event ID means the audit log was cleared?</p>
-<p><strong>A</strong> 1102 — always investigate; it&#x27;s a defence-evasion signal</p>
-<p><strong>Q</strong> Which Sysmon event ID logs process creation with hashes and command line?</p>
-<p><strong>A</strong> Event ID 1</p>
-<p><strong>Q</strong> Which Sysmon event ID logs DNS queries?</p>
-<p><strong>A</strong> Event ID 22</p>
-<p><strong>Q</strong> NetFlow vs full packet capture — what&#x27;s the difference?</p>
-<p><strong>A</strong> NetFlow is metadata (5-tuple, counters, timing); pcap includes payload. Flow scales for months, pcap for days</p>
-<p><strong>Q</strong> What makes a process suspicious even when the name is legitimate?</p>
-<p><strong>A</strong> Its parent. <code>winword.exe → powershell.exe</code> is malicious regardless of names; <code>svchost.exe</code> not parented by <code>services.exe</code> is masquerading</p>
-<p><strong>Q</strong> What is beaconing and how do you spot it?</p>
-<p><strong>A</strong> Regular-interval callbacks to C2. Look for tight interval clustering and consistent byte counts; discriminate from update checkers by destination reputation</p>
-<p><strong>Q</strong> What does SPF verify?</p>
-<p><strong>A</strong> That the sending IP is authorised to send for the envelope-sender domain</p>
-<p><strong>Q</strong> What does DKIM verify?</p>
-<p><strong>A</strong> A cryptographic signature proving the message wasn&#x27;t altered in transit</p>
-<p><strong>Q</strong> What does DMARC add over SPF and DKIM?</p>
-<p><strong>A</strong> Alignment with the <em>visible</em> From header, a policy (none/quarantine/reject), and reporting</p>
-<p><strong>Q</strong> Which direction do you read a Received: header chain?</p>
-<p><strong>A</strong> Bottom to top — the bottom-most Received is the origin</p>
-<p><strong>Q</strong> What&#x27;s the classic BEC header tell?</p>
-<p><strong>A</strong> Reply-To differs from From — the display name looks internal, replies go external</p>
-<p><strong>Q</strong> Name the Pyramid of Pain levels bottom to top.</p>
-<p><strong>A</strong> Hash values, IP addresses, domain names, network/host artefacts, tools, TTPs</p>
-<p><strong>Q</strong> Why detect at the TTP level?</p>
-<p><strong>A</strong> TTPs are expensive for the adversary to change; hashes and IPs are trivially rotated</p>
-<p><strong>Q</strong> STIX vs TAXII?</p>
-<p><strong>A</strong> STIX is the language for describing threat intel; TAXII is the transport that moves it</p>
-<p><strong>Q</strong> TLP:AMBER means you can share with…?</p>
-<p><strong>A</strong> Your organisation and clients on a need-to-know basis (AMBER+STRICT = your organisation only)</p>
-<p><strong>Q</strong> TLP:GREEN means?</p>
-<p><strong>A</strong> The peer community — but not public</p>
-<p><strong>Q</strong> What makes threat hunting different from alert triage?</p>
-<p><strong>A</strong> Hunting is proactive and hypothesis-driven; it begins without an alert</p>
-<p><strong>Q</strong> A hunt finds nothing. Was it a failure?</p>
-<p><strong>A</strong> No — a hunt that produces a new detection rule or exposes a visibility gap succeeded</p>
-<p><strong>Q</strong> What is the Admiralty Code used for?</p>
-<p><strong>A</strong> Rating threat intel: source reliability (A–F) and information credibility (1–6)</p>
-<p><strong>Q</strong> Which tasks are good automation candidates?</p>
-<p><strong>A</strong> Repeatable, high-volume, low-judgement tasks with well-defined inputs — enrichment, IOC lookups, ticket creation</p>
-<p><strong>Q</strong> What&#x27;s the danger of over-automation?</p>
-<p><strong>A</strong> An automated containment action that fires on a false positive can cause the outage the attacker wanted</p>
-<p><strong>Q</strong> Recognise: <code>powershell -nop -w hidden -enc &lt;base64&gt;</code></p>
-<p><strong>A</strong> Malicious download-and-execute cradle — no profile, hidden window, encoded command</p>
-<p><strong>Q</strong> SAML vs OAuth vs OIDC?</p>
-<p><strong>A</strong> SAML = XML-based enterprise SSO; OAuth 2.0 = authorisation delegation (not authentication); OIDC = authentication layer on top of OAuth</p>
-<p><strong>Q</strong> What is a CASB?</p>
-<p><strong>A</strong> Cloud Access Security Broker — a policy enforcement point between users and cloud services; discovers shadow IT</p>
-<p><strong>Q</strong> Split tunnel vs full tunnel VPN?</p>
-<p><strong>A</strong> Split sends only corporate traffic through the VPN (faster, less visibility); full tunnel inspects everything</p>
+<div class="card"><p class="q">Which Windows Event ID records a successful logon?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>4624 (check Logon Type: 2 = interactive, 3 = network, 10 = RDP)</p></div>
+<div class="card"><p class="q">Which Event ID records process creation?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>4688 — and command-line auditing must be explicitly enabled</p></div>
+<div class="card"><p class="q">Which Event ID means the audit log was cleared?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>1102 — always investigate; it&#x27;s a defence-evasion signal</p></div>
+<div class="card"><p class="q">Which Sysmon event ID logs process creation with hashes and command line?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Event ID 1</p></div>
+<div class="card"><p class="q">Which Sysmon event ID logs DNS queries?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Event ID 22</p></div>
+<div class="card"><p class="q">NetFlow vs full packet capture — what&#x27;s the difference?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>NetFlow is metadata (5-tuple, counters, timing); pcap includes payload. Flow scales for months, pcap for days</p></div>
+<div class="card"><p class="q">What makes a process suspicious even when the name is legitimate?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Its parent. <code>winword.exe → powershell.exe</code> is malicious regardless of names; <code>svchost.exe</code> not parented by <code>services.exe</code> is masquerading</p></div>
+<div class="card"><p class="q">What is beaconing and how do you spot it?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Regular-interval callbacks to C2. Look for tight interval clustering and consistent byte counts; discriminate from update checkers by destination reputation</p></div>
+<div class="card"><p class="q">What does SPF verify?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>That the sending IP is authorised to send for the envelope-sender domain</p></div>
+<div class="card"><p class="q">What does DKIM verify?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>A cryptographic signature proving the message wasn&#x27;t altered in transit</p></div>
+<div class="card"><p class="q">What does DMARC add over SPF and DKIM?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Alignment with the <em>visible</em> From header, a policy (none/quarantine/reject), and reporting</p></div>
+<div class="card"><p class="q">Which direction do you read a Received: header chain?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Bottom to top — the bottom-most Received is the origin</p></div>
+<div class="card"><p class="q">What&#x27;s the classic BEC header tell?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Reply-To differs from From — the display name looks internal, replies go external</p></div>
+<div class="card"><p class="q">Name the Pyramid of Pain levels bottom to top.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Hash values, IP addresses, domain names, network/host artefacts, tools, TTPs</p></div>
+<div class="card"><p class="q">Why detect at the TTP level?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>TTPs are expensive for the adversary to change; hashes and IPs are trivially rotated</p></div>
+<div class="card"><p class="q">STIX vs TAXII?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>STIX is the language for describing threat intel; TAXII is the transport that moves it</p></div>
+<div class="card"><p class="q">TLP:AMBER means you can share with…?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Your organisation and clients on a need-to-know basis (AMBER+STRICT = your organisation only)</p></div>
+<div class="card"><p class="q">TLP:GREEN means?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>The peer community — but not public</p></div>
+<div class="card"><p class="q">What makes threat hunting different from alert triage?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Hunting is proactive and hypothesis-driven; it begins without an alert</p></div>
+<div class="card"><p class="q">A hunt finds nothing. Was it a failure?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>No — a hunt that produces a new detection rule or exposes a visibility gap succeeded</p></div>
+<div class="card"><p class="q">What is the Admiralty Code used for?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Rating threat intel: source reliability (A–F) and information credibility (1–6)</p></div>
+<div class="card"><p class="q">Which tasks are good automation candidates?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Repeatable, high-volume, low-judgement tasks with well-defined inputs — enrichment, IOC lookups, ticket creation</p></div>
+<div class="card"><p class="q">What&#x27;s the danger of over-automation?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>An automated containment action that fires on a false positive can cause the outage the attacker wanted</p></div>
+<div class="card"><p class="q">Recognise: <code>powershell -nop -w hidden -enc &lt;base64&gt;</code></p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Malicious download-and-execute cradle — no profile, hidden window, encoded command</p></div>
+<div class="card"><p class="q">SAML vs OAuth vs OIDC?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>SAML = XML-based enterprise SSO; OAuth 2.0 = authorisation delegation (not authentication); OIDC = authentication layer on top of OAuth</p></div>
+<div class="card"><p class="q">What is a CASB?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Cloud Access Security Broker — a policy enforcement point between users and cloud services; discovers shadow IT</p></div>
+<div class="card"><p class="q">Split tunnel vs full tunnel VPN?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Split sends only corporate traffic through the VPN (faster, less visibility); full tunnel inspects everything</p></div>
 <hr>
 <h2 id="domain-2-vulnerability-management">Domain 2 — Vulnerability Management</h2>
-<p><strong>Q</strong> Why does a credentialed scan produce fewer false positives?</p>
-<p><strong>A</strong> It authenticates and reads actual patch level and configuration rather than inferring from banners</p>
-<p><strong>Q</strong> RHEL reports a vulnerable OpenSSH version but the patch is applied. Why?</p>
-<p><strong>A</strong> Back-ported patches — the vendor fixes the flaw without changing the version banner. It&#x27;s a <strong>false positive</strong></p>
-<p><strong>Q</strong> Which finding type is most dangerous?</p>
-<p><strong>A</strong> False negative — a real vulnerability the scanner missed</p>
-<p><strong>Q</strong> SAST vs DAST?</p>
-<p><strong>A</strong> SAST reads source without running it (early, more false positives); DAST attacks the running app (finds runtime/config issues, no source needed)</p>
-<p><strong>Q</strong> What does SCA produce?</p>
-<p><strong>A</strong> An inventory of third-party dependencies against known CVEs — an SBOM</p>
-<p><strong>Q</strong> Expand the CVSS base metrics.</p>
-<p><strong>A</strong> AV (Attack Vector), AC (Attack Complexity), PR (Privileges Required), UI (User Interaction), S (Scope), C/I/A impacts</p>
-<p><strong>Q</strong> What does <code>S:C</code> mean in a CVSS vector?</p>
-<p><strong>A</strong> Scope Changed — the vulnerability affects resources beyond its own security authority. Always worse</p>
-<p><strong>Q</strong> What&#x27;s the score band for Critical?</p>
-<p><strong>A</strong> 9.0–10.0</p>
-<p><strong>Q</strong> What does <code>AV:N/AC:L/PR:N/UI:N</code> describe?</p>
-<p><strong>A</strong> Network-reachable, low complexity, no privileges, no user interaction — the worst possible reachability</p>
-<p><strong>Q</strong> What does EPSS measure?</p>
-<p><strong>A</strong> Probability the vulnerability will be exploited in the wild in the next 30 days</p>
-<p><strong>Q</strong> What is CISA KEV?</p>
-<p><strong>A</strong> The Known Exploited Vulnerabilities catalogue — confirmed in-the-wild exploitation. A KEV-listed medium can outrank a non-KEV critical</p>
-<p><strong>Q</strong> Does CVSS measure risk?</p>
-<p><strong>A</strong> No — severity only. Risk requires asset value, exposure, exploitability, and compensating controls</p>
-<p><strong>Q</strong> Correct fix for SQL injection?</p>
-<p><strong>A</strong> Parameterised queries / prepared statements (input validation alone is not the exam&#x27;s answer)</p>
-<p><strong>Q</strong> Reflected vs stored vs DOM-based XSS?</p>
-<p><strong>A</strong> Reflected = in the response to a crafted request; stored = persisted and served to every viewer (most severe); DOM-based = client-side only, never reaches the server</p>
-<p><strong>Q</strong> Primary XSS mitigation?</p>
-<p><strong>A</strong> Context-appropriate output encoding, plus CSP and HttpOnly cookies</p>
-<p><strong>Q</strong> What is SSRF and what&#x27;s the cloud-specific target?</p>
-<p><strong>A</strong> Server fetches an attacker-controlled URL; in cloud it targets the metadata endpoint 169.254.169.254 to steal instance credentials. IMDSv2 mitigates</p>
-<p><strong>Q</strong> What is IDOR?</p>
-<p><strong>A</strong> Insecure Direct Object Reference — changing an identifier in a request to access another user&#x27;s data. A broken access control failure</p>
-<p><strong>Q</strong> What&#x27;s #1 on the OWASP Top 10 (2021)?</p>
-<p><strong>A</strong> Broken Access Control</p>
-<p><strong>Q</strong> Buffer overflow mitigations?</p>
-<p><strong>A</strong> ASLR, DEP/NX, stack canaries, bounds checking, memory-safe languages</p>
-<p><strong>Q</strong> What is TOCTOU?</p>
-<p><strong>A</strong> Time of Check to Time of Use — a race condition where state changes between validation and use</p>
-<p><strong>Q</strong> Vertical vs horizontal privilege escalation?</p>
-<p><strong>A</strong> Vertical = user to admin; horizontal = user to another user&#x27;s data at the same level</p>
-<p><strong>Q</strong> You cannot patch a medical device. What now?</p>
-<p><strong>A</strong> Compensating controls: network segmentation, virtual patching at IPS/WAF, disabling the vulnerable feature, restricting access, enhanced monitoring</p>
-<p><strong>Q</strong> Name the four risk responses.</p>
-<p><strong>A</strong> Mitigate, transfer, avoid, accept — and residual risk always remains</p>
-<p><strong>Q</strong> When can a remediation ticket close?</p>
-<p><strong>A</strong> Only after a verification rescan confirms the fix. Remediation isn&#x27;t complete until verified</p>
-<p><strong>Q</strong> A vulnerability keeps reappearing after remediation. What&#x27;s the real problem?</p>
-<p><strong>A</strong> Process — a stale golden image or config drift, not patching diligence</p>
-<p><strong>Q</strong> Why is scan coverage the metric that gates all the others?</p>
-<p><strong>A</strong> Metrics computed over a fraction of your estate misrepresent risk entirely</p>
-<p><strong>Q</strong> Why not actively scan ICS/SCADA?</p>
-<p><strong>A</strong> Active probing can cause physical process disruption. Use passive discovery, or a test environment</p>
-<p><strong>Q</strong> SLE and ALE formulas?</p>
-<p><strong>A</strong> SLE = Asset Value × Exposure Factor; ALE = SLE × ARO</p>
+<div class="card"><p class="q">Why does a credentialed scan produce fewer false positives?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>It authenticates and reads actual patch level and configuration rather than inferring from banners</p></div>
+<div class="card"><p class="q">RHEL reports a vulnerable OpenSSH version but the patch is applied. Why?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Back-ported patches — the vendor fixes the flaw without changing the version banner. It&#x27;s a <strong>false positive</strong></p></div>
+<div class="card"><p class="q">Which finding type is most dangerous?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>False negative — a real vulnerability the scanner missed</p></div>
+<div class="card"><p class="q">SAST vs DAST?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>SAST reads source without running it (early, more false positives); DAST attacks the running app (finds runtime/config issues, no source needed)</p></div>
+<div class="card"><p class="q">What does SCA produce?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>An inventory of third-party dependencies against known CVEs — an SBOM</p></div>
+<div class="card"><p class="q">Expand the CVSS base metrics.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>AV (Attack Vector), AC (Attack Complexity), PR (Privileges Required), UI (User Interaction), S (Scope), C/I/A impacts</p></div>
+<div class="card"><p class="q">What does <code>S:C</code> mean in a CVSS vector?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Scope Changed — the vulnerability affects resources beyond its own security authority. Always worse</p></div>
+<div class="card"><p class="q">What&#x27;s the score band for Critical?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>9.0–10.0</p></div>
+<div class="card"><p class="q">What does <code>AV:N/AC:L/PR:N/UI:N</code> describe?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Network-reachable, low complexity, no privileges, no user interaction — the worst possible reachability</p></div>
+<div class="card"><p class="q">What does EPSS measure?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Probability the vulnerability will be exploited in the wild in the next 30 days</p></div>
+<div class="card"><p class="q">What is CISA KEV?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>The Known Exploited Vulnerabilities catalogue — confirmed in-the-wild exploitation. A KEV-listed medium can outrank a non-KEV critical</p></div>
+<div class="card"><p class="q">Does CVSS measure risk?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>No — severity only. Risk requires asset value, exposure, exploitability, and compensating controls</p></div>
+<div class="card"><p class="q">Correct fix for SQL injection?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Parameterised queries / prepared statements (input validation alone is not the exam&#x27;s answer)</p></div>
+<div class="card"><p class="q">Reflected vs stored vs DOM-based XSS?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Reflected = in the response to a crafted request; stored = persisted and served to every viewer (most severe); DOM-based = client-side only, never reaches the server</p></div>
+<div class="card"><p class="q">Primary XSS mitigation?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Context-appropriate output encoding, plus CSP and HttpOnly cookies</p></div>
+<div class="card"><p class="q">What is SSRF and what&#x27;s the cloud-specific target?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Server fetches an attacker-controlled URL; in cloud it targets the metadata endpoint 169.254.169.254 to steal instance credentials. IMDSv2 mitigates</p></div>
+<div class="card"><p class="q">What is IDOR?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Insecure Direct Object Reference — changing an identifier in a request to access another user&#x27;s data. A broken access control failure</p></div>
+<div class="card"><p class="q">What&#x27;s #1 on the OWASP Top 10 (2021)?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Broken Access Control</p></div>
+<div class="card"><p class="q">Buffer overflow mitigations?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>ASLR, DEP/NX, stack canaries, bounds checking, memory-safe languages</p></div>
+<div class="card"><p class="q">What is TOCTOU?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Time of Check to Time of Use — a race condition where state changes between validation and use</p></div>
+<div class="card"><p class="q">Vertical vs horizontal privilege escalation?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Vertical = user to admin; horizontal = user to another user&#x27;s data at the same level</p></div>
+<div class="card"><p class="q">You cannot patch a medical device. What now?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Compensating controls: network segmentation, virtual patching at IPS/WAF, disabling the vulnerable feature, restricting access, enhanced monitoring</p></div>
+<div class="card"><p class="q">Name the four risk responses.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Mitigate, transfer, avoid, accept — and residual risk always remains</p></div>
+<div class="card"><p class="q">When can a remediation ticket close?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Only after a verification rescan confirms the fix. Remediation isn&#x27;t complete until verified</p></div>
+<div class="card"><p class="q">A vulnerability keeps reappearing after remediation. What&#x27;s the real problem?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Process — a stale golden image or config drift, not patching diligence</p></div>
+<div class="card"><p class="q">Why is scan coverage the metric that gates all the others?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Metrics computed over a fraction of your estate misrepresent risk entirely</p></div>
+<div class="card"><p class="q">Why not actively scan ICS/SCADA?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Active probing can cause physical process disruption. Use passive discovery, or a test environment</p></div>
+<div class="card"><p class="q">SLE and ALE formulas?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>SLE = Asset Value × Exposure Factor; ALE = SLE × ARO</p></div>
 <hr>
 <h2 id="domain-3-incident-response">Domain 3 — Incident Response</h2>
-<p><strong>Q</strong> Name the seven Cyber Kill Chain stages.</p>
-<p><strong>A</strong> Reconnaissance, Weaponisation, Delivery, Exploitation, Installation, Command and Control, Actions on Objectives</p>
-<p><strong>Q</strong> Main weakness of the Cyber Kill Chain?</p>
-<p><strong>A</strong> Linear and malware/perimeter-centric — poor fit for insider threat or credential-only attacks</p>
-<p><strong>Q</strong> Name the four Diamond Model vertices.</p>
-<p><strong>A</strong> Adversary, Capability, Infrastructure, Victim</p>
-<p><strong>Q</strong> What is the Diamond Model actually for?</p>
-<p><strong>A</strong> Pivoting — from one known vertex you discover the others</p>
-<p><strong>Q</strong> ATT&amp;CK structure?</p>
-<p><strong>A</strong> Tactics (the goal) × Techniques (how) × Sub-techniques × Procedures (observed implementations)</p>
-<p><strong>Q</strong> What is MITRE D3FEND?</p>
-<p><strong>A</strong> A knowledge base of defensive countermeasures, the counterpart to ATT&amp;CK</p>
-<p><strong>Q</strong> NIST SP 800-61 phases?</p>
-<p><strong>A</strong> Preparation; Detection and Analysis; Containment, Eradication and Recovery; Post-Incident Activity</p>
-<p><strong>Q</strong> Order of volatility, most to least?</p>
-<p><strong>A</strong> Registers/cache → routing table, ARP cache, process table, RAM → temp filesystems → disk → remote logs → physical config → archival media</p>
-<p><strong>Q</strong> Why capture memory before powering off?</p>
-<p><strong>A</strong> Encryption keys, injected code, and live network connections exist only in RAM</p>
-<p><strong>Q</strong> What is chain of custody and why does it matter?</p>
-<p><strong>A</strong> An unbroken documented record of who handled evidence, when, and why. Gaps can render evidence inadmissible</p>
-<p><strong>Q</strong> What does a write blocker do?</p>
-<p><strong>A</strong> Prevents any write to original media during acquisition — you analyse the image, never the original</p>
-<p><strong>Q</strong> IOC vs IOA?</p>
-<p><strong>A</strong> IOC = evidence something already happened; IOA = behaviour indicating an attack in progress. IOAs catch novel attacks</p>
-<p><strong>Q</strong> Why isolate with EDR rather than power off?</p>
-<p><strong>A</strong> It stops network-borne spread while preserving volatile memory evidence and keeping the host analysable</p>
-<p><strong>Q</strong> Trade-off of immediate containment?</p>
-<p><strong>A</strong> Stops damage but may alert the adversary and destroy volatile evidence; delayed containment preserves intelligence but risks further loss</p>
-<p><strong>Q</strong> Eradication removed the malware but the host was reinfected. What was skipped?</p>
-<p><strong>A</strong> Closing the vulnerability that allowed entry — eradication must remove the vector, not just the payload</p>
-<p><strong>Q</strong> When is reimaging the only trustworthy option?</p>
-<p><strong>A</strong> Root-level or kernel-level compromise (rootkits) — you cannot verifiably clean it</p>
-<p><strong>Q</strong> What must be true of a backup before restoring?</p>
-<p><strong>A</strong> It must predate the compromise. Attacker dwell time is often weeks, so recent backups may already contain the backdoor</p>
-<p><strong>Q</strong> What must be rotated after a domain compromise?</p>
-<p><strong>A</strong> Every credential the adversary could reach — including service accounts and KRBTGT (twice, for Golden Ticket)</p>
-<p><strong>Q</strong> Why run incident communications out-of-band?</p>
-<p><strong>A</strong> If the adversary is in your email or chat, coordinating there hands them your response plan</p>
-<p><strong>Q</strong> RTO vs RPO?</p>
-<p><strong>A</strong> RTO = how long until service is restored; RPO = how much data loss is tolerable</p>
-<p><strong>Q</strong> What is a tabletop exercise?</p>
-<p><strong>A</strong> A discussion-based walkthrough of a scenario — cheapest way to find process and authority gaps</p>
-<p><strong>Q</strong> What are the three incident impact dimensions?</p>
-<p><strong>A</strong> Functional impact, information impact, and recoverability</p>
-<p><strong>Q</strong> What is dwell time?</p>
-<p><strong>A</strong> How long the adversary was present before detection — the headline IR metric</p>
-<p><strong>Q</strong> What makes lessons-learned productive?</p>
-<p><strong>A</strong> Held promptly, blameless, and producing tracked actions with owners and due dates</p>
-<p><strong>Q</strong> Root cause analysis: &quot;the user clicked the link&quot; — is that a root cause?</p>
-<p><strong>A</strong> No. Ask why the link arrived, why it executed, why it reached the internet, and why nothing alerted</p>
+<div class="card"><p class="q">Name the seven Cyber Kill Chain stages.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Reconnaissance, Weaponisation, Delivery, Exploitation, Installation, Command and Control, Actions on Objectives</p></div>
+<div class="card"><p class="q">Main weakness of the Cyber Kill Chain?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Linear and malware/perimeter-centric — poor fit for insider threat or credential-only attacks</p></div>
+<div class="card"><p class="q">Name the four Diamond Model vertices.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Adversary, Capability, Infrastructure, Victim</p></div>
+<div class="card"><p class="q">What is the Diamond Model actually for?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Pivoting — from one known vertex you discover the others</p></div>
+<div class="card"><p class="q">ATT&amp;CK structure?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Tactics (the goal) × Techniques (how) × Sub-techniques × Procedures (observed implementations)</p></div>
+<div class="card"><p class="q">What is MITRE D3FEND?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>A knowledge base of defensive countermeasures, the counterpart to ATT&amp;CK</p></div>
+<div class="card"><p class="q">NIST SP 800-61 phases?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Preparation; Detection and Analysis; Containment, Eradication and Recovery; Post-Incident Activity</p></div>
+<div class="card"><p class="q">Order of volatility, most to least?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Registers/cache → routing table, ARP cache, process table, RAM → temp filesystems → disk → remote logs → physical config → archival media</p></div>
+<div class="card"><p class="q">Why capture memory before powering off?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Encryption keys, injected code, and live network connections exist only in RAM</p></div>
+<div class="card"><p class="q">What is chain of custody and why does it matter?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>An unbroken documented record of who handled evidence, when, and why. Gaps can render evidence inadmissible</p></div>
+<div class="card"><p class="q">What does a write blocker do?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Prevents any write to original media during acquisition — you analyse the image, never the original</p></div>
+<div class="card"><p class="q">IOC vs IOA?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>IOC = evidence something already happened; IOA = behaviour indicating an attack in progress. IOAs catch novel attacks</p></div>
+<div class="card"><p class="q">Why isolate with EDR rather than power off?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>It stops network-borne spread while preserving volatile memory evidence and keeping the host analysable</p></div>
+<div class="card"><p class="q">Trade-off of immediate containment?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Stops damage but may alert the adversary and destroy volatile evidence; delayed containment preserves intelligence but risks further loss</p></div>
+<div class="card"><p class="q">Eradication removed the malware but the host was reinfected. What was skipped?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Closing the vulnerability that allowed entry — eradication must remove the vector, not just the payload</p></div>
+<div class="card"><p class="q">When is reimaging the only trustworthy option?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Root-level or kernel-level compromise (rootkits) — you cannot verifiably clean it</p></div>
+<div class="card"><p class="q">What must be true of a backup before restoring?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>It must predate the compromise. Attacker dwell time is often weeks, so recent backups may already contain the backdoor</p></div>
+<div class="card"><p class="q">What must be rotated after a domain compromise?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Every credential the adversary could reach — including service accounts and KRBTGT (twice, for Golden Ticket)</p></div>
+<div class="card"><p class="q">Why run incident communications out-of-band?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>If the adversary is in your email or chat, coordinating there hands them your response plan</p></div>
+<div class="card"><p class="q">RTO vs RPO?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>RTO = how long until service is restored; RPO = how much data loss is tolerable</p></div>
+<div class="card"><p class="q">What is a tabletop exercise?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>A discussion-based walkthrough of a scenario — cheapest way to find process and authority gaps</p></div>
+<div class="card"><p class="q">What are the three incident impact dimensions?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Functional impact, information impact, and recoverability</p></div>
+<div class="card"><p class="q">What is dwell time?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>How long the adversary was present before detection — the headline IR metric</p></div>
+<div class="card"><p class="q">What makes lessons-learned productive?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Held promptly, blameless, and producing tracked actions with owners and due dates</p></div>
+<div class="card"><p class="q">Root cause analysis: &quot;the user clicked the link&quot; — is that a root cause?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>No. Ask why the link arrived, why it executed, why it reached the internet, and why nothing alerted</p></div>
 <hr>
 <h2 id="domain-4-reporting-and-communication">Domain 4 — Reporting and Communication</h2>
-<p><strong>Q</strong> Name four inhibitors to remediation.</p>
-<p><strong>A</strong> MOU, SLA, organisational governance, business process interruption, degrading functionality, legacy systems, proprietary systems</p>
-<p><strong>Q</strong> Correct analyst response to an inhibitor?</p>
-<p><strong>A</strong> Document the risk, propose compensating controls, and escalate the risk-acceptance decision to the business owner</p>
-<p><strong>Q</strong> How long does GDPR give you to notify the supervisory authority?</p>
-<p><strong>A</strong> 72 hours from becoming aware of the breach</p>
-<p><strong>Q</strong> What belongs in an incident report executive summary?</p>
-<p><strong>A</strong> Plain language: what happened, what was affected, what you did, what it means, what&#x27;s next. No CVEs, no jargon</p>
-<p><strong>Q</strong> What&#x27;s the spine of an incident report?</p>
-<p><strong>A</strong> The timeline — timestamps with time zones, correlated across sources</p>
-<p><strong>Q</strong> Who decides breach notification obligations?</p>
-<p><strong>A</strong> Legal counsel — not the analyst</p>
-<p><strong>Q</strong> Why involve legal early?</p>
-<p><strong>A</strong> Regulatory duties, and to establish attorney–client privilege over the investigation where applicable</p>
-<p><strong>Q</strong> What does a high ratio of externally-reported incidents indicate?</p>
-<p><strong>A</strong> A serious internal detection and visibility failure</p>
-<p><strong>Q</strong> What does an exception without an expiry date represent?</p>
-<p><strong>A</strong> Unmanaged risk — exceptions must be time-bounded with a review date and named owner</p>
-<p><strong>Q</strong> How do you pitch remediation to an executive audience?</p>
-<p><strong>A</strong> Business risk, trend direction, and cost — one page, no CVSS vectors</p>
-<p><strong>Q</strong> What does recurrence in vulnerability reporting tell you?</p>
-<p><strong>A</strong> A process failure (golden image, config drift), not an individual&#x27;s negligence</p>
-<p><strong>Q</strong> Why does cyber insurance matter during an incident?</p>
-<p><strong>A</strong> Carriers often require prompt notification and may mandate their own IR firm; failing to notify can void coverage</p></section></main>
-</div>
+<div class="card"><p class="q">Name four inhibitors to remediation.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>MOU, SLA, organisational governance, business process interruption, degrading functionality, legacy systems, proprietary systems</p></div>
+<div class="card"><p class="q">Correct analyst response to an inhibitor?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Document the risk, propose compensating controls, and escalate the risk-acceptance decision to the business owner</p></div>
+<div class="card"><p class="q">How long does GDPR give you to notify the supervisory authority?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>72 hours from becoming aware of the breach</p></div>
+<div class="card"><p class="q">What belongs in an incident report executive summary?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Plain language: what happened, what was affected, what you did, what it means, what&#x27;s next. No CVEs, no jargon</p></div>
+<div class="card"><p class="q">What&#x27;s the spine of an incident report?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>The timeline — timestamps with time zones, correlated across sources</p></div>
+<div class="card"><p class="q">Who decides breach notification obligations?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Legal counsel — not the analyst</p></div>
+<div class="card"><p class="q">Why involve legal early?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Regulatory duties, and to establish attorney–client privilege over the investigation where applicable</p></div>
+<div class="card"><p class="q">What does a high ratio of externally-reported incidents indicate?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>A serious internal detection and visibility failure</p></div>
+<div class="card"><p class="q">What does an exception without an expiry date represent?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Unmanaged risk — exceptions must be time-bounded with a review date and named owner</p></div>
+<div class="card"><p class="q">How do you pitch remediation to an executive audience?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Business risk, trend direction, and cost — one page, no CVSS vectors</p></div>
+<div class="card"><p class="q">What does recurrence in vulnerability reporting tell you?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>A process failure (golden image, config drift), not an individual&#x27;s negligence</p></div>
+<div class="card"><p class="q">Why does cyber insurance matter during an incident?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><p class="a" hidden>Carriers often require prompt notification and may mandate their own IR firm; failing to notify can void coverage</p></div></section></main></div>
 <script>
+var nav=document.querySelector('nav'),scrim=document.querySelector('.scrim');
+function setNav(open){nav.classList.toggle('open',open);scrim.classList.toggle('on',open);}
 document.querySelector('.toggle').addEventListener('click',function(){
-  document.querySelector('nav').classList.toggle('open');
-});
-document.querySelectorAll('nav a').forEach(function(a){
-  a.addEventListener('click',function(){
-    document.querySelector('nav').classList.remove('open');
-  });
-});
+  setNav(!nav.classList.contains('open'));});
+scrim.addEventListener('click',function(){setNav(false);});
+nav.addEventListener('click',function(e){if(e.target.tagName==='A')setNav(false);});
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.reveal'); if(!b)return;
+  var a=b.parentNode.querySelector('.a'), open=a.hidden;
+  a.hidden=!open; b.setAttribute('aria-expanded',open?'true':'false');
+  b.textContent=open?'Hide answer':'Show answer';});
 </script>
 </body></html>

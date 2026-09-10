@@ -82,6 +82,13 @@ python3 build_offline_html.py
 Standard library only — nothing to install, works offline. Use `-o PATH` to
 write somewhere else.
 
+`--artifact` emits a body-only fragment for publishing as a hosted page instead
+of a standalone file:
+
+```bash
+python3 build_offline_html.py --artifact
+```
+
 ## How to use this pack
 
 1. Read the domain file end to end once, slowly. Don't take notes yet.

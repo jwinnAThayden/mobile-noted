@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# Audio is committed on purpose so a clone is immediately listenable offline.
+# Regenerate with a better voice via: python3 build_audio.py --engine say|sapi|piper
+
+# Generated for publishing only; rebuild with: python3 build_offline_html.py --artifact
+cysa-artifact.html
