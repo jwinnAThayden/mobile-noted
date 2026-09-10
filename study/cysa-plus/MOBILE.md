@@ -1,134 +1,143 @@
-# Getting this onto a phone or tablet for offline use
+# Getting this onto Android for offline use
 
-The whole pack is 25 MB of ordinary files — no app, no account, no sync service
-required. Once it's on the device it works in airplane mode, permanently.
-
----
-
-## Fastest route: straight from the chat, no computer
-
-The project zip was delivered as an attachment in the Claude conversation. On
-the phone:
-
-### iPhone / iPad
-
-1. Open the conversation in the **Claude** app and tap the `.zip` attachment.
-2. Tap **Share → Save to Files**. Put it in *On My iPhone* (not iCloud Drive) if
-   you want it genuinely local.
-3. Open the **Files** app, find the zip, **long-press → Uncompress**.
-
-You now have a `cysa-plus-study` folder on the device.
-
-### Android
-
-1. Open the conversation in the **Claude** app and tap the `.zip` attachment to
-   download it. It lands in `Downloads`.
-2. Open **Files** (or Google Files / Samsung My Files), long-press the zip and
-   choose **Extract**. If your file manager can't, install **ZArchiver** — free
-   and does nothing else.
-
-You now have a `cysa-plus-study` folder on the device.
+25 MB of ordinary files. No account, no sync service, no special app required.
+Once it's on the device it works in airplane mode, permanently.
 
 ---
 
-## Then: what opens what
+## The whole process, on the phone, no computer
 
-### Audio — the part that works best on a phone
+1. **Open the Claude conversation** in the Claude app and tap the
+   `cysa-plus-study.zip` attachment. It downloads to `Download/`.
+2. **Open Files** (Google Files, Samsung *My Files*, or whatever ships on the
+   device), find the zip, long-press → **Extract**.
+   *If your file manager has no Extract option, install **ZArchiver** — free,
+   does one job.*
+3. Done. You have `Download/cysa-plus-study/` on the device.
 
-The eight MP3s in `audio/` are plain files. Anything that plays music plays them.
-
-| Platform | Recommended | Why |
-|---|---|---|
-| **Both** | **VLC** (free) | Opens the folder directly, reads `playlist.m3u`, remembers your position, and has playback speed. This is the one to use. |
-| Android | Musicolet, Poweramp | Folder-based players; no library import needed |
-| iOS | Files app's built-in player | Fine for a single track, but loses your place |
-
-**Use VLC and add `audio/` as a folder.** Position memory matters — `flashcards.mp3`
-is 24 minutes and you will not want to restart it every time.
-
-For the flashcard drill specifically, turn playback speed to **1.0×** the first
-time through. The 3-second answer gaps are timed for normal speed; at 1.5× you
-get 2 seconds, which isn't long enough to actually retrieve the answer.
-
-> **Android tip:** if the tracks don't appear in your music app, the media
-> scanner hasn't picked them up. Opening the folder in VLC once forces a scan,
-> or reboot the phone.
-
-### The written pack
-
-`cysa-offline.html` is one self-contained file — the layout is already
-phone-width responsive with a collapsing contents menu.
-
-- **Android:** open Chrome, type `file:///sdcard/Download/cysa-plus-study/cysa-offline.html`
-  in the address bar, and bookmark it. Or tap the file in your file manager and
-  choose Chrome.
-- **iOS:** tap `cysa-offline.html` in the Files app — it previews and renders.
-  If the sidebar or dark mode misbehaves in the preview, install
-  **Documents by Readdle** (free), which has a real browser for local files and
-  handles this properly.
-
-The `.md` files are readable as plain text in any editor if you'd rather not
-deal with HTML at all.
+That's the entire setup. Under a minute on a decent connection.
 
 ---
 
-## Alternative: via OneDrive
+## Audio
 
-You already use OneDrive, so this works and keeps the phone copy in sync with a
-desktop copy.
+Eight MP3s in `audio/`, 105 minutes total, including a 92-card spoken drill.
 
-1. On a computer, copy the `cysa-plus-study` folder into OneDrive.
-2. In the OneDrive **mobile app**, find the folder.
-3. Long-press it → **Make available offline**.
+### Recommended: AntennaPod
 
-If **Make available offline** is greyed out for the folder, mark the individual
-files instead — same effect, a few more taps. Files marked offline stay on the
-device and survive airplane mode.
+Sounds like an odd choice — it's a podcast app — but it supports **local
+folders**, which gives you the three things that actually matter for long-form
+study material:
 
-> A caution: "in OneDrive" is not the same as "on the device". Unless a file is
-> explicitly marked available offline, the app will try to fetch it when you
-> open it, and you'll get nothing on a plane. **Verify before you rely on it** —
-> see the check below.
+- resumes exactly where you stopped, per track
+- variable playback speed
+- a queue, so the domains play in order
+
+Add it as: **☰ → Add Podcast → Add Local Folder → pick `cysa-plus-study/audio`.**
+
+### Simpler: VLC
+
+Also free, also fine. Opens the folder directly, reads `playlist.m3u`, remembers
+position. Less setup than AntennaPod, slightly worse for a 24-minute drill track.
+
+### Folder players
+
+Musicolet and Poweramp both browse by folder rather than forcing a library
+import, and both read `.m3u`. Good if you already use one.
+
+> **If the tracks don't show up:** Android's media scanner hasn't indexed them
+> yet. Opening the folder once in VLC forces a scan, or reboot. This is the most
+> common "it didn't work" and it isn't a problem with the files.
+
+### On the flashcard drill
+
+Keep it at **1.0× the first time through.** The gaps after each question are
+3 seconds. At 1.5× that's 2 seconds — not long enough to actually retrieve the
+answer, and retrieval is the whole point of the format. Speed it up on later
+passes once the answers are quick.
 
 ---
+
+## The written pack
+
+`cysa-offline.html` is one self-contained file, already laid out for phone width
+with a collapsing contents menu.
+
+**Easiest:** in your file manager, tap `cysa-offline.html` → **Open with →
+Chrome**. Then ⋮ → **Bookmark** it so you don't go hunting next time.
+
+**By address:** Chrome can open it directly —
+
+```
+file:///sdcard/Download/cysa-plus-study/cysa-offline.html
+```
+
+If `/sdcard` doesn't resolve on your device, use the full path:
+
+```
+file:///storage/emulated/0/Download/cysa-plus-study/cysa-offline.html
+```
+
+Chrome won't let you add a `file://` page to the home screen — bookmark it
+instead, or make a shortcut from your file manager if it supports one.
+
+The `.md` files are plain text and readable in any editor, if you'd rather skip
+HTML entirely.
+
+---
+
+## Alternative: OneDrive
+
+Works, and keeps the phone copy in step with a desktop copy.
+
+1. On a computer, copy `cysa-plus-study` into OneDrive.
+2. In the OneDrive Android app, long-press the folder → **Make available
+   offline**.
+3. If that's greyed out for the folder, mark the individual files instead.
+
+> **The trap:** "in OneDrive" is not "on the device". A file that isn't
+> explicitly marked available offline is a placeholder — the app fetches it when
+> you open it, so it fails exactly when you have no signal. Run the check below
+> before you rely on it.
 
 ## Alternative: USB cable
 
-The least clever and most reliable option.
-
-- **Android:** plug in, set the USB mode to **File Transfer**, drag the folder to
-  `Internal Storage/Download/`.
-- **iPhone:** plug into a Mac, open Finder, select the iPhone, use the **Files**
-  tab to drop the folder into an app that accepts it (VLC and Documents both do).
+Plug in, pull down the notification, set USB mode to **File Transfer**, then drag
+the folder to `Internal Storage/Download/`. Nothing to configure and nothing to
+go wrong.
 
 ---
 
-## Verify it actually works offline
+## Verify it works offline
 
-Do this once, before you're relying on it somewhere with no signal.
+Do this once, deliberately, before you need it.
 
-1. **Turn on airplane mode.**
-2. Play two minutes of `audio/flashcards.mp3`. Confirm you hear a question, a
+1. **Airplane mode on.**
+2. Play two minutes of `audio/flashcards.mp3` — you should hear a question, a
    pause, then the answer.
-3. Open `cysa-offline.html`. Click through to Domain 3 and confirm tables render.
-4. Turn airplane mode off.
+3. Open `cysa-offline.html`, jump to Domain 3, confirm the tables render.
+4. Airplane mode off.
 
-If either step fails, the files aren't actually local — most likely they're
-still cloud placeholders. Go back and mark them available offline, or copy them
-into device storage directly.
+If either step fails, the files aren't local yet — almost always cloud
+placeholders. Copy them into device storage directly.
 
 ---
 
-## What to put where, if you're short on space
+## If you're short on space
 
-The whole thing is 25 MB, so this rarely matters. But if you're picking:
+The whole thing is 25 MB, so this rarely comes up. But in priority order:
 
-| Priority | File | Size | Why |
+| | File | Size | Why |
 |---|---|---|---|
-| 1 | `audio/flashcards.mp3` | 5.5 MB | Retrieval practice, hands-free |
-| 2 | `cysa-offline.html` | 154 KB | The entire written pack |
+| 1 | `cysa-offline.html` | 154 KB | Every word of the written pack, in one file |
+| 2 | `audio/flashcards.mp3` | 5.5 MB | Hands-free retrieval practice |
 | 3 | `audio/01-` … `04-*.mp3` | 14 MB | The four domains narrated |
-| 4 | everything else | 5 MB | Frameworks, tools, acronyms |
+| 4 | the rest | 5 MB | Frameworks, tools, acronyms |
 
-`cysa-offline.html` alone is 154 KB and contains every word of the written
-material. If you take nothing else, take that.
+---
+
+## Note for iOS
+
+Not the target here, but if the repo gets shared: the Files app can uncompress
+the zip and preview the HTML, though local HTML is fiddlier than on Android —
+**Documents by Readdle** handles it properly. VLC works the same on both.
