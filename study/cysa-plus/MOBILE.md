@@ -19,6 +19,63 @@ That's the entire setup. Under a minute on a decent connection.
 
 ---
 
+## "I can't find the Download folder"
+
+Common, and almost always one of these three.
+
+### The folder is `Download`, singular
+
+On disk it is `/storage/emulated/0/Download` — **no "s"**. Most file managers
+*label* it "Downloads" in their UI. If you are searching for a folder named
+`Downloads`, or typing that into a path, you will not find it.
+
+### Your file manager is showing you the wrong view
+
+Most open on **Recent**, which lists files you've touched, not the filesystem.
+You have to tap into the real storage:
+
+| App | Path to tap |
+|---|---|
+| **Files by Google** | **Browse** tab → **Internal storage** → **Download** |
+| **Samsung My Files** | **Internal storage** → **Download** |
+| Others | Look for "Internal storage", "Device storage", or "Main storage" |
+
+The **Downloads** shortcut at the top of Files by Google is a *category view*
+built from the media database, not the folder itself — it can omit zip files
+entirely. Use Browse → Internal storage → Download instead.
+
+If the device has no file manager at all, install **Files by Google** or
+**ZArchiver**. Both are free and both show the real filesystem.
+
+### The download never happened
+
+Tapping an attachment in a chat app can open a preview instead of saving it.
+Confirm it actually downloaded:
+
+- Pull down the **notification shade** — a finished download leaves a notification
+  you can tap
+- Or open **Chrome → ⋮ → Downloads**. Anything downloaded appears here, and you
+  can extract straight from this list without a file manager at all.
+
+**Most reliable route:** open the chat in **Chrome** rather than the app, and tap
+the attachment there. Chrome's download behaviour is predictable and its
+Downloads list is easy to find.
+
+### Where the files end up doesn't actually matter
+
+Nothing in this pack depends on being in `Download/`. If your file manager
+extracted somewhere else — `Documents/`, a per-app folder, an SD card — that's
+fine. Adjust the Chrome path accordingly:
+
+```
+file:///storage/emulated/0/Documents/cysa-plus-study/cysa-offline.html
+```
+
+The only placement to avoid is an app's **cache** directory, which Android
+clears on its own. See Test 6 in [`TESTING.md`](TESTING.md).
+
+---
+
 ## Audio
 
 Eight MP3s in `audio/`, 105 minutes total, including a 92-card spoken drill.

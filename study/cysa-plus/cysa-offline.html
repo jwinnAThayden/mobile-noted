@@ -251,6 +251,29 @@ python3 build_audio.py --only 01        # rebuild one track</code></pre>
 </ol>
 <p>That&#x27;s the entire setup. Under a minute on a decent connection.</p>
 <hr>
+<h2 id="i-can-t-find-the-download-folder">&quot;I can&#x27;t find the Download folder&quot;</h2>
+<p>Common, and almost always one of these three.</p>
+<h3 id="the-folder-is-download-singular">The folder is <code>Download</code>, singular</h3>
+<p>On disk it is <code>/storage/emulated/0/Download</code> — <strong>no &quot;s&quot;</strong>. Most file managers</p>
+<p><em>label</em> it &quot;Downloads&quot; in their UI. If you are searching for a folder named <code>Downloads</code>, or typing that into a path, you will not find it.</p>
+<h3 id="your-file-manager-is-showing-you-the-wrong-view">Your file manager is showing you the wrong view</h3>
+<p>Most open on <strong>Recent</strong>, which lists files you&#x27;ve touched, not the filesystem. You have to tap into the real storage:</p>
+<div class="tw"><table><thead><tr><th>App</th><th>Path to tap</th></tr></thead><tbody><tr><td><strong>Files by Google</strong></td><td><strong>Browse</strong> tab → <strong>Internal storage</strong> → <strong>Download</strong></td></tr><tr><td><strong>Samsung My Files</strong></td><td><strong>Internal storage</strong> → <strong>Download</strong></td></tr><tr><td>Others</td><td>Look for &quot;Internal storage&quot;, &quot;Device storage&quot;, or &quot;Main storage&quot;</td></tr></tbody></table></div>
+<p>The <strong>Downloads</strong> shortcut at the top of Files by Google is a <em>category view</em> built from the media database, not the folder itself — it can omit zip files entirely. Use Browse → Internal storage → Download instead.</p>
+<p>If the device has no file manager at all, install <strong>Files by Google</strong> or</p>
+<p><strong>ZArchiver</strong>. Both are free and both show the real filesystem.</p>
+<h3 id="the-download-never-happened">The download never happened</h3>
+<p>Tapping an attachment in a chat app can open a preview instead of saving it. Confirm it actually downloaded:</p>
+<ul>
+<li>Pull down the <strong>notification shade</strong> — a finished download leaves a notification you can tap</li>
+<li>Or open <strong>Chrome → ⋮ → Downloads</strong>. Anything downloaded appears here, and you can extract straight from this list without a file manager at all.</li>
+</ul>
+<p><strong>Most reliable route:</strong> open the chat in <strong>Chrome</strong> rather than the app, and tap the attachment there. Chrome&#x27;s download behaviour is predictable and its Downloads list is easy to find.</p>
+<h3 id="where-the-files-end-up-doesn-t-actually-matter">Where the files end up doesn&#x27;t actually matter</h3>
+<p>Nothing in this pack depends on being in <code>Download/</code>. If your file manager extracted somewhere else — <code>Documents/</code>, a per-app folder, an SD card — that&#x27;s fine. Adjust the Chrome path accordingly:</p>
+<pre><code>file:///storage/emulated/0/Documents/cysa-plus-study/cysa-offline.html</code></pre>
+<p>The only placement to avoid is an app&#x27;s <strong>cache</strong> directory, which Android clears on its own. See Test 6 in <a href="#testing"><code>TESTING.md</code></a>.</p>
+<hr>
 <h2 id="audio">Audio</h2>
 <p>Eight MP3s in <code>audio/</code>, 105 minutes total, including a 92-card spoken drill.</p>
 <h3 id="recommended-antennapod">Recommended: AntennaPod</h3>
