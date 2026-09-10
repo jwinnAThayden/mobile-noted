@@ -1,4 +1,74 @@
-# Setup — stand this up as your own private repo
+# Setup — get this onto the device, and into a private repo
+
+## The goal
+
+**Download this entire project to the local device for offline access.**
+
+The study pack must be fully usable with the network off: on a plane, in an exam
+prep session with no signal, on a machine that has never been online. That means
+the whole project — notes, build script, and generated HTML — lives *on the
+device itself*. A hosted copy is a backup, not the deliverable.
+
+Two separate things follow from that, and they are independent:
+
+| | What it gives you | Required? |
+|---|---|---|
+| **Part 1 — Get it on the device** | Offline access. This is the actual goal. | Yes |
+| **Part 2 — Put it in a private repo** | Version history, sync across machines, a durable backup. | Optional |
+
+Do Part 1. Part 2 is filing.
+
+---
+
+# Part 1 — Get the project onto this device
+
+Pick whichever applies. All of them end with the complete project in a local
+folder, and none of them need a connection afterwards.
+
+### From the chat attachment (simplest)
+
+The file `cysa-plus-study.zip` was delivered directly in conversation. Download
+it, then unzip it wherever you keep working files. Done — that folder *is* the
+project, git history included.
+
+### From GitHub, with git
+
+```bash
+git clone https://github.com/YOUR-USERNAME/cysa-plus-study.git
+```
+
+### From GitHub, without git
+
+On the repo page: **Code → Download ZIP**. Unzip it. You lose the git history;
+the content is identical.
+
+### From the staging branch, if the standalone repo doesn't exist yet
+
+```bash
+git clone --branch claude/course-offline-access-uk538j \
+  https://github.com/jwinnAThayden/mobile-noted.git
+```
+
+The pack is under `study/cysa-plus/`.
+
+### Verify you actually have offline access
+
+Turn the network off, open `cysa-offline.html`, and click through the sidebar.
+If everything renders — tables, code blocks, all eleven sections — you're done.
+The page makes **zero** network requests by design, so nothing should degrade.
+
+> **A note on what a Claude Code session can and cannot do here.** These sessions
+> run in an ephemeral cloud container, not on your device. Nothing can be written
+> to your local disk directly. The download has to be initiated from your end —
+> via the chat attachment, a clone, or a browser download. That is why this
+> project is packaged as a single zip and a single self-contained HTML file
+> rather than as something that installs itself.
+
+---
+
+# Part 2 — Stand it up as your own private repo
+
+Optional. Gives you version history and an off-device backup.
 
 Everything you need is in this folder. It does **not** depend on any other
 repository, and the study material works right now without doing any of this.
@@ -92,7 +162,7 @@ Or delete it from the GitHub web UI: **mobile-noted → Branches → 🗑**.
 
 ---
 
-## Keeping it accessible
+## Keeping it accessible on the device
 
 The repo is your durable, versioned copy. For actually *reading* it offline,
 pick whichever of these fits how you study:

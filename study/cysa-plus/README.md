@@ -3,6 +3,18 @@
 Self-contained study material for the CompTIA Cybersecurity Analyst (CySA+)
 exam. **No connection required** — clone once, read anywhere.
 
+> ## Goal
+>
+> **Download this entire project onto the local device so the full study pack is
+> available offline, with no network connection and no dependency on any hosted
+> service.**
+>
+> Every design decision here serves that goal: no CDN links, no external fonts
+> or scripts, no build toolchain, no package installs. The whole project is
+> plain text plus one generated HTML file, and it is intended to be *held
+> locally* — a copy on the device is the primary artefact, not a convenience.
+> See [`SETUP.md`](SETUP.md) for how to get it there.
+
 ## Start here
 
 Open **[`cysa-offline.html`](cysa-offline.html)** in any browser. It's a single

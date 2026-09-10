@@ -19,6 +19,7 @@ HERE = Path(__file__).resolve().parent
 # Order matters: this is the reading order in the bundled document.
 PAGES = [
     ("README.md", "Overview"),
+    ("SETUP.md", "Setup & Offline Access"),
     ("study-plan.md", "Study Plan"),
     ("01-security-operations.md", "1. Security Operations"),
     ("02-vulnerability-management.md", "2. Vulnerability Management"),
@@ -153,9 +154,12 @@ def render(markdown: str) -> str:
             close_lists()
             quote = []
             while i < len(lines) and lines[i].strip().startswith(">"):
-                quote.append(lines[i].strip().lstrip(">").strip())
+                # Strip one level of "> " only, so nesting and indentation survive.
+                content = lines[i].strip()[1:]
+                quote.append(content[1:] if content.startswith(" ") else content)
                 i += 1
-            out.append(f"<blockquote>{inline(' '.join(quote))}</blockquote>")
+            # Render recursively: blockquotes may contain headings, lists, tables.
+            out.append(f"<blockquote>{render(chr(10).join(quote))}</blockquote>")
             continue
 
         bullet = re.match(r"[-*+]\s+(.*)", stripped)
@@ -227,8 +231,14 @@ pre code{background:none;padding:0;font-size:.85rem;line-height:1.55}
 table{border-collapse:collapse;width:100%;font-size:.92rem}
 th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
 th{background:var(--code-bg);font-weight:600}
-blockquote{margin:1.1em 0;padding:.6em 1em;border-left:3px solid var(--accent);
+blockquote{margin:1.1em 0;padding:.8em 1.1em;border-left:3px solid var(--accent);
 background:var(--code-bg);border-radius:0 6px 6px 0;color:var(--muted)}
+blockquote>*:first-child{margin-top:0}
+blockquote>*:last-child{margin-bottom:0}
+blockquote h1,blockquote h2,blockquote h3,blockquote h4{border:0;padding:0;color:var(--fg);
+font-size:1.08rem;margin:.1em 0 .5em}
+blockquote strong{color:var(--fg)}
+blockquote table{background:var(--card)}
 hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
 ul,ol{padding-left:1.5em}
 li{margin:.3em 0}

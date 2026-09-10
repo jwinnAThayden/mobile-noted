@@ -32,8 +32,14 @@ pre code{background:none;padding:0;font-size:.85rem;line-height:1.55}
 table{border-collapse:collapse;width:100%;font-size:.92rem}
 th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
 th{background:var(--code-bg);font-weight:600}
-blockquote{margin:1.1em 0;padding:.6em 1em;border-left:3px solid var(--accent);
+blockquote{margin:1.1em 0;padding:.8em 1.1em;border-left:3px solid var(--accent);
 background:var(--code-bg);border-radius:0 6px 6px 0;color:var(--muted)}
+blockquote>*:first-child{margin-top:0}
+blockquote>*:last-child{margin-bottom:0}
+blockquote h1,blockquote h2,blockquote h3,blockquote h4{border:0;padding:0;color:var(--fg);
+font-size:1.08rem;margin:.1em 0 .5em}
+blockquote strong{color:var(--fg)}
+blockquote table{background:var(--card)}
 hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
 ul,ol{padding-left:1.5em}
 li{margin:.3em 0}
@@ -51,14 +57,17 @@ color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;
 </head><body>
 <button class="toggle" aria-label="Toggle contents">&#9776; Contents</button>
 <div id="wrap">
-<nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations">1. Security Operations</a><a href="#02-vulnerability-management">2. Vulnerability Management</a><a href="#03-incident-response">3. Incident Response</a><a href="#04-reporting-communication">4. Reporting &amp; Communication</a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav>
+<nav><h2>Contents</h2><a href="#readme">Overview</a><a href="#setup">Setup &amp; Offline Access</a><a href="#study-plan">Study Plan</a><a href="#01-security-operations">1. Security Operations</a><a href="#02-vulnerability-management">2. Vulnerability Management</a><a href="#03-incident-response">3. Incident Response</a><a href="#04-reporting-communication">4. Reporting &amp; Communication</a><a href="#frameworks">Frameworks</a><a href="#commands-cheatsheet">Command Cheatsheet</a><a href="#tools-reference">Tools Reference</a><a href="#acronyms">Acronyms</a><a href="#flashcards">Flashcards</a></nav>
 <main><section class="section" id="readme"><h1 id="comptia-cysa-cs0-003-offline-study-pack">CompTIA CySA+ (CS0-003) — Offline Study Pack</h1>
 <p>Self-contained study material for the CompTIA Cybersecurity Analyst (CySA+) exam. <strong>No connection required</strong> — clone once, read anywhere.</p>
+<blockquote><h2 id="goal">Goal</h2>
+<p><strong>Download this entire project onto the local device so the full study pack is available offline, with no network connection and no dependency on any hosted service.</strong></p>
+<p>Every design decision here serves that goal: no CDN links, no external fonts or scripts, no build toolchain, no package installs. The whole project is plain text plus one generated HTML file, and it is intended to be <em>held locally</em> — a copy on the device is the primary artefact, not a convenience. See <a href="#setup"><code>SETUP.md</code></a> for how to get it there.</p></blockquote>
 <h2 id="start-here">Start here</h2>
 <p>Open **<a href="cysa-offline.html"><code>cysa-offline.html</code></a>** in any browser. It&#x27;s a single file with no CDN links, no external scripts, and no network calls: sidebar contents, dark mode, phone-friendly layout, and it prints cleanly. Copy it to a phone, tablet, or USB stick and it just works.</p>
 <p>The Markdown files are the editable source; the HTML is generated from them.</p>
 <p>Not set up as a repository yet? See **<a href="#setup"><code>SETUP.md</code></a>** — about three minutes.</p>
-<blockquote><strong>Note on sources.</strong> Written from the publicly published CS0-003 exam objectives and general security-domain knowledge. It is <em>not</em> a copy of CompTIA&#x27;s CertMaster course and is not a substitute for licensed course material. Cross-check the domain/objective numbering against the free official objectives PDF from CompTIA.</blockquote>
+<blockquote><p><strong>Note on sources.</strong> Written from the publicly published CS0-003 exam objectives and general security-domain knowledge. It is <em>not</em> a copy of CompTIA&#x27;s CertMaster course and is not a substitute for licensed course material. Cross-check the domain/objective numbering against the free official objectives PDF from CompTIA.</p></blockquote>
 <h2 id="exam-at-a-glance">Exam at a glance</h2>
 <div class="tw"><table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody><tr><td>Exam code</td><td>CS0-003</td></tr><tr><td>Questions</td><td>Max 85 (multiple choice + performance-based)</td></tr><tr><td>Time</td><td>165 minutes</td></tr><tr><td>Passing score</td><td>750 (scale 100–900)</td></tr><tr><td>Recommended experience</td><td>4+ years hands-on IR / security analyst work</td></tr><tr><td>Prerequisite</td><td>None formally; Security+ and Network+ knowledge assumed</td></tr></tbody></table></div>
 <h2 id="domains-and-weighting">Domains and weighting</h2>
@@ -88,7 +97,92 @@ color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;
 <li>PBQs cluster at the <strong>start</strong>. Flag and skip them; bank the multiple-choice points first, then return with whatever time is left.</li>
 <li>CySA+ is an <em>analyst</em> exam, not a <em>tool operator</em> exam. When two answers both look technically right, pick the one that reflects better <strong>process</strong> (escalate, document, preserve evidence, validate before acting).</li>
 <li>&quot;First/next/best&quot; in the stem is doing work. Read it twice.</li>
-</ul></section><section class="section" id="study-plan"><h1 id="six-week-cysa-study-plan">Six-Week CySA+ Study Plan</h1>
+</ul></section><section class="section" id="setup"><h1 id="setup-get-this-onto-the-device-and-into-a-private-repo">Setup — get this onto the device, and into a private repo</h1>
+<h2 id="the-goal">The goal</h2>
+<p><strong>Download this entire project to the local device for offline access.</strong></p>
+<p>The study pack must be fully usable with the network off: on a plane, in an exam prep session with no signal, on a machine that has never been online. That means the whole project — notes, build script, and generated HTML — lives <em>on the device itself</em>. A hosted copy is a backup, not the deliverable.</p>
+<p>Two separate things follow from that, and they are independent:</p>
+<div class="tw"><table><thead><tr><th></th><th>What it gives you</th><th>Required?</th></tr></thead><tbody><tr><td><strong>Part 1 — Get it on the device</strong></td><td>Offline access. This is the actual goal.</td><td>Yes</td></tr><tr><td><strong>Part 2 — Put it in a private repo</strong></td><td>Version history, sync across machines, a durable backup.</td><td>Optional</td></tr></tbody></table></div>
+<p>Do Part 1. Part 2 is filing.</p>
+<hr>
+<h1 id="part-1-get-the-project-onto-this-device">Part 1 — Get the project onto this device</h1>
+<p>Pick whichever applies. All of them end with the complete project in a local folder, and none of them need a connection afterwards.</p>
+<h3 id="from-the-chat-attachment-simplest">From the chat attachment (simplest)</h3>
+<p>The file <code>cysa-plus-study.zip</code> was delivered directly in conversation. Download it, then unzip it wherever you keep working files. Done — that folder <em>is</em> the project, git history included.</p>
+<h3 id="from-github-with-git">From GitHub, with git</h3>
+<pre><code class="lang-bash">git clone https://github.com/YOUR-USERNAME/cysa-plus-study.git</code></pre>
+<h3 id="from-github-without-git">From GitHub, without git</h3>
+<p>On the repo page: <strong>Code → Download ZIP</strong>. Unzip it. You lose the git history; the content is identical.</p>
+<h3 id="from-the-staging-branch-if-the-standalone-repo-doesn-t-exist-yet">From the staging branch, if the standalone repo doesn&#x27;t exist yet</h3>
+<pre><code class="lang-bash">git clone --branch claude/course-offline-access-uk538j \
+  https://github.com/jwinnAThayden/mobile-noted.git</code></pre>
+<p>The pack is under <code>study/cysa-plus/</code>.</p>
+<h3 id="verify-you-actually-have-offline-access">Verify you actually have offline access</h3>
+<p>Turn the network off, open <code>cysa-offline.html</code>, and click through the sidebar. If everything renders — tables, code blocks, all eleven sections — you&#x27;re done. The page makes <strong>zero</strong> network requests by design, so nothing should degrade.</p>
+<blockquote><p><strong>A note on what a Claude Code session can and cannot do here.</strong> These sessions run in an ephemeral cloud container, not on your device. Nothing can be written to your local disk directly. The download has to be initiated from your end — via the chat attachment, a clone, or a browser download. That is why this project is packaged as a single zip and a single self-contained HTML file rather than as something that installs itself.</p></blockquote>
+<hr>
+<h1 id="part-2-stand-it-up-as-your-own-private-repo">Part 2 — Stand it up as your own private repo</h1>
+<p>Optional. Gives you version history and an off-device backup.</p>
+<p>Everything you need is in this folder. It does <strong>not</strong> depend on any other repository, and the study material works right now without doing any of this.</p>
+<p><strong>Time required: about 3 minutes.</strong></p>
+<hr>
+<h2 id="before-you-start">Before you start</h2>
+<p>You need a GitHub account. That&#x27;s it. The git history is already committed in this folder, so there&#x27;s nothing to prepare.</p>
+<blockquote><p><strong>Why this step is manual:</strong> the GitHub App used by Claude Code sessions has read/write access to repositories that already exist, but not permission to</p>
+<p><em>create</em> new ones (<code>POST /user/repos</code> → <code>403 Resource not accessible by integration</code>). Creating the empty repo has to come from a browser or a personal access token. Everything after that can be automated.</p></blockquote>
+<hr>
+<h2 id="step-1-create-the-empty-repository">Step 1 — Create the empty repository</h2>
+<ol>
+<li>Go to &lt;https://github.com/new&gt;</li>
+<li><strong>Repository name:</strong> <code>cysa-plus-study</code></li>
+<li><strong>Visibility:</strong> Private</li>
+<li><strong>Leave every initialise option unticked</strong> — no README, no <code>.gitignore</code>, no licence. The repo must be completely empty or the first push is rejected.</li>
+<li>Click <strong>Create repository</strong></li>
+</ol>
+<hr>
+<h2 id="step-2-push-this-folder-into-it">Step 2 — Push this folder into it</h2>
+<p>Pick whichever path suits the machine you&#x27;re on.</p>
+<h3 id="path-a-git-command-line-recommended">Path A — Git command line (recommended)</h3>
+<p>From inside this folder:</p>
+<pre><code class="lang-bash">git remote add origin https://github.com/YOUR-USERNAME/cysa-plus-study.git
+git push -u origin main</code></pre>
+<p>Replace <code>YOUR-USERNAME</code> with your GitHub username.</p>
+<p>If this folder somehow lost its git history (you copied the files rather than the whole folder), run this first:</p>
+<pre><code class="lang-bash">git init -b main
+git add -A
+git commit -m &quot;Offline CySA+ (CS0-003) study pack&quot;</code></pre>
+<h3 id="path-b-github-desktop">Path B — GitHub Desktop</h3>
+<ol>
+<li><strong>File → Add local repository</strong>, choose this folder</li>
+<li><strong>Publish repository</strong>, tick <strong>Keep this code private</strong></li>
+</ol>
+<h3 id="path-c-browser-upload-no-tools-needed">Path C — Browser upload, no tools needed</h3>
+<p>Works from a tablet or a locked-down machine.</p>
+<ol>
+<li>On your new empty repo page, click <strong>uploading an existing file</strong></li>
+<li>Drag in every file from this folder <strong>except</strong> the hidden <code>.git</code> folder</li>
+<li>Commit directly to <code>main</code></li>
+</ol>
+<p>You lose the commit history this way; the content is identical.</p>
+<hr>
+<h2 id="step-3-confirm-it-worked">Step 3 — Confirm it worked</h2>
+<p>Open <code>https://github.com/YOUR-USERNAME/cysa-plus-study</code>. You should see the README rendered, and <code>cysa-offline.html</code> in the file list.</p>
+<hr>
+<h2 id="step-4-clean-up-the-staging-copy-optional">Step 4 — Clean up the staging copy (optional)</h2>
+<p>A copy was staged on a branch of the <code>mobile-noted</code> repository while this was being built. Once the new repo is live, that branch is redundant:</p>
+<pre><code class="lang-bash">git push origin --delete claude/course-offline-access-uk538j</code></pre>
+<p>Or delete it from the GitHub web UI: <strong>mobile-noted → Branches → 🗑</strong>.</p>
+<hr>
+<h2 id="keeping-it-accessible-on-the-device">Keeping it accessible on the device</h2>
+<p>The repo is your durable, versioned copy. For actually <em>reading</em> it offline, pick whichever of these fits how you study:</p>
+<div class="tw"><table><thead><tr><th>Where</th><th>How</th><th>Offline?</th></tr></thead><tbody><tr><td><strong>Phone / tablet</strong></td><td>Put <code>cysa-offline.html</code> in OneDrive or Google Drive and mark it <strong>Available offline</strong>. Open it with any browser.</td><td>Yes</td></tr><tr><td><strong>Laptop</strong></td><td>Clone the repo, or just keep <code>cysa-offline.html</code> on the desktop.</td><td>Yes</td></tr><tr><td><strong>Any device, quick look</strong></td><td>Browse the Markdown on github.com — renders tables and all.</td><td>No</td></tr><tr><td><strong>Printed</strong></td><td>Open <code>cysa-offline.html</code>, Ctrl/Cmd-P. The sidebar is hidden automatically in print styles.</td><td>Yes</td></tr></tbody></table></div>
+<p><code>cysa-offline.html</code> makes <strong>zero network requests</strong> — no CDN, no fonts, no analytics, no external scripts. Copy it to a USB stick and it works on a machine that has never been online.</p>
+<hr>
+<h2 id="editing-it-later">Editing it later</h2>
+<p>The Markdown files are the source of truth. After changing any of them:</p>
+<pre><code class="lang-bash">python3 build_offline_html.py</code></pre>
+<p>Python 3, standard library only — nothing to install, works offline. The script regenerates <code>cysa-offline.html</code> from every <code>.md</code> file. Then commit and push as normal.</p>
+<p>To add a section, create a new <code>.md</code> file and add it to the <code>PAGES</code> list near the top of <code>build_offline_html.py</code>.</p></section><section class="section" id="study-plan"><h1 id="six-week-cysa-study-plan">Six-Week CySA+ Study Plan</h1>
 <p>Assumes ~8–10 hours per week. Adjust the calendar, keep the sequence.</p>
 <h2 id="week-1-foundations-and-security-operations-part-1">Week 1 — Foundations and Security Operations, part 1</h2>
 <ul>
@@ -852,7 +946,7 @@ tcp.analysis.retransmission
 frame contains &quot;password&quot;
 http.response.code == 500
 smtp || pop || imap</code></pre>
-<blockquote><strong>Capture filters use BPF syntax</strong> (<code>host x</code>, <code>port y</code>) — display filters do not. Mixing them up is a classic mistake.</blockquote>
+<blockquote><p><strong>Capture filters use BPF syntax</strong> (<code>host x</code>, <code>port y</code>) — display filters do not. Mixing them up is a classic mistake.</p></blockquote>
 <hr>
 <h2 id="linux-triage">Linux triage</h2>
 <pre><code class="lang-bash">ps aux --forest                    # process tree
