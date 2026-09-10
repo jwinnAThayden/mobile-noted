@@ -1,4 +1,4 @@
-14607ca8290db8f7d574133f0048dd356df235dbe9136cd0c3a3869c085e10c8  ./.gitignore
+aa2f051d8ce59a678c3303f87f025249b049b3762b835289f951841fbb6bb33b  ./.gitignore
 9f18f8d78ad20474cf67e781c20e14a6d8595fc991d3fe483e1377e05d9d988e  ./01-security-operations.md
 2ff1b1c31c22dd931cc3fa931545ea03761487c6f88072f0a94ce6ce5b2f16db  ./02-vulnerability-management.md
 81153da6f14d66841439aeee44853458b1a42ceb6f3d1829c02eecaa58a722ee  ./03-incident-response.md
@@ -34,3 +34,20 @@ bce7d993ba81dd23cc1ea459c8c605613c9828828ed8020db99dd46138be680d  ./build_offlin
 b7d7f88b3ce5fb9780e60e8c25a320e3283b116ab023d24d62e6a3ee3622e9e0  ./frameworks.md
 322efcab5b43c8d4fdbc871d48e5551538c4c0ee50dce9b59bf1e7b7f3e10ed8  ./study-plan.md
 a88c4de3b744ff2e562e1b4323dff318c8163229b403563462604dbb097fa76a  ./tools-reference.md
+43f4f3ceece57a6fdcf99ce274a5d324446e0d9f6a4e41c1274a0f2269ba8f9b  ./webapp/Procfile
+34e5b2739f28ae61468af3162553ea80af30e7bb5a7053729a57d774500c6c44  ./webapp/README.md
+0debe452dfec076f7aa0c3dee4d81d77f63e8af444e3a4c6eecf6286b14d7b40  ./webapp/app.py
+5c66c87e77b7eb11a93f248e0f5132d6d374ca0b3c4f4390f039b556f6008b98  ./webapp/build_content.py
+239c6f68020e5af6800305bc344825a91c8d69741166d2d5121e023e829a1444  ./webapp/requirements.txt
+7807515d3de87f06863a96ddf9be037e734ee0383ddc97ed43a7a756e9ae94e9  ./webapp/static/content.json
+89947cbf0c70d3342a2e0ce93a48d9516b433fa1c7e67af83e3628410dace20e  ./webapp/static/css/app.css
+c455ee8f8d8f6f8ccf4938e7a78158ff11dabb12dc0f60f2efff224acdb0a7f4  ./webapp/static/icons/icon-192.png
+e0a6c499ad249775648d8d059e85a1afd7f0363a802b8868588e7799682bff1b  ./webapp/static/icons/icon-512.png
+17f01a098359b51294fd15ab79cb19709429313ca7b227ac9a676e32a3075793  ./webapp/static/icons/icon-maskable.png
+aba9c4fae62400753b046dac6dffd814fee061fcf5beb850e4ce6edb33ab7faf  ./webapp/static/icons/icon.svg
+03ad5ee187b66a9476ff280d16dbd36da479a3777b8fe7b9a3aba266405ed600  ./webapp/static/index.html
+3996fe6221521a2e29ad3910f920b73b8215eff9cc0915f4ab2aea87cd37c8c0  ./webapp/static/js/app.js
+93261570ea3a5afa8c91cfb6f0be9d520831de0dc18ba13265babc664739e8dd  ./webapp/static/js/cards.js
+3cf5632ea664a2a27ab656f2b5edaccc520a688232d4dae130faafd9b24ad3c0  ./webapp/static/js/tts.js
+f79aa6e38d7b75e72dc8ab748ccd6a19139512fbcc0d67ef60ea9100f876d7a8  ./webapp/static/manifest.webmanifest
+a10f8090da34163153912981432f206808401ea043f62518810e806e89d258f9  ./webapp/static/sw.js

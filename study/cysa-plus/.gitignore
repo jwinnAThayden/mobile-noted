@@ -7,3 +7,4 @@ __pycache__/
 
 # Generated for publishing only; rebuild with: python3 build_offline_html.py --artifact
 cysa-artifact.html
+__pycache__/

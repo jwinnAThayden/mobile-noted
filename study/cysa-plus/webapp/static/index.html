@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CySA+ Field Notes</title>
+<meta name="description" content="Offline study app for CompTIA CySA+ (CS0-003) — notes, read-aloud, and spaced-repetition flashcards.">
+<meta name="theme-color" content="#1F5C7A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="bar">
+  <button class="icon" id="menu" aria-label="Contents" aria-expanded="false">&#9776;</button>
+  <h1 id="crumb">CySA+ Field Notes</h1>
+  <nav class="tabs" role="tablist">
+    <button class="tab is-on" data-view="read" role="tab" aria-selected="true">Read</button>
+    <button class="tab" data-view="cards" role="tab" aria-selected="false">Cards</button>
+  </nav>
+  <button class="icon" id="prefs" aria-label="Voice settings">&#9881;</button>
+</header>
+
+<div class="scrim" id="scrim"></div>
+
+<aside class="rail" id="rail" aria-label="Contents">
+  <p class="rail-h">Study</p>
+  <div id="navStudy"></div>
+  <p class="rail-h">Project</p>
+  <div id="navProject"></div>
+  <div class="rail-foot">
+    <p id="storeInfo">Offline copy ready</p>
+  </div>
+</aside>
+
+<main id="read" class="view">
+  <article id="doc" aria-live="polite"></article>
+</main>
+
+<main id="cards" class="view" hidden>
+  <section class="deck">
+    <div class="deck-top">
+      <label class="field">
+        <span>Deck</span>
+        <select id="deckPick"></select>
+      </label>
+      <div class="stats">
+        <span class="stat"><b id="dueN">0</b> due</span>
+        <span class="stat"><b id="newN">0</b> new</span>
+        <span class="stat"><b id="doneN">0</b> done today</span>
+      </div>
+    </div>
+
+    <div class="card" id="cardBox">
+      <p class="card-domain" id="cardDomain"></p>
+      <div class="card-q" id="cardQ"></div>
+      <div class="card-a" id="cardA" hidden></div>
+      <div class="card-tools">
+        <button class="ghost" id="sayCard" type="button">&#9654; Read aloud</button>
+      </div>
+    </div>
+
+    <div class="grade" id="gradeRow" hidden>
+      <button data-g="0" class="g g-again">Again</button>
+      <button data-g="3" class="g g-hard">Hard</button>
+      <button data-g="4" class="g g-good">Good</button>
+      <button data-g="5" class="g g-easy">Easy</button>
+    </div>
+    <button class="show" id="showA" type="button">Show answer</button>
+
+    <p class="deck-done" id="deckDone" hidden>
+      Nothing due in this deck. <button class="link" id="cram" type="button">Study anyway</button>
+    </p>
+    <button class="link reset" id="resetDeck" type="button">Reset progress for this deck</button>
+  </section>
+</main>
+
+<div class="player" id="player" hidden>
+  <button class="icon" id="pp" aria-label="Pause">&#10074;&#10074;</button>
+  <div class="player-txt"><span id="nowTxt"></span></div>
+  <span class="player-pos" id="pos"></span>
+  <button class="icon" id="stop" aria-label="Stop">&#9632;</button>
+</div>
+
+<dialog id="prefsBox">
+  <form method="dialog">
+    <h2>Voice</h2>
+    <label class="field"><span>Voice</span><select id="voicePick"></select></label>
+    <label class="field"><span>Speed <b id="rateOut">1.0&times;</b></span>
+      <input type="range" id="rate" min="0.6" max="2" step="0.1" value="1"></label>
+    <label class="field"><span>Answer pause <b id="gapOut">3s</b></span>
+      <input type="range" id="gap" min="0" max="8" step="1" value="3"></label>
+    <p class="hint" id="voiceHint"></p>
+    <menu><button value="ok" class="primary">Done</button></menu>
+  </form>
+</dialog>
+
+<script src="js/tts.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
